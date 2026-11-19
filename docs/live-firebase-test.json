@@ -1,0 +1,85 @@
+{
+  "run_id": "b94775c417394153",
+  "project": "elderly-safety-ai",
+  "origin": "isolated production smoke",
+  "started_utc": "2026-11-09T17:18:35.625866+00:00",
+  "checks": [
+    {
+      "name": "Firebase Auth Email/Password sign-in",
+      "pass": true
+    },
+    {
+      "name": "Firebase Auth Email/Password sign-in",
+      "pass": true
+    },
+    {
+      "name": "Python Admin creates and reads isolated test alert",
+      "pass": true
+    },
+    {
+      "name": "Linked client reads production profile",
+      "pass": true
+    },
+    {
+      "name": "Unlinked account denied production profile",
+      "pass": true
+    },
+    {
+      "name": "Anonymous account denied production profile",
+      "pass": true
+    },
+    {
+      "name": "Client reads Python-written status",
+      "pass": true
+    },
+    {
+      "name": "Client cannot forge a fall event",
+      "pass": true
+    },
+    {
+      "name": "Client seen acknowledgment with server timestamp",
+      "pass": true
+    },
+    {
+      "name": "Admin reads back seen acknowledgment",
+      "pass": true
+    },
+    {
+      "name": "Client safe acknowledgment with server timestamp",
+      "pass": true
+    },
+    {
+      "name": "Admin reads back safe acknowledgment",
+      "pass": true
+    },
+    {
+      "name": "Escalation preserves caregiver safety confirmation",
+      "pass": true
+    },
+    {
+      "name": "Own device registration allowed",
+      "pass": true
+    },
+    {
+      "name": "Other account denied device token",
+      "pass": true
+    }
+  ],
+  "cleanup": [
+    {
+      "resource": "temporary profile",
+      "deleted": true
+    },
+    {
+      "resource": "temporary test account",
+      "deleted": true
+    },
+    {
+      "resource": "temporary test account",
+      "deleted": true
+    }
+  ],
+  "fcm_receipt": "PENDING_DEVICE_TEST",
+  "android_ui": "PENDING_DEVICE_TEST",
+  "status": "PASS"
+}

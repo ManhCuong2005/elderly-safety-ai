@@ -1,0 +1,38 @@
+Group,Test,Automated_result,Evidence,User_result,Device,Date,Notes
+A,Python dependencies,PASS,pip check,PENDING,,,No broken requirements
+A,Python unit regression 77 tests,PASS,python-tests.xml,PENDING,,,Synthetic logic tests do not validate real-world accuracy
+B,Real RGB/MP4 MediaPipe extraction,PASS,INPUT_LAYOUT_CORRECTION.md,PENDING,,,54 composite MP4 inputs corrected; legacy accuracy reports invalid
+B,Physical webcam capture release reopen,PASS,camera-probe.json,PENDING,,,15 frames640x480 - no reliable full-body pose in sample
+B,Physical webcam skeleton and posture,PENDING_USER_TEST,,PENDING,,,
+C,Geometric posture unit rules,PASS,python-tests.xml,PENDING,,,
+C,Real posture labels and walking accuracy,PENDING_COVERAGE,,PENDING,,,No independently annotated frame labels
+D,Corrected RGB dataset pipeline,PASS,evaluation-test_v1_4-rgb_input_fixed.json,PENDING,,,Diagnostic reevaluation only
+D,Independent fall warning accuracy,NOT_VALIDATED,INPUT_LAYOUT_CORRECTION.md,PENDING,,,Corrected diagnostic TP0 FP1 FN5 TN4; fresh independent validation required
+E,Inactivity lying and missing-pose logic,PASS,python-tests.xml,PENDING,,,Synthetic temporal tests
+E,Live inactivity and lying alerts,PENDING_DEVICE_TEST,,PENDING,,,
+F,Production Email Password server auth,PASS,live-firebase-test.json,PENDING,,,Temporary accounts cleaned
+F,Android login session reset logout,PENDING_DEVICE_TEST,,PENDING,,,
+G,Production Admin and authorized client read/ack,PASS,live-firebase-test.json,PENDING,,,
+G,Production snapshot listener,PASS,live-transport-test.json,PENDING,,,
+G,Actual webcam to Flutter dashboard,PENDING_DEVICE_TEST,,PENDING,,,
+H,Flutter analyze,PASS,verification-summary.json,PENDING,,,No issues
+H,Flutter unit and widget tests 7 tests,PASS,verification-summary.json,PENDING,,,
+H,Android debug APK build,PASS,verification-summary.json,PENDING,,,
+H,Android release build and signature,PASS,android-release-build.json,PENDING,,,Android Debug signing for installation testing
+H,Flutter web release build,PASS,web-build-status.json,PENDING,,,Local Python recognition only
+H,Chrome real video skeleton and standing,PASS,web-browser-test.json,PENDING,,,Reset and seek passed; no cloud requests
+H,Chrome camera open stop,PASS,web-browser-test.json,PENDING,,,Synthetic camera flow only; real full-body test pending
+H,Physical Android install/open,PENDING_DEVICE_TEST,,PENDING,,,
+I,FCM validate-only server request,PASS,live-transport-test.json,PENDING,,,No notification delivered
+I,Foreground notification and tap,PENDING_DEVICE_TEST,,PENDING,,,
+I,Background notification and tap,PENDING_DEVICE_TEST,,PENDING,,,
+I,Terminated cold-start and tap,PENDING_DEVICE_TEST,,PENDING,,,
+I,Token refresh multi-device logout,PENDING_DEVICE_TEST,,PENDING,,,
+J,Different Wi-Fi and mobile networks,PENDING_DEVICE_TEST,,PENDING,,,
+K,Firestore Rules 17 tests,PASS,IMPLEMENTATION_REPORT.md,PENDING,,,
+K,Live unauthorized access and forged event rejection,PASS,live-firebase-test.json,PENDING,,,
+K,Python retry and early-warning escalation,PASS,../tools/publisher-emulator.log,PENDING,,,
+K,Source secrets scan,PASS,verification-summary.json,PENDING,,,Credential outside monorepo and not copied
+L,Real file decode/inference throughput,PASS,verification-summary.json,PENDING,,,Not webcam FPS
+L,30-minute live soak,PENDING_DEVICE_TEST,,PENDING,,,
+L,Live network loss retry and queue saturation,PENDING_DEVICE_TEST,,PENDING,,,

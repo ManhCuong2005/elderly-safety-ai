@@ -1,0 +1,11 @@
+{
+  "status": "PASS_BUILD_AND_SIGNATURE_VERIFICATION",
+  "build_mode": "release",
+  "bytes": 50081615,
+  "sha256": "3b914bb7ccf8d8105e75fd1a77b071708330bd34d646f187561a2a85bb7dcc0a",
+  "path": "flutter_app/build/app/outputs/flutter-apk/app-release.apk",
+  "signer": "C=US, O=Android, CN=Android Debug",
+  "production_signing_configured": false,
+  "physical_device_test": "PENDING_DEVICE_TEST",
+  "as_of": "2026-11-10"
+}

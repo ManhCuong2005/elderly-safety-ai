@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function member(profile) {
+      return signedIn() && exists(/databases/$(database)/documents/profiles/$(profile)/caregivers/$(request.auth.uid));
+    }
+    function canAcknowledge(profile) {
+      return member(profile) && get(/databases/$(database)/documents/profiles/$(profile)/caregivers/$(request.auth.uid)).data.role == 'caregiver';
+    }
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+      match /profiles/{profile} {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow write: if false;
+      }
+      match /devices/{device} {
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['token', 'platform', 'updatedAt', 'enabled'])
+          && request.resource.data.token is string && request.resource.data.token.size() > 20
+          && request.resource.data.token.size() < 4096
+          && request.resource.data.platform == 'android'
+          && request.resource.data.enabled is bool
+          && request.resource.data.updatedAt == request.time;
+      }
+    }
+    match /profiles/{profile} {
+      allow read: if member(profile);
+      allow write: if false;
+      match /caregivers/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid;
+        allow list, write: if false;
+      }
+      match /status/{status} {
+        allow read: if member(profile);
+        allow write: if false;
+      }
+      match /events/{event} {
+        allow read: if member(profile);
+        allow write: if false;
+      }
+      match /alerts/{alert} {
+        allow read: if member(profile);
+        allow create, delete: if false;
+        allow update: if canAcknowledge(profile) && (
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenBy','seenAt'])
+            && request.resource.data.seenBy == request.auth.uid
+            && request.resource.data.seenAt == request.time)
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['safeBy','safeAt'])
+            && request.resource.data.safeBy == request.auth.uid
+            && request.resource.data.safeAt == request.time)
+        );
+        match /deliveries/{delivery} { allow read, write: if false; }
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

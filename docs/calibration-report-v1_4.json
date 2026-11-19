@@ -1,0 +1,875 @@
+{
+  "algorithm_version": "1.4",
+  "split": "calibration",
+  "experimental_small_sample": true,
+  "subject_independence_verified": false,
+  "thresholds_sha256": "ca0df8a76579baf0f01c4b8f83ed7f819791bdee42ed1ac1d2245d2f66e7e794",
+  "positive_definition": "At least one SUSPECTED_FALL warning (or verified POSSIBLE_FALL) per video; not a confirmed physical fall",
+  "thresholds": {
+    "visibility": 0.5,
+    "min_torso": 0.04,
+    "core_visibility": 0.85,
+    "core_fall_lean": 65.0,
+    "core_fall_aspect": 1.0,
+    "standing_lean": 32.0,
+    "standing_knee": 150.0,
+    "standing_leg_vertical": 1.4,
+    "standing_thigh_vertical": 0.5,
+    "standing_hip": 145.0,
+    "sitting_knee": 135.0,
+    "sitting_hip": 140.0,
+    "lying_lean": 55.0,
+    "lying_aspect": 1.35,
+    "lying_leg_vertical": 0.55,
+    "posture_debounce_s": 0.25,
+    "smoothing_tau_s": 0.12,
+    "window_s": 2.5,
+    "max_gap_s": 0.5,
+    "motion_speed_window_s": 0.3,
+    "transition_s": 1.2,
+    "prior_support_s": 0.08,
+    "fall_angle_delta": 38.0,
+    "fall_angle_speed": 45.0,
+    "fall_hip_drop": 0.5,
+    "fall_hip_speed": 0.65,
+    "fall_height_ratio": 0.6,
+    "fall_foreshortening_angle_delta": 15.0,
+    "collapsed_body_aspect": 1.35,
+    "collapsed_body_leg_vertical": 0.9,
+    "verification_s": 1.0,
+    "verification_timeout_s": 5.0,
+    "immobile_speed": 0.3,
+    "cooldown_s": 30.0,
+    "lying_long_s": 1800.0,
+    "inactivity_s": 600.0,
+    "walking_window_s": 1.5,
+    "walking_ankle_range": 0.25,
+    "walking_min_speed": 0.15,
+    "heartbeat_s": 30.0,
+    "status_min_interval_s": 5.0,
+    "identity_max_jump": 2.0,
+    "identity_match_radius": 0.6,
+    "identity_loss_s": 3.0
+  },
+  "metrics": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 1,
+    "tn": 3,
+    "confusion_matrix": [
+      [
+        3,
+        0
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+    "precision": 1.0,
+    "recall": 0.6666666666666666,
+    "f1": 0.8,
+    "false_positive_rate": 0.0,
+    "false_positive_rate_definition": "FP / (FP + TN), video level"
+  },
+  "verified_metrics": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 3,
+    "tn": 3,
+    "confusion_matrix": [
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        0
+      ]
+    ],
+    "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "false_positive_rate": 0.0,
+    "false_positive_rate_definition": "FP / (FP + TN), video level"
+  },
+  "videos": [
+    {
+      "video_id": "fall-01",
+      "label": "FALL",
+      "split": "calibration",
+      "detected": true,
+      "verified_detected": false,
+      "frame_count": 160,
+      "reliable_pose_frames": 118,
+      "missing_landmark_frames": [
+        115,
+        116,
+        117,
+        118,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160
+      ],
+      "pose_coverage_counts": {
+        "FULL": 100,
+        "ONE_LEG": 7,
+        "CORE_ONLY": 11,
+        "NONE": 42
+      },
+      "detection_latency_s": null,
+      "events": [
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 0.266,
+          "event_id": "b0f58b94-64a4-460d-8a16-898944666726",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.868,
+          "event_id": "9cde9026-c07a-4fa5-a57a-6942ba815ef3",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.968,
+          "event_id": "b85c49a7-c0ee-4e71-a009-cb27f96854bf",
+          "details": {
+            "from": "WALKING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.269,
+          "event_id": "bbe359d6-369e-4b78-8cd8-84cce434c488",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.569,
+          "event_id": "605df311-ea5e-4d74-9064-0a219c8d9508",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.803,
+          "event_id": "e8986932-ff9c-426c-8cc1-c24d135505f8",
+          "details": {
+            "from": "WALKING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.303,
+          "event_id": "7fc22820-8d5c-4c1c-b27d-2a5f8f777edd",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "SITTING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.37,
+          "event_id": "77bb182b-1bdd-4c9f-b0db-5b4cddda4d5e",
+          "details": {
+            "from": "SITTING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "SUSPECTED_FALL",
+          "timestamp": 3.47,
+          "event_id": "94580f58-66bb-4e07-a3a1-0de56b6fb212",
+          "details": {
+            "pose_coverage": "CORE_ONLY"
+          }
+        }
+      ]
+    },
+    {
+      "video_id": "adl-01",
+      "label": "NON_FALL",
+      "split": "calibration",
+      "detected": false,
+      "verified_detected": false,
+      "frame_count": 150,
+      "reliable_pose_frames": 136,
+      "missing_landmark_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "pose_coverage_counts": {
+        "NONE": 14,
+        "CORE_ONLY": 14,
+        "ONE_LEG": 54,
+        "FULL": 68
+      },
+      "detection_latency_s": null,
+      "events": [
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.134,
+          "event_id": "5840213a-3885-4753-b27a-c00f3c4b2426",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.902,
+          "event_id": "a38cfa32-0ddf-4510-bb85-c9784a066fa4",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.069,
+          "event_id": "7fcdfe2b-0f01-44dc-a450-dd79edc4e9e4",
+          "details": {
+            "from": "WALKING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 4.555,
+          "event_id": "21976537-49ec-4c6a-89b2-508db65d308d",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "SITTING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 4.657,
+          "event_id": "7762a873-bcce-4e19-a51a-462c4aadc2a2",
+          "details": {
+            "from": "SITTING",
+            "to": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "video_id": "fall-09",
+      "label": "FALL",
+      "split": "calibration",
+      "detected": true,
+      "verified_detected": false,
+      "frame_count": 185,
+      "reliable_pose_frames": 128,
+      "missing_landmark_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19,
+        20,
+        21,
+        22,
+        110,
+        111,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185
+      ],
+      "pose_coverage_counts": {
+        "NONE": 57,
+        "CORE_ONLY": 9,
+        "FULL": 91,
+        "ONE_LEG": 28
+      },
+      "detection_latency_s": null,
+      "events": [
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.0,
+          "event_id": "1f3fb9a1-999b-4a39-9c71-083611e764a2",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.9333333333333333,
+          "event_id": "7d40e484-edac-49b4-9b59-b12da7a32168",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.1333333333333333,
+          "event_id": "fb959ebf-92eb-4117-8b7f-dcb9cb1ef04e",
+          "details": {
+            "from": "WALKING",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.6333333333333333,
+          "event_id": "0b26d2b6-56f1-4412-8f36-4124b7206b13",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.8333333333333335,
+          "event_id": "97f93b55-a9be-4d20-83fe-5f76fde5917b",
+          "details": {
+            "from": "WALKING",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.9,
+          "event_id": "e4488bb9-3c93-43d0-a05f-a223548cfb69",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.466666666666667,
+          "event_id": "0d891ddf-68de-435e-aed0-f2b6b7dac851",
+          "details": {
+            "from": "WALKING",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.533333333333333,
+          "event_id": "eddc15a2-0b38-4e57-800a-91dfb001d328",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.6333333333333333,
+          "event_id": "7d8b700d-0107-47cf-bc39-c3a97b2f66d4",
+          "details": {
+            "from": "WALKING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.966666666666667,
+          "event_id": "400fab2e-a613-4708-bf66-8297d825f36c",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 4.166666666666667,
+          "event_id": "acd0e915-a30d-4c12-b067-f0d61a69c88f",
+          "details": {
+            "from": "STANDING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "SUSPECTED_FALL",
+          "timestamp": 4.666666666666667,
+          "event_id": "feebdfa2-597a-48fb-9ef0-f304ff2ce83d",
+          "details": {
+            "pose_coverage": "ONE_LEG"
+          }
+        },
+        {
+          "kind": "RECOVERED",
+          "timestamp": 4.933333333333334,
+          "event_id": "feebdfa2-597a-48fb-9ef0-f304ff2ce83d",
+          "details": {
+            "reason": "upright_after_candidate",
+            "pose_coverage": "ONE_LEG"
+          }
+        }
+      ]
+    },
+    {
+      "video_id": "adl-09",
+      "label": "NON_FALL",
+      "split": "calibration",
+      "detected": false,
+      "verified_detected": false,
+      "frame_count": 150,
+      "reliable_pose_frames": 121,
+      "missing_landmark_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        35
+      ],
+      "pose_coverage_counts": {
+        "NONE": 29,
+        "FULL": 68,
+        "ONE_LEG": 53
+      },
+      "detection_latency_s": null,
+      "events": [
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.4333333333333333,
+          "event_id": "858c2811-3291-4176-a7c8-9ade8566024f",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.4,
+          "event_id": "34f33862-b1c1-45fb-9c7e-2ac241584d22",
+          "details": {
+            "from": "STANDING",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.1666666666666665,
+          "event_id": "9de91378-7165-42cb-a399-83861022fd0e",
+          "details": {
+            "from": "WALKING",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.2,
+          "event_id": "f1107c98-f8af-4743-af9c-969bc53c5690",
+          "details": {
+            "from": "STANDING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 4.2,
+          "event_id": "3e00e714-6454-4e60-a933-eb05c08bd578",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "SITTING"
+          }
+        }
+      ]
+    },
+    {
+      "video_id": "fall-10",
+      "label": "FALL",
+      "split": "calibration",
+      "detected": false,
+      "verified_detected": false,
+      "frame_count": 130,
+      "reliable_pose_frames": 73,
+      "missing_landmark_frames": [
+        46,
+        48,
+        68,
+        71,
+        72,
+        73,
+        74,
+        75,
+        79,
+        80,
+        81,
+        83,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129
+      ],
+      "pose_coverage_counts": {
+        "FULL": 35,
+        "ONE_LEG": 31,
+        "NONE": 57,
+        "CORE_ONLY": 7
+      },
+      "detection_latency_s": null,
+      "events": [
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 0.26666666666666666,
+          "event_id": "8036a5c5-0bbb-4797-953d-1ed4c291c80d",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "SITTING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 1.3333333333333333,
+          "event_id": "3c7e2ada-2cb6-4601-93f9-a0e21b6710a6",
+          "details": {
+            "from": "SITTING",
+            "to": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "video_id": "adl-10",
+      "label": "NON_FALL",
+      "split": "calibration",
+      "detected": false,
+      "verified_detected": false,
+      "frame_count": 300,
+      "reliable_pose_frames": 219,
+      "missing_landmark_frames": [
+        1,
+        2,
+        7,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        54,
+        66,
+        70,
+        79,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        176,
+        177,
+        180,
+        204,
+        205,
+        206,
+        209,
+        210,
+        222,
+        223,
+        261,
+        262,
+        264,
+        265,
+        266,
+        267,
+        268,
+        276,
+        281,
+        282
+      ],
+      "pose_coverage_counts": {
+        "NONE": 81,
+        "CORE_ONLY": 80,
+        "ONE_LEG": 48,
+        "FULL": 91
+      },
+      "detection_latency_s": null,
+      "events": [
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 2.9,
+          "event_id": "9b99d3b9-a900-4a5e-9dc9-36a4b5e98123",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "STANDING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.433333333333333,
+          "event_id": "258f4e22-4998-48bc-9e30-32f784e30a70",
+          "details": {
+            "from": "STANDING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 3.933333333333333,
+          "event_id": "40e398ba-52d5-4c41-a4d7-a92469375ac4",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 4.033333333333333,
+          "event_id": "a34980ea-9605-4005-a77a-29fc05316de2",
+          "details": {
+            "from": "WALKING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 4.366666666666666,
+          "event_id": "20f732ba-e821-461c-af31-d37456d374de",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "WALKING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 4.433333333333334,
+          "event_id": "46ec1aab-8f78-452b-b7c9-978ebee3a05f",
+          "details": {
+            "from": "WALKING",
+            "to": "UNKNOWN"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 6.533333333333333,
+          "event_id": "ef52e637-c42a-45a1-bfb8-85a72fa211a0",
+          "details": {
+            "from": "UNKNOWN",
+            "to": "SITTING"
+          }
+        },
+        {
+          "kind": "POSTURE_CHANGE",
+          "timestamp": 6.666666666666667,
+          "event_id": "15da3281-a7c9-4790-a32e-2600e4b02b7d",
+          "details": {
+            "from": "SITTING",
+            "to": "UNKNOWN"
+          }
+        }
+      ]
+    }
+  ]
+}

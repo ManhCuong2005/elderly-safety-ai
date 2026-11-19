@@ -1,0 +1,18 @@
+{
+  "webcam_test_source": "browser synthetic camera: flow test only, never ground truth for motion",
+  "cloud_requests": 0,
+  "frames": 22,
+  "postures": [
+    "UNKNOWN",
+    "STANDING"
+  ],
+  "skeleton_frames": 13,
+  "reset_flow": "PASS",
+  "seek_reset": "PASS",
+  "video_test": "PASS",
+  "camera_open_stop": "PASS_SYNTHETIC_CAMERA_FLOW",
+  "responsive": "PASS_1440_AND_390",
+  "backend_offline_state": "PASS",
+  "console_errors": [],
+  "status": "PASS"
+}

@@ -1,0 +1,1064 @@
+[
+  {
+    "video_id": "fall-01",
+    "file_name": "fall-01-cam0-rgb",
+    "input_layout": "rgb",
+    "verified": true
+  },
+  {
+    "video_id": "adl-01",
+    "file_name": "adl-01-cam0-rgb",
+    "input_layout": "rgb",
+    "verified": true
+  },
+  {
+    "video_id": "fall-02",
+    "file_name": "fall-02-cam0-rgb",
+    "input_layout": "rgb",
+    "verified": true
+  },
+  {
+    "video_id": "adl-02",
+    "file_name": "adl-02-cam0-rgb",
+    "input_layout": "rgb",
+    "verified": true
+  },
+  {
+    "video_id": "fall-03",
+    "file_name": "fall-03-cam0-rgb",
+    "input_layout": "rgb",
+    "verified": true
+  },
+  {
+    "video_id": "adl-03",
+    "file_name": "adl-03-cam0-rgb",
+    "input_layout": "rgb",
+    "verified": true
+  },
+  {
+    "video_id": "fall-04",
+    "file_name": "fall-04-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0037109374534338713,
+      0.006575520616024733,
+      0.006888020783662796
+    ],
+    "right_chroma": [
+      21.384126663208008,
+      22.846900939941406,
+      23.703632354736328
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-04",
+    "file_name": "adl-04-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0052994792349636555,
+      0.006874999962747097,
+      0.008020833134651184
+    ],
+    "right_chroma": [
+      42.951080322265625,
+      41.67311096191406,
+      41.8476448059082
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-05",
+    "file_name": "fall-05-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.008333333767950535,
+      0.009960937313735485,
+      0.007083333563059568
+    ],
+    "right_chroma": [
+      19.139036178588867,
+      21.0834903717041,
+      24.423398971557617
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-05",
+    "file_name": "adl-05-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0044921874068677425,
+      0.004114583134651184,
+      0.009270832873880863
+    ],
+    "right_chroma": [
+      42.97841262817383,
+      41.0777587890625,
+      41.10140609741211
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-06",
+    "file_name": "fall-06-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.00501302070915699,
+      0.008281249552965164,
+      0.00807291641831398
+    ],
+    "right_chroma": [
+      20.487512588500977,
+      20.783931732177734,
+      23.506444931030273
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-06",
+    "file_name": "adl-06-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.008984374813735485,
+      0.007864583283662796,
+      0.010820312425494194
+    ],
+    "right_chroma": [
+      44.01739501953125,
+      41.66361999511719,
+      41.77130126953125
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-07",
+    "file_name": "fall-07-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.002005208283662796,
+      0.0025130207650363445,
+      0.003828125074505806
+    ],
+    "right_chroma": [
+      26.252044677734375,
+      21.382747650146484,
+      24.35057258605957
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-07",
+    "file_name": "adl-07-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.005937499925494194,
+      0.007565103936940432,
+      0.010507812723517418
+    ],
+    "right_chroma": [
+      39.943111419677734,
+      41.5302619934082,
+      40.99421691894531
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-08",
+    "file_name": "fall-08-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0027604165952652693,
+      0.0018359374953433871,
+      0.0016276041278615594
+    ],
+    "right_chroma": [
+      22.172161102294922,
+      22.406978607177734,
+      23.218385696411133
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-08",
+    "file_name": "adl-08-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0072526042349636555,
+      0.006002604030072689,
+      0.016067707911133766
+    ],
+    "right_chroma": [
+      40.04574203491211,
+      42.1525764465332,
+      41.4429931640625
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-09",
+    "file_name": "fall-09-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0022656249348074198,
+      0.0044010416604578495,
+      0.0054166666232049465
+    ],
+    "right_chroma": [
+      20.165742874145508,
+      22.381484985351562,
+      25.05596351623535
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-09",
+    "file_name": "adl-09-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0072656250558793545,
+      0.009583333507180214,
+      0.0071744793094694614
+    ],
+    "right_chroma": [
+      41.38322830200195,
+      40.14106750488281,
+      39.815521240234375
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-10",
+    "file_name": "fall-10-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0011979166883975267,
+      0.00403645820915699,
+      0.005742187611758709
+    ],
+    "right_chroma": [
+      22.98729133605957,
+      26.560441970825195,
+      25.144636154174805
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-10",
+    "file_name": "adl-10-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.004101562313735485,
+      0.12929686903953552,
+      0.06268229335546494
+    ],
+    "right_chroma": [
+      43.43214797973633,
+      40.653541564941406,
+      44.86868667602539
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-11",
+    "file_name": "fall-11-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.006002604030072689,
+      0.006614583544433117,
+      0.00768229179084301
+    ],
+    "right_chroma": [
+      22.489778518676758,
+      25.873138427734375,
+      23.240949630737305
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-11",
+    "file_name": "adl-11-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.003020833246409893,
+      0.002994791604578495,
+      0.0048828125
+    ],
+    "right_chroma": [
+      44.07734298706055,
+      41.07960891723633,
+      44.921016693115234
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-12",
+    "file_name": "fall-12-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0026041667442768812,
+      0.0044791665859520435,
+      0.0021614583674818277
+    ],
+    "right_chroma": [
+      22.80338478088379,
+      23.428255081176758,
+      23.235130310058594
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-12",
+    "file_name": "adl-12-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.008684895932674408,
+      0.011263021267950535,
+      0.01212239544838667
+    ],
+    "right_chroma": [
+      26.745365142822266,
+      25.065834045410156,
+      25.806575775146484
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-13",
+    "file_name": "fall-13-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0018749999580904841,
+      0.0045182290486991405,
+      0.0036979166325181723
+    ],
+    "right_chroma": [
+      18.383853912353516,
+      19.067930221557617,
+      19.245573043823242
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-13",
+    "file_name": "adl-13-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.008489583618938923,
+      0.0073307291604578495,
+      0.012773437425494194
+    ],
+    "right_chroma": [
+      27.4364070892334,
+      25.41029930114746,
+      25.685585021972656
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-14",
+    "file_name": "fall-14-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0036458333488553762,
+      0.008776041679084301,
+      0.0062500000931322575
+    ],
+    "right_chroma": [
+      19.55065155029297,
+      19.5756893157959,
+      20.172746658325195
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-14",
+    "file_name": "adl-14-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.00950520858168602,
+      0.011653645895421505,
+      0.011263021267950535
+    ],
+    "right_chroma": [
+      27.446901321411133,
+      25.81561279296875,
+      25.711849212646484
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-15",
+    "file_name": "fall-15-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0037369790952652693,
+      0.007499999832361937,
+      0.006093749776482582
+    ],
+    "right_chroma": [
+      18.73406219482422,
+      19.26398468017578,
+      19.193880081176758
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-15",
+    "file_name": "adl-15-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.011236979626119137,
+      0.017630208283662796,
+      0.016028646379709244
+    ],
+    "right_chroma": [
+      27.606040954589844,
+      25.72266960144043,
+      26.2032413482666
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-16",
+    "file_name": "fall-16-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.002864583395421505,
+      0.006809895858168602,
+      0.008372396230697632
+    ],
+    "right_chroma": [
+      19.208477020263672,
+      19.159751892089844,
+      19.86311149597168
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-16",
+    "file_name": "adl-16-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0072265625931322575,
+      0.009296875447034836,
+      0.010455729439854622
+    ],
+    "right_chroma": [
+      27.2099609375,
+      25.434818267822266,
+      25.305286407470703
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-17",
+    "file_name": "fall-17-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.005963541567325592,
+      0.008710937574505806,
+      0.008854166604578495
+    ],
+    "right_chroma": [
+      18.393360137939453,
+      18.90627670288086,
+      18.9350528717041
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-17",
+    "file_name": "adl-17-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.008502604439854622,
+      0.008710937574505806,
+      0.012083332985639572
+    ],
+    "right_chroma": [
+      27.461719512939453,
+      26.084218978881836,
+      25.62906265258789
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-18",
+    "file_name": "fall-18-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0044921874068677425,
+      0.0062630209140479565,
+      0.00937500037252903
+    ],
+    "right_chroma": [
+      19.217552185058594,
+      19.00279998779297,
+      19.624935150146484
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-18",
+    "file_name": "adl-18-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.007877604104578495,
+      0.007604166865348816,
+      0.010781249962747097
+    ],
+    "right_chroma": [
+      27.24054718017578,
+      25.74806022644043,
+      27.012487411499023
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-19",
+    "file_name": "fall-19-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0021614583674818277,
+      0.009622395969927311,
+      0.009648437611758709
+    ],
+    "right_chroma": [
+      18.500442504882812,
+      18.987720489501953,
+      19.097604751586914
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-19",
+    "file_name": "adl-19-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0073828124441206455,
+      0.010403646156191826,
+      0.009309896267950535
+    ],
+    "right_chroma": [
+      27.506914138793945,
+      25.841081619262695,
+      26.89681053161621
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-20",
+    "file_name": "fall-20-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0034244791604578495,
+      0.0072265625931322575,
+      0.004648437723517418
+    ],
+    "right_chroma": [
+      18.898698806762695,
+      19.383840560913086,
+      19.430936813354492
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-20",
+    "file_name": "adl-20-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.007773437537252903,
+      0.015247396193444729,
+      0.023098958656191826
+    ],
+    "right_chroma": [
+      27.951509475708008,
+      26.061471939086914,
+      27.100547790527344
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-21",
+    "file_name": "fall-21-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.004101562313735485,
+      0.006692708469927311,
+      0.008619791828095913
+    ],
+    "right_chroma": [
+      18.762357711791992,
+      19.016887664794922,
+      18.76885414123535
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-21",
+    "file_name": "adl-21-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.010833333246409893,
+      0.011575520969927311,
+      0.012617187574505806
+    ],
+    "right_chroma": [
+      27.29509162902832,
+      25.76169204711914,
+      26.90885353088379
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-22",
+    "file_name": "fall-22-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.003802083432674408,
+      0.0033984375186264515,
+      0.005781250074505806
+    ],
+    "right_chroma": [
+      18.60631561279297,
+      19.093412399291992,
+      19.412656784057617
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-22",
+    "file_name": "adl-22-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.004921874962747097,
+      0.008958333171904087,
+      0.014960937201976776
+    ],
+    "right_chroma": [
+      27.91242218017578,
+      25.726015090942383,
+      27.442331314086914
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-23",
+    "file_name": "fall-23-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.003919270820915699,
+      0.006901041604578495,
+      0.004023437388241291
+    ],
+    "right_chroma": [
+      18.826953887939453,
+      19.19449234008789,
+      19.19024658203125
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-23",
+    "file_name": "adl-23-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.006523437332361937,
+      0.012161457911133766,
+      0.012903645634651184
+    ],
+    "right_chroma": [
+      27.367721557617188,
+      27.026901245117188,
+      27.684675216674805
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-24",
+    "file_name": "fall-24-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0037109374534338713,
+      0.007890624925494194,
+      0.008346354588866234
+    ],
+    "right_chroma": [
+      18.645221710205078,
+      18.84210968017578,
+      19.315677642822266
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-24",
+    "file_name": "adl-24-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.003541666781529784,
+      0.0036197917070239782,
+      0.0013671874767169356
+    ],
+    "right_chroma": [
+      17.809154510498047,
+      17.66598892211914,
+      18.064023971557617
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-25",
+    "file_name": "fall-25-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0013151041930541396,
+      0.005143229383975267,
+      0.005651041865348816
+    ],
+    "right_chroma": [
+      18.192134857177734,
+      19.178255081176758,
+      19.562850952148438
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-25",
+    "file_name": "adl-25-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0008333333535119891,
+      0.0021744791883975267,
+      0.0020963542629033327
+    ],
+    "right_chroma": [
+      18.053176879882812,
+      17.785547256469727,
+      17.75650978088379
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-26",
+    "file_name": "fall-26-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.000963541679084301,
+      0.0032421874348074198,
+      0.0037109374534338713
+    ],
+    "right_chroma": [
+      19.175039291381836,
+      19.383373260498047,
+      20.143203735351562
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-26",
+    "file_name": "adl-26-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.002812500111758709,
+      0.0022656249348074198,
+      0.0029296875
+    ],
+    "right_chroma": [
+      18.8153133392334,
+      18.33561134338379,
+      18.4506893157959
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-27",
+    "file_name": "fall-27-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.005169271025806665,
+      0.008138020522892475,
+      0.008580729365348816
+    ],
+    "right_chroma": [
+      18.721431732177734,
+      19.639986038208008,
+      19.62191390991211
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-27",
+    "file_name": "adl-27-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0027864582370966673,
+      0.002890625037252903,
+      0.006953124888241291
+    ],
+    "right_chroma": [
+      18.107864379882812,
+      19.559778213500977,
+      18.956523895263672
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-28",
+    "file_name": "fall-28-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0022395832929760218,
+      0.004947916604578495,
+      0.007695312611758709
+    ],
+    "right_chroma": [
+      19.661588668823242,
+      19.4246883392334,
+      20.73941421508789
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-28",
+    "file_name": "adl-28-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.002864583395421505,
+      0.011250000447034836,
+      0.0024609374813735485
+    ],
+    "right_chroma": [
+      18.491561889648438,
+      17.483112335205078,
+      17.583593368530273
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-29",
+    "file_name": "fall-29-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.001901041716337204,
+      0.0034635416232049465,
+      0.00696614570915699
+    ],
+    "right_chroma": [
+      18.774349212646484,
+      19.895729064941406,
+      19.12630271911621
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-29",
+    "file_name": "adl-29-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0033072917722165585,
+      0.0036197917070239782,
+      0.002031249925494194
+    ],
+    "right_chroma": [
+      18.309856414794922,
+      17.696731567382812,
+      17.87112045288086
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "fall-30",
+    "file_name": "fall-30-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0016276041278615594,
+      0.0054296874441206455,
+      0.004583333153277636
+    ],
+    "right_chroma": [
+      20.01337242126465,
+      19.035390853881836,
+      20.71677017211914
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  },
+  {
+    "video_id": "adl-30",
+    "file_name": "adl-30-cam0.mp4",
+    "input_layout": "ur-rgbd",
+    "verified": true,
+    "container_width": 640,
+    "container_height": 240,
+    "left_chroma": [
+      0.0012630207929760218,
+      0.0073567708022892475,
+      0.0053515625186264515
+    ],
+    "right_chroma": [
+      19.373645782470703,
+      17.644895553588867,
+      18.371706008911133
+    ],
+    "verification": "three real frames: grayscale left and color right plus composite aspect"
+  }
+]
