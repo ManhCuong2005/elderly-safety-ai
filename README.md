@@ -1,6 +1,6 @@
 # Phát hiện té ngã qua camera
 
-Đồ án theo dõi một người bằng camera của thiết bị đang mở website. Laptop chạy MoveNet SinglePose Lightning v4 và bộ phân loại theo cửa sổ thời gian. Ảnh camera dùng trong RAM của phiên theo dõi. Dữ liệu, trọng số và website có thể dùng offline sau khi chuẩn bị.
+Đồ án theo dõi một người bằng camera của thiết bị đang mở website. Laptop chạy MoveNet SinglePose Lightning v4 và bộ phân loại theo cửa sổ thời gian. Ảnh camera dùng trong RAM của phiên theo dõi. Đăng nhập và lưu lịch sử dùng Supabase, còn suy luận chạy trên máy.
 
 ## Mở demo trên laptop
 
@@ -10,7 +10,7 @@ Tại PowerShell trong thư mục project, chạy:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Web
 ```
 
-Mở [website tại 127.0.0.1](http://127.0.0.1:8765/). Chọn **Camera → Bắt đầu theo dõi** và cấp quyền camera. Đặt laptop cố định, đưa một người vào khung sao cho thấy vai, hông và chân. Hai giây đầu thấy rõ tư thế dùng để làm đầy cửa sổ. Nút **Dừng** giải phóng camera và đóng phiên. Khi rời trang hoặc máy xử lý mất kết nối, phiên kết thúc và buffer được giải phóng.
+Mở [website tại 127.0.0.1](http://127.0.0.1:8765/) và đăng nhập. Chọn **Camera → Bắt đầu theo dõi** và cấp quyền camera. Đặt laptop cố định, đưa một người vào khung sao cho thấy vai, hông và chân. Hai giây đầu thấy rõ tư thế dùng để làm đầy cửa sổ. Nút **Dừng** giải phóng camera và đóng phiên. Khi rời trang hoặc máy xử lý mất kết nối, phiên kết thúc và buffer được giải phóng.
 
 Chọn **Phát lại**, chọn clip có nhãn **Test** rồi bấm Play trong khung. Danh sách sự kiện cập nhật theo thời gian video. Chọn **Rà nhãn** để xem căn cứ và hai mốc thật độc lập với cảnh báo. Hồ sơ từ model đến split, video gốc và mốc nằm trong [model_videos.csv](data/manifests/model_videos.csv). Xem số đo tại [Đánh giá model](reports/model_evaluation.md) và [Kiểm kê dữ liệu](reports/dataset_summary.md).
 
@@ -19,6 +19,28 @@ Clip demo của pilot hiện tại là **Test · Trip_n_Fall/Person27**. Khi ph�
 Để thử một video trên máy, mở **Thử video**, chọn MP4 hoặc WebM, rồi bấm **Phân tích video**. Giới hạn mỗi tệp là 64 MiB, 90 giây, 4K và khoảng 60 khung hình/giây. Kết quả cho biết model có cảnh báo hay thiếu dữ liệu tư thế và cho phép bấm mốc để tua. Tệp chỉ được gửi tới máy xử lý localhost. Ứng dụng không đưa tệp vào dữ liệu huấn luyện. Nếu tệp giống byte với một video train, giao diện sẽ báo. Bản cắt hoặc mã hóa lại có thể có checksum khác.
 
 **Đứng** và **Ngồi** là nhãn phụ từ một Logistic Regression riêng, chạy từ cùng các điểm MoveNet. Dòng tư thế chỉ xuất hiện khi máy đang theo dõi và có đủ độ tin cậy. Khi có **Nghi té ngã**, giao diện ưu tiên cảnh báo. Mô hình tư thế hiện có hai lớp, vì dữ liệu đã rà cho bước này xác nhận Standing và Sitting. Khi cần huấn luyện lại riêng model tư thế, chạy `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Posture`. [Kết quả tư thế](reports/posture.json)
+
+## Thiết lập tài khoản và cảnh báo
+
+Trong Supabase, bật **Data API**, rồi chạy toàn bộ [schema.sql](supabase/schema.sql) trong **SQL Editor**. Trong **Authentication → URL Configuration**, đặt **Site URL** thành `http://127.0.0.1:8765` để liên kết xác nhận email quay về web local. Khi triển khai, thay bằng URL HTTPS của web.
+
+Lưu cấu hình phía máy chủ vào `.secrets/supabase.json`.
+
+```json
+{
+  "project_url": "https://xxxxx.supabase.co",
+  "publishable_key": "sb_publishable_...",
+  "secret_key": "sb_secret_..."
+}
+```
+
+Lưu `{"bot_token": "..."}` vào `.secrets/telegram.json` và khởi động lại web. Giữ `.secrets` ngoài Git. Khi triển khai có thể dùng `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `TELEGRAM_BOT_TOKEN` và một `CAMERAAI_SESSION_SECRET` ngẫu nhiên ở phía máy chủ. Với cấu hình local mặc định, khởi động lại web sẽ yêu cầu đăng nhập lại.
+
+Đăng ký bằng email, xác nhận qua email nếu Supabase yêu cầu, rồi đăng nhập. Trong **Tôi → Kết nối Telegram**, tạo liên kết, mở bot và bấm **Start**. Quay lại CameraAI, bấm **Kiểm tra kết nối** rồi **Xác nhận liên kết** khi thấy đúng tài khoản. Một chat Telegram chỉ liên kết với một tài khoản CameraAI. Dùng một máy chủ CameraAI cho mỗi bot và tắt webhook Telegram nếu đã cấu hình webhook trước đó.
+
+Nếu bật xác nhận email cho người dùng bên ngoài nhóm Supabase, cấu hình [SMTP riêng](https://supabase.com/docs/guides/auth/auth-smtp) để gửi email đăng ký.
+
+Camera trực tiếp ghi sự kiện **Nghi té ngã** cho tài khoản đã mở phiên. Bot chỉ gửi tới chat đã liên kết với tài khoản đó. Trong **Tôi** có lịch sử 50 cảnh báo gần nhất, nút gửi tin nhắn thử và nút ngắt kết nối. Cảnh báo từ video tải lên hoặc phát lại hiển thị trên web. [Telegram Bot API](https://core.telegram.org/bots/api#sendmessage)
 
 ## Chuẩn bị lại từng bước
 

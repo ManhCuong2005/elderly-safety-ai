@@ -1,12 +1,13 @@
 param(
     [Parameter(Mandatory=$true, Position=0)]
-    [ValidateSet('Model','Catalog','Download','Inventory','Sheets','Split','Extract','Train','Evaluate','Posture','Web','Check')]
+    [ValidateSet('Model','Catalog','Download','Inventory','Sheets','Split','Extract','Train','Evaluate','Posture','Web','Check','TelegramPair','TelegramTest')]
     [string]$Step,
     [switch]$All,
     [switch]$IncludeReview,
     [switch]$Rebuild,
     [switch]$FreshTest,
     [string]$Video,
+    [string]$LinkCode,
     [string]$HostAddress = '127.0.0.1',
     [int]$Port = 8765,
     [string]$Cert,
@@ -28,6 +29,8 @@ try {
         'Train'     { '-m'; 'src.train'; 'train' }
         'Evaluate'  { '-m'; 'src.train'; 'evaluate' }
         'Posture'   { '-m'; 'src.posture' }
+        'TelegramPair' { '-m'; 'src.telegram'; 'pair'; if ($LinkCode) {'--code'; $LinkCode} }
+        'TelegramTest' { '-m'; 'src.telegram'; 'test' }
         'Web'       { '-m'; 'src.server'; '--host'; $HostAddress; '--port'; "$Port"; if ($Cert) {'--cert'; $Cert}; if ($Key) {'--key'; $Key} }
         'Check'     { '-m'; 'unittest'; 'discover'; '-s'; 'tests'; '-v' }
     }

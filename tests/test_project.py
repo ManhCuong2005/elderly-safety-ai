@@ -1,7 +1,7 @@
 import io
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 
@@ -13,6 +13,7 @@ from src.posture import posture_features
 from src.review import annotation, inspect
 from src.server import create_app
 from src.storage import safe, sha
+from src.telegram import TelegramError, api as telegram_api, pair
 from src.train import assign_splits, assert_split, load_model, load_split, replay, score_events, window_label
 
 
@@ -146,6 +147,28 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual({person for person, part in parts.items() if part == "test"}, {"f"})
 
 
+class TelegramTests(unittest.TestCase):
+    def test_pair_requires_matching_private_start(self):
+        config = {"bot_token": "123:unused"}
+        msg = {"text": "/start camera_test", "chat": {"type": "group", "id": -1}}
+        with patch("src.telegram.api", return_value=[{"message": msg}]), patch("src.telegram.write_json") as save:
+            with self.assertRaises(TelegramError):
+                pair(config, "camera_test")
+            save.assert_not_called()
+        private = {"type": "private", "id": 123}
+        with (patch("src.telegram.api", side_effect=[[{"message": {**msg, "chat": private}}], private]),
+              patch("src.telegram.write_json") as save):
+            pair(config, "camera_test")
+            save.assert_called_once_with(safe(".secrets/telegram.json"), {**config, "chat_id": 123})
+
+    def test_hides_transport_error_details(self):
+        with patch("src.telegram.http.client.HTTPSConnection") as connection:
+            connection.return_value.request.side_effect = OSError("url contained 123:unused")
+            with self.assertRaises(TelegramError) as caught:
+                telegram_api("123:unused", "sendMessage", {})
+            self.assertNotIn("123:unused", str(caught.exception))
+
+
 class RealVideoTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -158,8 +181,16 @@ class RealVideoTests(unittest.TestCase):
         cls.video = next(v for v in clips if v["split"] == "test" and v["label"] == "Fall")
         cls.path = safe(cls.video["relative_path"])
         cls.cfg = cls.info["config"]
-        cls.app = create_app(start_sweeper=False)
-        cls.client = cls.app.test_client()
+        cls.alerts = Mock()
+        with (patch("src.server.AccountAlerts", return_value=cls.alerts),
+              patch("src.server.load_supabase"), patch("src.server.load_telegram", return_value=None)):
+            cls.app = create_app(start_sweeper=False)
+
+    def setUp(self):
+        self.alerts.reset_mock()
+        self.client = self.app.test_client()
+        with self.client.session_transaction() as session:
+            session.update(login_id="test-login", user={"id": "test-user"})
 
     def test_video_range_and_local_only(self):
         response = self.client.get("/api/video", query_string={"id": self.video["video_id"]},
@@ -191,6 +222,7 @@ class RealVideoTests(unittest.TestCase):
         trace = response.json["trace"]
         self.assertEqual([{k: v for k, v in frame.items() if k != "activity"} for frame in trace], expected)
         self.assertTrue(all("activity" not in frame for frame in trace if frame["state"] == FALL_WARNING))
+        self.alerts.enqueue.assert_not_called()
         self.assertEqual((self.path.stat().st_size, sha(self.path)), (size, self.video["sha256"]))
 
     def test_upload_preserves_fall_events_and_rejects_unsupported_input(self):
@@ -204,6 +236,7 @@ class RealVideoTests(unittest.TestCase):
         self.assertFalse(detected["matches_train"])
         self.assertEqual(detected["trace"], archived["trace"])
         self.assertEqual(detected["alarms"], [f["t"] for f in archived["trace"] if f["alarm"]])
+        self.alerts.enqueue.assert_not_called()
         self.assertEqual(self.client.post(route, data=b"not a video").status_code, 415)
         self.assertEqual(self.client.post(route, data=b"\x00\x00\x00\x18ftyp").status_code, 400)
         self.assertEqual(self.client.post(route, environ_overrides={"REMOTE_ADDR": "192.168.1.2"}).status_code, 403)
@@ -226,9 +259,26 @@ class RealVideoTests(unittest.TestCase):
         route = f"/api/frame/{token}"
         sent = self.client.post(route, data=jpeg, content_type="image/jpeg", headers={"X-Frame-Time": "0"})
         self.assertEqual(sent.status_code, 200)
+        self.alerts.enqueue.assert_not_called()
+        other = self.app.test_client()
+        with other.session_transaction() as session:
+            session.update(login_id="different-login", user={"id": "different-user"})
+        self.assertEqual(other.delete(f"/api/session/{token}").status_code, 204)
+        self.assertEqual(other.post(route, data=jpeg, content_type="image/jpeg",
+                                    headers={"X-Frame-Time": "0.1"}).status_code, 410)
+        with patch("src.server.web_result", side_effect=[
+            {"state": FALL_WARNING, "alarm": True}, {"state": FALL_WARNING, "alarm": False},
+        ]):
+            for timestamp in ("0.1", "0.2"):
+                result = self.client.post(route, data=jpeg, content_type="image/jpeg",
+                                          headers={"X-Frame-Time": timestamp})
+                self.assertEqual(result.status_code, 200)
+        self.alerts.enqueue.assert_called_once_with("test-user")
         self.assertEqual(self.client.delete(f"/api/session/{token}").status_code, 204)
         self.assertEqual(self.client.post(route, data=jpeg, content_type="image/jpeg",
-                                         headers={"X-Frame-Time": "0.1"}).status_code, 410)
-        self.assertEqual(first_session.engine.last, 0)
+                                         headers={"X-Frame-Time": "0.3"}).status_code, 410)
+        self.assertEqual(first_session.last_timestamp, 0.2)
         self.assertIsNone(second_session.engine.last)
-        self.assertEqual(self.client.delete(f"/api/session/{second}").status_code, 204)
+        self.assertEqual(self.client.post("/api/account/logout").status_code, 204)
+        self.assertIsNone(sessions.find(second))
+        self.assertEqual(self.client.post("/api/session").status_code, 401)

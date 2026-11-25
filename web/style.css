@@ -17,6 +17,24 @@ h1, h2, p, dl, dd { margin: 0; }
 h1 { font-size: clamp(1.85rem, 4vw, 3rem); line-height: 1.12; letter-spacing: -.045em; }
 h2 { font-size: 1.17rem; }
 header p { color: #395962; margin-top: .5rem; }
+.monitor-header { display: flex; justify-content: space-between; align-items: start; gap: .8rem; }
+#open-account { min-width: 3.5rem; }
+.account-card, #account-dialog { background: #fbffff; border: 1px solid var(--line); border-radius: .65rem; }
+.account-card { max-width: 30rem; margin: clamp(1rem, 8vh, 6rem) auto 0; padding: clamp(1rem, 4vw, 2rem); }
+.account-card input { width: 100%; }
+.account-card label { display: block; margin-top: .65rem; }
+.account-card .controls button { margin: 0; }
+#account-dialog { color: var(--ink); width: min(36rem, calc(100% - 2rem)); max-height: 90dvh; padding: clamp(1rem, 3vw, 1.5rem); }
+#account-dialog::backdrop { background: #14293280; }
+#account-dialog > header { margin: 0; align-items: center; }
+.account-section { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: 1rem; }
+.account-section h3 { margin: 0 0 .4rem; font-size: 1rem; }
+.profile-info { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .25rem 1rem; margin: .5rem 0 .9rem; }
+.profile-info dd { margin: 0; overflow-wrap: anywhere; }
+#telegram-open { color: var(--accent); font-weight: 600; padding: .4rem; }
+#telegram-candidate { margin-top: .5rem; }
+#history-events { margin-bottom: 0; }
+#history-events li + li { margin-top: .35rem; }
 .mode { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1.25rem; }
 .mode button { border-color: transparent; background: transparent; }
 .mode button[aria-pressed="true"] { background: #d2e8e4; border-color: #a4c8c0; color: #164d47; }

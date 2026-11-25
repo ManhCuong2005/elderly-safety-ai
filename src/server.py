@@ -9,10 +9,11 @@ import time
 from dataclasses import dataclass, field
 
 import av
-from flask import Flask, abort, jsonify, request, send_file
+from flask import Flask, abort, jsonify, request, send_file, session as account_session
 from PIL import Image, UnidentifiedImageError
 from werkzeug.exceptions import RequestEntityTooLarge
 
+from .accounts import AccountAlerts, load_supabase, load_telegram, register_account_routes
 from .dataset import RAW
 from .inference import Engine, TRACKING, web_result
 from .keypoints import get_keypoints
@@ -37,6 +38,7 @@ def reject_external_media(*args):
 class Session:
     engine: Engine
     pace: Cadence
+    owner: str
     last_seen: float = field(default_factory=time.monotonic)
     active: bool = True
     last_timestamp: float = -1
@@ -65,12 +67,18 @@ class Sessions:
         with self.lock:
             self.remove_locked(token)
 
-    def open(self, cfg, model, threshold):
+    def stop_owner(self, owner):
+        with self.lock:
+            for token, entry in list(self.items.items()):
+                if entry.owner == owner:
+                    self.remove_locked(token)
+
+    def open(self, cfg, model, threshold, owner):
         with self.lock:
             if len(self.items) >= MAX_SESSIONS:
                 return None
             token = secrets.token_urlsafe(24)
-            self.items[token] = Session(Engine(cfg, model, threshold), Cadence(1 / cfg["sample_hz"]))
+            self.items[token] = Session(Engine(cfg, model, threshold), Cadence(1 / cfg["sample_hz"]), owner)
             return token
 
     def find(self, token):
@@ -80,7 +88,8 @@ class Sessions:
 
 def local_client():
     try:
-        return ipaddress.ip_address(request.remote_addr).is_loopback
+        return (request.host.split(":", 1)[0] in {"localhost", "127.0.0.1"}
+                and ipaddress.ip_address(request.remote_addr).is_loopback)
     except (TypeError, ValueError):
         return False
 
@@ -123,6 +132,10 @@ def create_app(host="127.0.0.1", start_sweeper=True):
     pose_path = safe("models/" + MODEL["file"])
     pose_ready = pose_path.is_file() and sha(pose_path) == MODEL["sha256"]
     posture = load_posture()
+    db = load_supabase()
+    telegram = load_telegram()
+    alerts = AccountAlerts(db, telegram) if db and db.secret_key else None
+    register_account_routes(app, db, telegram, sessions.stop_owner)
     if start_sweeper:
         threading.Thread(target=sessions.reap, daemon=True).start()
     app.extensions["sessions"] = sessions
@@ -159,6 +172,9 @@ def create_app(host="127.0.0.1", start_sweeper=True):
             origin = request.headers.get("Origin")
             if origin and origin != request.host_url.rstrip("/"):
                 abort(403)
+        if (request.path.startswith("/api/") and request.endpoint not in {"account", "authenticate", "logout"}
+                and not account_session.get("login_id")):
+            return jsonify(error="Hãy đăng nhập để tiếp tục."), 401
 
     @app.after_request
     def headers(response):
@@ -184,7 +200,7 @@ def create_app(host="127.0.0.1", start_sweeper=True):
 
     @app.get("/assets/<name>")
     def asset(name):
-        mime = {"app.js": "text/javascript", "style.css": "text/css"}.get(name)
+        mime = {"app.js": "text/javascript", "account.js": "text/javascript", "style.css": "text/css"}.get(name)
         if mime is None:
             abort(404)
         return send_file(safe(f"web/{name}"), mimetype=mime)
@@ -280,20 +296,22 @@ def create_app(host="127.0.0.1", start_sweeper=True):
         if not info:
             return jsonify(error=load_error or "Chưa có bộ phân loại đã huấn luyện."), 503
         get_pose()
-        token = sessions.open(cfg, model, threshold)
+        token = sessions.open(cfg, model, threshold, account_session["login_id"])
         if token is None:
             return jsonify(error="Đã đầy phiên theo dõi. Thử lại sau."), 429
         return jsonify(token=token, sample_hz=cfg["sample_hz"])
 
     @app.delete("/api/session/<token>")
     def stop(token):
-        sessions.remove(token)
+        entry = sessions.find(token)
+        if entry and entry.owner == account_session["login_id"]:
+            sessions.remove(token)
         return "", 204
 
     @app.post("/api/frame/<token>")
     def frame(token):
         session = sessions.find(token)
-        if session is None:
+        if session is None or session.owner != account_session["login_id"]:
             return jsonify(error="Phiên đã kết thúc. Bấm bắt đầu lại."), 410
         if not session.lock.acquire(blocking=False):
             return "", 204
@@ -326,7 +344,10 @@ def create_app(host="127.0.0.1", start_sweeper=True):
             obs = get_pose().observe(timestamp, image)
             if not session.active:
                 return "", 204
-            return jsonify(tracked_frame(session.engine, obs))
+            result = tracked_frame(session.engine, obs)
+            if result["alarm"] and alerts is not None:
+                alerts.enqueue(account_session["user"]["id"])
+            return jsonify(result)
         finally:
             session.lock.release()
 

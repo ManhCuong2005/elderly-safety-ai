@@ -27,6 +27,9 @@ async function api(url, options) {
   const response = await fetch(url, options);
   if (response.status === 204) return null;
   const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : {};
+  if (response.status === 401 && !['/api/account/login', '/api/account/register'].includes(url)) {
+    window.dispatchEvent(new Event('account-expired'));
+  }
   if (!response.ok) throw new Error(data.error || `Máy xử lý trả về mã ${response.status}.`);
   return data;
 }
@@ -153,7 +156,6 @@ function stopCamera(text = 'Camera đang tắt', error = false) {
   }
   updateControls();
 }
-
 function cameraError(error) {
   if (error.name === 'NotAllowedError' || error.name === 'SecurityError') return 'Hãy cấp quyền camera trong trình duyệt rồi thử lại.';
   if (error.name === 'NotFoundError') return 'Thiết bị chưa có camera khả dụng.';
@@ -579,5 +581,3 @@ async function init() {
   }
   updateControls();
 }
-
-init();

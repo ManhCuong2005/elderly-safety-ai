@@ -6,12 +6,40 @@
   <title>Theo dõi té ngã</title>
   <link rel="stylesheet" href="/assets/style.css">
   <script src="/assets/app.js" defer></script>
+  <script src="/assets/account.js" defer></script>
 </head>
 <body>
-  <main>
-    <header>
-      <h1>Theo dõi té ngã</h1>
-      <p id="backend" role="status">Đang kết nối với máy xử lý…</p>
+  <main id="account-screen">
+    <div class="account-card">
+      <header>
+        <h1>CameraAI</h1>
+        <p>Theo dõi té ngã qua camera</p>
+      </header>
+      <form id="account-form" hidden>
+        <h2 id="account-heading">Đăng nhập</h2>
+        <div id="account-name-field" hidden>
+          <label for="account-name">Tên hiển thị</label>
+          <input id="account-name" autocomplete="name" maxlength="80">
+        </div>
+        <label for="account-email">Email</label>
+        <input id="account-email" type="email" autocomplete="email" maxlength="254" required>
+        <label for="account-password">Mật khẩu</label>
+        <input id="account-password" type="password" autocomplete="current-password" maxlength="256" required>
+        <div class="controls">
+          <button class="primary" id="account-submit" type="submit">Đăng nhập</button>
+          <button id="account-switch" type="button">Tạo tài khoản</button>
+        </div>
+      </form>
+      <p id="account-message" class="message" role="status">Đang kiểm tra phiên đăng nhập…</p>
+    </div>
+  </main>
+  <main id="monitor" hidden>
+    <header class="monitor-header">
+      <div>
+        <h1>Theo dõi té ngã</h1>
+        <p id="backend" role="status">Đang kết nối với máy xử lý…</p>
+      </div>
+      <button id="open-account" type="button" aria-haspopup="dialog">Tôi</button>
     </header>
     <nav aria-label="Chế độ" class="mode">
       <button data-mode="camera" aria-pressed="true">Camera</button>
@@ -97,6 +125,43 @@
       </aside>
     </div>
   </main>
+  <dialog id="account-dialog" aria-labelledby="profile-heading">
+    <header class="monitor-header">
+      <h2 id="profile-heading">Tôi</h2>
+      <form method="dialog"><button type="submit">Đóng</button></form>
+    </header>
+    <section class="account-section" aria-labelledby="profile-info">
+      <h3 id="profile-info">Thông tin cơ bản</h3>
+      <dl class="profile-info">
+        <dt>Tên hiển thị</dt><dd id="profile-name"></dd>
+        <dt>Email</dt><dd id="profile-email"></dd>
+      </dl>
+      <button type="button" id="logout">Đăng xuất</button>
+      <p id="logout-message" class="message" role="status" hidden></p>
+    </section>
+    <section class="account-section" aria-labelledby="telegram-heading">
+      <h3 id="telegram-heading">Kết nối Telegram</h3>
+      <p id="telegram-status" role="status"></p>
+      <p id="telegram-candidate" hidden></p>
+      <div class="controls">
+        <button type="button" id="telegram-start" hidden>Kết nối Telegram</button>
+        <a id="telegram-open" target="_blank" rel="noopener noreferrer" hidden>Mở bot Telegram</a>
+        <button type="button" id="telegram-check" hidden>Kiểm tra kết nối</button>
+        <button type="button" class="primary" id="telegram-confirm" hidden>Xác nhận liên kết</button>
+        <button type="button" id="telegram-test" hidden>Gửi tin nhắn thử</button>
+        <button type="button" id="telegram-unlink" hidden>Ngắt kết nối</button>
+      </div>
+      <p id="telegram-message" class="message" role="status" hidden></p>
+    </section>
+    <section class="account-section" aria-labelledby="history-heading">
+      <div class="monitor-header">
+        <h3 id="history-heading">Lịch sử cảnh báo</h3>
+        <button type="button" id="history-refresh">Tải lại</button>
+      </div>
+      <p id="history-status" class="message" role="status"></p>
+      <ol id="history-events"></ol>
+    </section>
+  </dialog>
   <template id="interval-template">
     <fieldset>
       <legend>Khoảng (giây)</legend>
