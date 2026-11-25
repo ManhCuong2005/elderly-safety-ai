@@ -1,0 +1,17 @@
+{
+  "sample_hz": 10,
+  "window_s": 2,
+  "step_s": 0.25,
+  "confidence": 0.3,
+  "max_gap_s": 0.36,
+  "bridge_small_gaps": true,
+  "absent_s": 0.65,
+  "alarm_streak": 2,
+  "rearm_s": 0.75,
+  "cooldown_s": 3,
+  "match_before_s": 0.25,
+  "match_after_impact_s": 1.5,
+  "positive_after_onset_s": 0.2,
+  "positive_after_impact_s": 0.75,
+  "seed": 37
+}

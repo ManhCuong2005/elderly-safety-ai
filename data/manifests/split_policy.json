@@ -1,0 +1,20 @@
+{
+  "excluded": [
+    "Person14",
+    "Person20"
+  ],
+  "test_excluded": [
+    "Person01",
+    "Person02",
+    "Person03",
+    "Person04",
+    "Person05",
+    "Person06",
+    "Person14",
+    "Person20",
+    "Person21",
+    "Person33",
+    "Person35",
+    "Person41"
+  ]
+}

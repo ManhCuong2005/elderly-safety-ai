@@ -1,0 +1,11 @@
+{
+  "slug": "abhatewari22/varishta-mm50-organized",
+  "source": "https://www.kaggle.com/datasets/abhatewari22/varishta-mm50-organized",
+  "api_version": 5,
+  "api_total_bytes": 12712846568,
+  "video_files_in_catalog": 450,
+  "api_listing_license": "CC0: Public Domain",
+  "bundled_README_license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+  "attribution": "Abha Tewari and Dhananjay Kalbande, VARISHTA-MM50, Sardar Patel Institute of Technology, 2026.",
+  "note": "Kaggle API v5 bao gồm README nội bộ ghi v2 và trang mô tả API ghi v3. Manifest ghim phiên bản API 5. Nhãn thời gian trong project do rà hình, không đến từ dataset."
+}

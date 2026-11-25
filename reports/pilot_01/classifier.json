@@ -1,0 +1,68 @@
+{
+  "model_id": "pilot-6baa77e3c24d",
+  "classifier": "Logistic Regression",
+  "threshold": 1.01,
+  "artifact_sha256": "6baa77e3c24d38b2cf1bc238a31de9af198400dbde5b0a9d4c94f9a5a3901119",
+  "feature_schema": [
+    "hip_drop",
+    "shoulder_drop",
+    "hip_down_speed",
+    "shoulder_down_speed",
+    "hip_peak_down_speed",
+    "shoulder_peak_down_speed",
+    "trunk_angle_change",
+    "trunk_angle_end",
+    "apparent_height_drop",
+    "apparent_height_end",
+    "apparent_height_missing",
+    "visible_joint_ratio",
+    "hip_horizontal_shift"
+  ],
+  "config": {
+    "sample_hz": 10,
+    "window_s": 2,
+    "step_s": 0.25,
+    "confidence": 0.3,
+    "max_gap_s": 0.36,
+    "absent_s": 0.65,
+    "alarm_streak": 2,
+    "rearm_s": 0.75,
+    "cooldown_s": 3,
+    "match_before_s": 0.25,
+    "match_after_impact_s": 1.5,
+    "positive_after_onset_s": 0.2,
+    "positive_after_impact_s": 0.75,
+    "seed": 37
+  },
+  "movenet": {
+    "model": "MoveNet SinglePose Lightning v4, TFLite float16 weights",
+    "file": "4.tflite",
+    "source": "https://www.kaggle.com/models/google/movenet/tflite/singlepose-lightning-tflite-float16/1",
+    "download": "https://www.kaggle.com/api/v1/models/google/movenet/tflite/singlepose-lightning-tflite-float16/1/download",
+    "license": "Apache-2.0",
+    "sha256": "0fac2226112d0371903ca86e3853cec24ef603a0b2f96f589b180f0ebdd135ab",
+    "preprocessing": "RGB uint8, scale whole display-oriented image to fit 192 x 192, bilinear, center on black; reverse padding and rounded resize per axis. Store display-oriented original pixel x, y and confidence."
+  },
+  "keypoint_runtime": {
+    "schema": 1,
+    "video_sha256": "8a65cfe0c80dadeb58e04859365e7b8ca46ea8b93251d9eed688d8c69f3ab0d8",
+    "pose_sha256": "0fac2226112d0371903ca86e3853cec24ef603a0b2f96f589b180f0ebdd135ab",
+    "sample_hz": 10,
+    "confidence": 0.3,
+    "rotation_override_ccw": null,
+    "av": "16.0.1",
+    "Pillow": "11.3.0",
+    "litert": "2.1.2"
+  },
+  "split_sha256": "45d54a04bab00b43edc8175ad132ce655ab890d944c50482c79ac9247602bf29",
+  "training_snapshot": "88beecebed5709e9952acf307af623126c28976131c494d2c0add7f1a7ed11b0",
+  "trained_utc": "2026-11-24T14:30:05.091040+00:00",
+  "train_windows": {
+    "Fall": 6,
+    "No_Fall": 988
+  },
+  "train_videos": 16,
+  "train_people": 8,
+  "train_events": 2,
+  "validation_target_false_per_hour": 1
+}

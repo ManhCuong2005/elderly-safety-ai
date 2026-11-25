@@ -1,0 +1,83 @@
+{
+  "model_id": "pilot-6baa77e3c24d",
+  "videos": 5,
+  "people": 2,
+  "events": 1,
+  "detected": 0,
+  "missed": 1,
+  "recall": 0.0,
+  "false_alarms": 0,
+  "negative_s": 111.91,
+  "false_per_hour": 0.0,
+  "video_s": 161.58259900000002,
+  "unclear_s": 4.499999999999997,
+  "no_person_s": 0,
+  "other_unmatched": 0,
+  "latency_s": [],
+  "median_latency_s": null,
+  "mistakes": [
+    {
+      "video_id": "Walk_n_Fall/Person20",
+      "relative_path": "data/raw/varishta/Walk_n_Fall/Person20/Person20_video.mp4",
+      "issue": "missed_fall",
+      "timestamp_s": 24.33
+    }
+  ],
+  "per_video": [
+    {
+      "video_id": "Sitting/Person14",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 26.2,
+      "unclear_s": 0,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Sitting/Person20",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 28.95,
+      "unclear_s": 0.2999999999999998,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Walk_n_Fall/Person20",
+      "label": "Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": 24.33,
+      "impact_s": 24.77,
+      "no_fall_s": 0,
+      "unclear_s": 2.0000000000000018,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Walking/Person14",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 25.16,
+      "unclear_s": 0,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Walking/Person20",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 31.599999999999998,
+      "unclear_s": 2.1999999999999957,
+      "no_person_s": 0
+    }
+  ]
+}

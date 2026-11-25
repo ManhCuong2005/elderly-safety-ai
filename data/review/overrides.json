@@ -1,0 +1,12 @@
+{
+  "Sitting/Person04": {
+    "subject_unknown": "Hình ảnh và trang phục trùng bối cảnh với Jogging/Person05 và Trip_n_Fall/Person05, khác clip Sit_n_Fall/Person04. Cần xác minh mã người với nguồn."
+  },
+  "Stair_Climbing/Person02": {
+    "subject_unknown": "Trang phục và bối cảnh giống Stair_Descending/Person03, khác Sitting/Person02 và Trip_n_Fall/Person02. Cần xác minh mã người với nguồn.",
+    "rotation_ccw": 270
+  },
+  "Walking/Person03": {
+    "rotation_ccw": 270
+  }
+}

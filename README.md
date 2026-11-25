@@ -1,85 +1,79 @@
-# An Tâm — AI Elderly Safety V1
+# Phát hiện té ngã qua camera
 
-Python/OpenCV/MediaPipe xử lý trên laptop → Firestore và FCM → Flutter Android tiếng Việt. Không huấn luyện bộ phân loại, không livestream, không dùng Cloud Functions hoặc nâng cấp Blaze.
+Đồ án theo dõi một người bằng camera của thiết bị đang mở website. Laptop chạy MoveNet SinglePose Lightning v4 và bộ phân loại theo cửa sổ thời gian. Ảnh camera dùng trong RAM của phiên theo dõi. Dữ liệu, trọng số và website có thể dùng offline sau khi chuẩn bị.
 
-**Trạng thái: bản triển khai thử nghiệm, chưa đạt nghiệm thu phát hiện ngã.** Pipeline chạy được trên video thật; kiểm thử logic đạt nhưng đánh giá ban đầu bỏ sót ngã. Không đánh đồng kiểm thử FSM bằng landmarks tổng hợp với độ chính xác thực tế. Đọc [báo cáo kết quả](docs/IMPLEMENTATION_REPORT.md) và [hướng dẫn kiểm thử](docs/TESTING_GUIDE.md) trước khi vận hành.
+## Mở demo trên laptop
 
-**Đã có web test nhận diện:**chạy Python bằng `scripts\run-web-ai.cmd`, rồi trong flutter_app chạy `flutter run -d chrome --web-port 7357`. Web dùng camera/video→Python local, không Firebase/thông báo; Android vẫn là app người chăm sóc. Đọc [WEB_TEST_GUIDE](docs/WEB_TEST_GUIDE.md).
-
-**Hiệu chỉnh đầu vào:**54 MP4 UR là khung ghép depth/RGB; đã xác minh và tách RGB. Các benchmark cũ không đại diện đúng RGB. Xem [ghi nhận sửa đầu vào](docs/INPUT_LAYOUT_CORRECTION.md); chẩn đoán với RGB đúng vẫn chưa đạt yêu cầu ngã.
-
-## Chạy nhanh trên máy này
-
-Mở PowerShell:
+Tại PowerShell trong thư mục project, chạy:
 
 ```powershell
-cd D:\DANC2\Project\elderly-safety-ai
-.\tools\python\python.exe -m pytest ai_engine/tests -q
-.\scripts\run-local.cmd --source 0
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Web
 ```
 
-`Q` dừng, `Space` tạm dừng/tiếp tục, `R` chọn lại người khi cần. Khi khởi động chỉ để một người trong khung hình. Webcam index0 đã mở, đọc15 frame640×480 và nhả/mở lại được; mẫu thử chưa có pose toàn thân tin cậy. GUI, nhận diện tư thế trực tiếp và chạy bền vẫn cần kiểm thử với người dùng.
+Mở [website tại 127.0.0.1](http://127.0.0.1:8765/). Chọn **Camera → Bắt đầu theo dõi** và cấp quyền camera. Đặt laptop cố định, đưa một người vào khung sao cho thấy vai, hông và chân. Hai giây đầu thấy rõ tư thế dùng để làm đầy cửa sổ. Nút **Dừng** giải phóng camera và đóng phiên. Khi rời trang hoặc máy xử lý mất kết nối, phiên kết thúc và buffer được giải phóng.
 
-Video có sẵn:
+Chọn **Phát lại**, chọn clip có nhãn **Test** rồi bấm Play trong khung. Danh sách sự kiện cập nhật theo thời gian video. Chọn **Rà nhãn** để xem căn cứ và hai mốc thật độc lập với cảnh báo. Hồ sơ từ model đến split, video gốc và mốc nằm trong [model_videos.csv](data/manifests/model_videos.csv). Xem số đo tại [Đánh giá model](reports/model_evaluation.md) và [Kiểm kê dữ liệu](reports/dataset_summary.md).
+
+Clip demo của pilot hiện tại là **Test · Trip_n_Fall/Person27**. Khi phát từ đầu, cảnh báo xuất hiện khoảng 6,52 giây, trước mốc chạm đã xác nhận 6,69 giây. Bảng cuối báo cáo đánh giá có thêm clip No_Fall của test và clip gốc đã dùng để train. [Mở thẳng clip test trong web](http://127.0.0.1:8765/?replay=Trip_n_Fall%2FPerson27)
+
+Để thử một video trên máy, mở **Thử video**, chọn MP4 hoặc WebM, rồi bấm **Phân tích video**. Giới hạn mỗi tệp là 64 MiB, 90 giây, 4K và khoảng 60 khung hình/giây. Kết quả cho biết model có cảnh báo hay thiếu dữ liệu tư thế và cho phép bấm mốc để tua. Tệp chỉ được gửi tới máy xử lý localhost. Ứng dụng không đưa tệp vào dữ liệu huấn luyện. Nếu tệp giống byte với một video train, giao diện sẽ báo. Bản cắt hoặc mã hóa lại có thể có checksum khác.
+
+**Đứng** và **Ngồi** là nhãn phụ từ một Logistic Regression riêng, chạy từ cùng các điểm MoveNet. Dòng tư thế chỉ xuất hiện khi máy đang theo dõi và có đủ độ tin cậy. Khi có **Nghi té ngã**, giao diện ưu tiên cảnh báo. Mô hình tư thế hiện có hai lớp, vì dữ liệu đã rà cho bước này xác nhận Standing và Sitting. Khi cần huấn luyện lại riêng model tư thế, chạy `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Posture`. [Kết quả tư thế](reports/posture.json)
+
+## Chuẩn bị lại từng bước
+
+Video RGB được cung cấp theo nhóm hoạt động trong [GitHub Release VARISHTA-MM50 v5](https://github.com/ManhCuong2005/elderly-safety-ai/releases/tag/varishta-mm50-v5). Để phát lại trên máy khác, tải ZIP của nhóm cần dùng rồi giải nén vào thư mục gốc của project, giữ cấu trúc `data/raw/varishta/`. Clip demo Person27 nằm trong gói `Trip_n_Fall.zip`. Để lấy toàn bộ metadata gốc phục vụ kiểm kê và train lại, dùng `Download -All` như dưới đây.
+
+Video RGB được cung cấp theo nhóm hoạt động trong [GitHub Release VARISHTA-MM50 v5](https://github.com/ManhCuong2005/elderly-safety-ai/releases/tag/varishta-mm50-v5). Để phát lại trên máy khác, tải ZIP của nhóm cần dùng rồi giải nén vào thư mục gốc của project, giữ cấu trúc `data/raw/varishta/`. Clip demo Person27 nằm trong gói `Trip_n_Fall.zip`. Để lấy toàn bộ metadata gốc phục vụ kiểm kê và train lại, dùng `Download -All` như dưới đây.
+
+Chạy từng lệnh từ thư mục project. Cách gọi PowerShell bên dưới áp dụng execution policy cho tiến trình lệnh. Python 3.12.10 x64 portable nằm trong `.tools` và mọi package chạy trong `.venv`. Phiên bản đầy đủ nằm trong [requirements.lock.txt](requirements.lock.txt).
 
 ```powershell
-.\scripts\run-local.cmd --source ai_engine/datasets/raw/fall-04-cam0.mp4
-.\scripts\run-local.cmd --source ai_engine/datasets/raw/fall-01-cam0-rgb --sync ai_engine/datasets/metadata/fall-01-data.csv
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Model
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Catalog
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Download
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Inventory
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Sheets
 ```
 
-CLI dùng model Full và configs/calibrated-v1_4.json; không đổi ngưỡng khi sửa đầu vào. Nguồn dataset đã có metadata được tự tách RGB, webcam/videoRGB khác giữ nguyên. Cache ghép cũ bị từ chối khi đánh giá RGB. Chẩn đoán sau sửa trên10 clip cũ:TP0,FP1,FN5,TN4; không phải kiểm định độc lập và không dùng số Recall20% cũ như độ chính xác hệ thống.
+`Download` mặc định lấy 18 clip đợt đầu của 6 người, đủ 9 nhóm nếu nguồn phục vụ. Thêm `-All` để lấy toàn bộ RGB và metadata theo từng file. Workspace hiện giữ đủ 450 video RGB của API v5. Dùng `-Video 'Trip_n_Fall/Person33'` để lấy một clip và metadata của nó. Với thư mục gốc `Person10` và `Person11`, tên file thực lần lượt là `Person51` và `Person52`. Manifest lưu cả mã thư mục và mã đối chiếu từ bảng nguồn. Tải lại sẽ so kích thước và checksum đã lưu, thử tiếp tục file dở nếu nguồn hỗ trợ. File tải dở ở `.cache/downloads`. Nguồn gốc, tên gốc, phiên bản và SHA-256 ở [download_manifest.csv](data/manifests/download_manifest.csv).
 
-## Flutter Android
+Kaggle cấp quyền công khai trong lần tải đã chạy. Nếu nhận HTTP 401/403, mở trang dataset bằng tài khoản của bạn, kiểm tra quyền hoặc điều khoản, và đặt credential vào `.secrets/kaggle.json` hoặc `.secrets/access_token`. Có thể dùng `KAGGLE_API_TOKEN` hoặc cặp `KAGGLE_USERNAME` và `KAGGLE_KEY` của phiên PowerShell. Giữ `.secrets` ngoài Git và ngoài gói bàn giao.
+
+Sau kiểm kê, mở web và chọn **Rà nhãn**. Với ca ngã, tua chậm để đặt mốc bắt đầu mất thăng bằng và mốc chạm bề mặt thấp hơn. Mốc chạm là khung đầu có tiếp xúc chịu tải quan sát được, ví dụ tay chống sàn. Với sinh hoạt, đánh dấu các khoảng thấy rõ là No_Fall. Chọn **Không rõ** khi còn nghi vấn. Các mốc lưu bằng giây trong [confirmed.json](data/annotations/confirmed.json) kèm checksum, mã người, nhãn nguồn và căn cứ quan sát. Khung đối chiếu nằm ở `data/review/`. Trạng thái `review` giữ clip cho lần rà tiếp theo. Kiểm kê đánh dấu bản trùng hoặc file lỗi theo manifest và giữ file gốc tại chỗ.
 
 ```powershell
-cd flutter_app
-flutter pub get
-flutter analyze
-flutter test
-flutter run -d <ANDROID_DEVICE_ID>
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Split
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Extract
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Train
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Evaluate
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Check
 ```
 
-APK debug: `flutter_app/build/app/outputs/flutter-apk/app-debug.apk`. Cấu hình client dùng project `elderly-safety-ai`, package `vn.elderlysafety.elderly_safety_app`; không chứa private key. APK debug dành cho thử nghiệm; phát hành cần keystore riêng.
+`Split` chạy lại được với cùng danh sách đủ điều kiện. Sau khi đã xem kết quả test, dùng `Split -Rebuild -FreshTest` khi có thêm nhãn từ người mới. Lệnh sẽ giữ người của test trước ở ngoài đợt mới và chọn test từ mã người chưa tham gia split trước. `Extract -IncludeReview` đo độ phủ tư thế của cả clip đang rà. `Web` đọc model có sẵn và khởi động độc lập với các bước tải và train.
 
-Đã build cả web và release-mode APK ở flutter_app/build/app/outputs/flutter-apk/app-release.apk. APK vẫn ký Android Debug để cài thử, chưa có keystore phát hành riêng/chưa kiểm thử trên điện thoại. Web test không cần Firebase Web; khởi tạo theo nền tảng nên không ảnh hưởng luồng Firebase Android.
+## Dữ liệu đi qua model
 
-## Firebase thật
+1. PyAV đọc PTS, chọn frame theo nhịp 10 Hz và áp dụng góc xoay. Hai video pilot ngang sai metadata có góc sửa ghi tại [overrides.json](data/review/overrides.json). MoveNet v4 giữ nguyên trọng số, nhận ảnh RGB 192 × 192 có viền và trả 17 điểm. Pipeline bỏ phần viền khi đổi điểm về tọa độ pixel theo chiều ảnh gốc đã xoay. Cache `data/processed/` ghi PTS, kích thước, tọa độ, độ tin cậy, trạng thái quan sát và khóa gồm checksum, phiên bản runtime và cấu hình.
+2. Mỗi khoảng 0,25 giây lấy tối đa hai giây quá khứ. Khi mất dấu, phiên báo không nhìn rõ. Sau khoảng trống trên 0,36 giây hoặc tọa độ nhảy quá 0,9 chiều dài thân khi bắt lại dấu, cửa sổ phải tích lũy lại. Khoảng mất dấu ngắn làm giảm đặc trưng độ phủ tư thế. Mô hình dùng độ hạ, vận tốc của vai và hông, độ nghiêng và biến đổi thân, chiều cao biểu kiến, độ phủ khớp và dịch chuyển ngang. Chuẩn hóa dịch chuyển bằng chiều dài thân ở phần đầu cửa sổ. Cờ thiếu và giá trị thiếu được giữ cho bộ điền dữ liệu.
+3. Cửa sổ Fall cần giao với đoạn mất thăng bằng đến chạm ít nhất 0,20 giây hoặc 75% đoạn với ca ngắn hơn. Cửa sổ có thể kết thúc tới 0,75 giây sau chạm. Cửa sổ No_Fall phải nằm trọn trong một khoảng đã xác nhận. Khoảng ranh giới và phần nằm lâu sau ngã được bỏ qua khi tạo mẫu. Thứ tự đặc trưng và cấu hình lưu cùng classifier. `data/processed/train_windows.csv` cho tra lại mẫu train và thời điểm kết thúc.
+4. Seed 37 chia theo người trước khi tạo cửa sổ, giữ cùng lượt quay và checksum trong một nhóm. Mã người thiếu hoặc mâu thuẫn nằm ngoài split. Logistic Regression và Random Forest nhận cùng đặc trưng. Imputer và scaler được fit trên train. Ngưỡng chọn trên validation, ưu tiên recall với mục tiêu 1 báo giả/giờ ADL. Khi video ADL quá ngắn để có ngưỡng bắt được ca trong mục tiêu đó, dùng số báo giả quan sát nhỏ nhất cho phép phát hiện trên validation làm ngân sách chung. Hai dự đoán liên tiếp vượt ngưỡng tạo một cảnh báo. Có thời gian reset 0,75 giây và khoảng cách tối thiểu 3 giây giữa hai báo.
+5. Replay xử lý frame nối tiếp qua cùng engine dùng cho camera. Tại thời điểm đang phát, giao diện dùng kết quả mới nhất có timestamp không vượt quá thời gian video. Test dùng cấu hình đã chốt. Cảnh báo đầu trong khoảng từ 0,25 giây trước mất thăng bằng đến 1,5 giây sau chạm được ghép với sự kiện. Độ trễ âm nghĩa là cảnh báo trước mốc chạm.
 
-Rules đã kiểm thử emulator và deploy lên project có sẵn. Auth server, Firestore production, listener realtime, phân quyền/xác nhận và FCM validate-only đã PASS bằng dữ liệu thử riêng được dọn sau test. Cần liên kết tài khoản/hồ sơ thật và kiểm thử điện thoại. File Admin credential người dùng cung cấp được đọc trực tiếp, không sao chép vào repository. Hướng dẫn tại [FIREBASE_SETUP](docs/FIREBASE_SETUP.md).
+Lệnh `Check` thử đường dẫn ngoài project, người/lượt quay/checksum giữa các tập, tính nhân quả, mất dấu, đánh giá sự kiện và đóng phiên. Với model và split có sẵn, kiểm tra lấy lại một clip test thật từ MP4, đối chiếu đặc trưng giữa giải mã mới và cache với sai số tuyệt đối 1e-7, rồi so timestamp, trạng thái và cảnh báo API replay. Kết quả kiểm tra Chrome và backend nằm trong [verification.md](reports/verification.md).
+
+## Điện thoại cùng Wi-Fi
+
+Camera của trình duyệt cần ngữ cảnh an toàn. Laptop truy cập qua localhost. Điện thoại kết nối vào địa chỉ HTTPS của laptop với chứng chỉ có SAN khớp địa chỉ IP và được điện thoại tin cậy. Đặt file PEM và private key trong `.secrets` của project. Chọn IPv4 riêng của laptop trên Wi-Fi và khởi chạy:
 
 ```powershell
-cd D:\DANC2\Project\elderly-safety-ai
-$env:GOOGLE_APPLICATION_CREDENTIALS='D:\private\elderly-safety-ai-service-account.json'
-.\tools\python\python.exe scripts/admin.py --profile nguoi-than-01 --name 'Người thân' --caregiver-email 'EMAIL_DA_TAO_TRONG_AUTH'
-# Lệnh trên chỉ xem trước. Sau khi kiểm tra đúng tài khoản/hồ sơ:
-.\tools\python\python.exe scripts/admin.py --profile nguoi-than-01 --name 'Người thân' --caregiver-email 'EMAIL_DA_TAO_TRONG_AUTH' --apply --confirm nguoi-than-01
-.\tools\python\python.exe ai_engine/main.py --source 0 --mode connected --profile nguoi-than-01
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Web -HostAddress 192.168.1.20 -Cert .secrets/lan.pem -Key .secrets/lan-key.pem
 ```
 
-Không dán credential vào chat, không bỏ credential trong Flutter. `.env.example` chỉ là mẫu; chương trình đọc biến môi trường, không tự nạp `.env`.
+Trên điện thoại mở `https://192.168.1.20:8765/` với IP thực của laptop, bấm **Bắt đầu theo dõi**, cấp quyền camera và dùng **Đổi camera** nếu có nhiều camera. HTTP tới IP LAN thường thiếu quyền truy cập camera. Chỉ giao diện camera được phục vụ cho thiết bị LAN. Rà nhãn và video nghiên cứu truy cập qua localhost. Thiết bị thật và chứng chỉ của mạng chấm cần được xác nhận tại chỗ. [MDN về quyền camera và HTTPS](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 
-## Dataset và tái lập
+## Nguồn
 
-```powershell
-.\tools\python\python.exe ai_engine/scripts/download_dataset.py --format rgb --per-class 3
-.\tools\python\python.exe ai_engine/scripts/download_dataset.py --format mp4 --start-index 4 --per-class 7 --append
-.\tools\python\python.exe ai_engine/scripts/download_dataset.py --format mp4 --start-index 11 --per-class 10 --append
-.\tools\python\python.exe ai_engine/scripts/download_dataset.py --format mp4 --start-index 21 --per-class 5 --append
-.\tools\python\python.exe ai_engine/scripts/download_dataset.py --format mp4 --start-index 26 --per-class 5 --append
-.\tools\python\python.exe scripts/verify_dataset_layout.py
-.\tools\python\python.exe ai_engine/scripts/evaluate.py --extract --extract-split test_v1_4 --split test_v1_4 --config ai_engine/configs/calibrated-v1_4.json --cache-tag rgb_input_fixed --report-tag=-rgb_input_fixed --model ai_engine/models/pose_landmarker_full.task
-```
-
-Downloader giới hạn tổng thư mục1.000.000.000 byte, tính cả archive và dữ liệu giải nén. Hiện có60 chuỗi (30 Fall/30 Non-Fall), khoảng500 MB, dưới800 MB. Không chạy song song nhiều downloader. Nhãn lấy từ nguồn, không từ bộ phát hiện. Clip01/09/10 thuộc calibration;02/03 thuộc test đầu;04–08,11–15,16–20,21–25 là các vòng test trước;26–30 là test mới bản1.4. Chưa xác minh độc lập theo người. Không sửa ngưỡng theo test cuối rồi dùng lại kết quả đó làm đánh giá khách quan.
-
-## Cấu trúc
-
-- `ai_engine/src`: camera, pose, features, posture, motion, fall detection, FSM, Firebase.
-- `ai_engine/scripts`: tải chọn lọc và đánh giá offline.
-- `ai_engine/tests`: kiểm thử công thức, thời gian, FSM và tình huống mất dấu.
-- `flutter_app`: ứng dụng Android, giao diện và kiểm thử heartbeat/link thông báo.
-- `firebase`: Security Rules, Rules tests và Python emulator integration.
-- `docs`: thiết kế, dữ liệu, vận hành, kiểm thử và báo cáo bằng chứng.
-- `tools`: Python riêng, dependency/cache và log, không commit.
-
-Cài lại môi trường Python trên Windows: `powershell -ExecutionPolicy Bypass -File scripts/setup.ps1`. Cờ chỉ áp dụng tiến trình cài đặt này, không đổi Execution Policy toàn hệ thống.
+- VARISHTA-MM50 của Abha Tewari và Dhananjay Kalbande, Sardar Patel Institute of Technology, 2026. Danh mục tải ghim Kaggle API v5. Trang Kaggle ghi CC0, README trong dữ liệu ghi CC BY 4.0. Project giữ attribution theo README và các video gốc trong workspace để kiểm tra và demo. Ca ngã trong dataset là mô phỏng được giám sát. [Kaggle VARISHTA-MM50](https://www.kaggle.com/datasets/abhatewari22/varishta-mm50-organized)
+- MoveNet SinglePose Lightning v4, bản TFLite float16, Apache 2.0. Nguồn và checksum tại [movenet.json](models/movenet.json). [Model Google trên Kaggle](https://www.kaggle.com/models/google/movenet/tflite/singlepose-lightning-tflite-float16/1) · [Hướng dẫn TensorFlow](https://www.tensorflow.org/hub/tutorials/movenet)

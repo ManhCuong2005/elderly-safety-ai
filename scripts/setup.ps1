@@ -1,37 +1,54 @@
-$ErrorActionPreference = 'Stop'
-$projectRoot = Split-Path -Parent $PSScriptRoot
-$toolsRoot = Join-Path $projectRoot 'tools'
-New-Item -ItemType Directory -Force -Path "$toolsRoot\tmp", "$projectRoot\ai_engine\models" | Out-Null
-$env:TEMP = "$toolsRoot\tmp"
-$env:TMP = $env:TEMP
-$env:MPLCONFIGDIR = "$toolsRoot\matplotlib"
-$pythonExe = "$toolsRoot\python\python.exe"
-if (-not (Test-Path -LiteralPath $pythonExe)) {
-    Invoke-WebRequest 'https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip' -OutFile "$toolsRoot\python.zip" -UseBasicParsing
-    Expand-Archive -LiteralPath "$toolsRoot\python.zip" -DestinationPath "$toolsRoot\python"
-    Set-Content -LiteralPath "$toolsRoot\python\python312._pth" -Value @('python312.zip', '.', '..\..', '..\..\ai_engine', 'import site')
+param()
+. "$PSScriptRoot/env.ps1"
+Push-Location -LiteralPath $ProjectRoot
+try {
+    Write-Host "PROJECT_ROOT=$ProjectRoot"
+    if (!(Test-Path -LiteralPath $ProjectPython -PathType Leaf)) {
+        $version = '3.12.10'
+        $checksum = '0EB85C2DFCCCCF1B17352DE4C397F69194035B7D37149EACC16F1147D93DE3B8'
+        $archive = Join-Path $ProjectRoot '.tools/python.nupkg'
+        Assert-ProjectPath $archive
+        if (!(Test-Path -LiteralPath $archive)) {
+            $free = [IO.DriveInfo]::new([IO.Path]::GetPathRoot($ProjectRoot)).AvailableFreeSpace
+            if ($free -lt 768MB) { throw 'Need 768 MB for Python and wheels' }
+            & curl.exe -q -fSL --retry 2 --max-time 120 -o $archive "https://api.nuget.org/v3-flatcontainer/python/$version/python.$version.nupkg"
+            if ($LASTEXITCODE -ne 0) { throw 'Unable to download Python from NuGet' }
+        }
+        if ((Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash -ne $checksum) {
+            throw 'Python archive checksum mismatch'
+        }
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $package = [IO.Compression.ZipFile]::OpenRead($archive)
+        try {
+            foreach ($entry in $package.Entries) {
+                if ($entry.FullName -match '(^/)|(^|/)\.\.(/|$)|[:\\]' -or
+                    ($entry.ExternalAttributes -shr 16 -band 61440) -eq 40960) {
+                    throw 'Unsafe runtime entry'
+                }
+            }
+            foreach ($entry in $package.Entries) {
+                if (!$entry.FullName.StartsWith('tools/') -or !$entry.Name) { continue }
+                $target = Join-Path "$ProjectRoot/.tools/cpython" $entry.FullName
+                Assert-ProjectPath $target
+                [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($target)) | Out-Null
+                if (!(Test-Path -LiteralPath $target)) {
+                    [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $target, $false)
+                } elseif ((Get-Item -LiteralPath $target).Length -ne $entry.Length) {
+                    throw "Incomplete runtime file: $target"
+                }
+            }
+        } finally {
+            $package.Dispose()
+        }
+        $bootstrap = Join-Path $ProjectRoot '.tools/cpython/tools/python.exe'
+        & $bootstrap -m venv .venv
+        if ($LASTEXITCODE -ne 0) { throw 'Unable to create .venv' }
+    }
+    & $ProjectPython --version
+    & $ProjectPython -m pip --isolated install --cache-dir $env:PIP_CACHE_DIR -r requirements.lock.txt
+    if ($LASTEXITCODE -ne 0) { throw 'Dependency setup failed' }
+    & $ProjectPython -m pip check
+    if ($LASTEXITCODE -ne 0) { throw 'Dependency validation failed' }
+} finally {
+    Pop-Location
 }
-& $pythonExe -m pip --version 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Invoke-WebRequest 'https://bootstrap.pypa.io/get-pip.py' -OutFile "$toolsRoot\get-pip.py" -UseBasicParsing
-    & $pythonExe "$toolsRoot\get-pip.py" --no-warn-script-location
-    if ($LASTEXITCODE -ne 0) { throw 'pip bootstrap failed' }
-}
-$requirements = "$projectRoot\ai_engine\requirements-lock.txt"
-if (-not (Test-Path -LiteralPath $requirements)) { $requirements = "$projectRoot\ai_engine\requirements.txt" }
-& $pythonExe -m pip install --no-warn-script-location --cache-dir "$toolsRoot\pip-cache" -r $requirements
-if ($LASTEXITCODE -ne 0) { throw 'Python dependency installation failed' }
-$modelPath = "$projectRoot\ai_engine\models\pose_landmarker_lite.task"
-if (-not (Test-Path -LiteralPath $modelPath)) {
-    Invoke-WebRequest 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task' -OutFile $modelPath -UseBasicParsing
-}
-$fullModelPath = "$projectRoot\ai_engine\models\pose_landmarker_full.task"
-if (-not (Test-Path -LiteralPath $fullModelPath)) {
-    Invoke-WebRequest 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task' -OutFile $fullModelPath -UseBasicParsing
-}
-if ((Get-FileHash -LiteralPath $fullModelPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne '5134a3aad27a58b93da0088d431f366da362b44e3ccfbe3462b3827a839011b1') {
-    throw 'Full pose model SHA-256 mismatch; verify the download before running'
-}
-Push-Location "$projectRoot\flutter_app"
-try { flutter pub get; if ($LASTEXITCODE -ne 0) { throw 'Flutter dependencies failed' } } finally { Pop-Location }
-Write-Output 'Setup complete. Dataset download is a separate bounded operation.'

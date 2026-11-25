@@ -1,0 +1,181 @@
+{
+  "classes": [
+    "Ngồi",
+    "Đứng"
+  ],
+  "sample_hz": 2,
+  "reviewed_range_s": [
+    1,
+    25
+  ],
+  "train_people": [
+    "Person02",
+    "Person03",
+    "Person05",
+    "Person06",
+    "Person21",
+    "Person22",
+    "Person24",
+    "Person29",
+    "Person35",
+    "Person36"
+  ],
+  "train_clips": [
+    {
+      "video_id": "Sitting/Person05",
+      "sha256": "856fc8b2183af2265ebf521711a52948a3449092aeaa1822b254d6fb3b483bdb",
+      "frames": 31
+    },
+    {
+      "video_id": "Sitting/Person06",
+      "sha256": "3d478bf709a6205006b02e04486337555eae498e2fc0e8afff6a697f3bc47da6",
+      "frames": 18
+    },
+    {
+      "video_id": "Sitting/Person21",
+      "sha256": "77418e556f912f509fc3f4af66f319b39f1a10474722f9501ac6520ce8ead7fe",
+      "frames": 48
+    },
+    {
+      "video_id": "Sitting/Person22",
+      "sha256": "cecc91178da06a3e730687c44f96429b67c2b774e1d4de54960a9fa034e79a4c",
+      "frames": 49
+    },
+    {
+      "video_id": "Sitting/Person24",
+      "sha256": "74cde026d6524dc4ca225aaea70187565c24ec440aad39b7dcc4d920395994db",
+      "frames": 48
+    },
+    {
+      "video_id": "Sitting/Person29",
+      "sha256": "0f84c5faa830117a7648b053aaa9ccd0ee09b77faed5e49c4a6720786ba47dd8",
+      "frames": 31
+    },
+    {
+      "video_id": "Sitting/Person35",
+      "sha256": "ae3a342fca895582f33f608be9107bae6da9fd3dc96efd81789e7b696b2f9ada",
+      "frames": 48
+    },
+    {
+      "video_id": "Sitting/Person36",
+      "sha256": "6c95ef364e8b1d86a2b4d99e039a5e9c75620364af7b341b95baea41936db437",
+      "frames": 30
+    },
+    {
+      "video_id": "Standing/Person02",
+      "sha256": "e8166deddd5f10fdb39978bd8bfc3ee52a276627cb1d8dafe7f29f6fbb9925d4",
+      "frames": 47
+    },
+    {
+      "video_id": "Standing/Person03",
+      "sha256": "66fa625f22011e95077758fa7423879193a850f2549d9ec37614a67b02adbad7",
+      "frames": 48
+    },
+    {
+      "video_id": "Standing/Person05",
+      "sha256": "1960198cfd7a30275ab6c86ceae10a18da0194b3ae96f9d7340e09b477d3213b",
+      "frames": 48
+    },
+    {
+      "video_id": "Standing/Person06",
+      "sha256": "42ffdfd74e0ecf7c0e142b032d8427a891042f9b4eca5a716697019c885271e9",
+      "frames": 36
+    },
+    {
+      "video_id": "Standing/Person21",
+      "sha256": "b9211594defa03d8228d98315cadb1ea732870b161d910786dbee347cf22ba9b",
+      "frames": 48
+    },
+    {
+      "video_id": "Standing/Person22",
+      "sha256": "84487b61b5adbf3cdfee95362baa8a95b3fdc4f95cf2982a7db3ba4a6bacfc91",
+      "frames": 49
+    },
+    {
+      "video_id": "Standing/Person24",
+      "sha256": "6c780072f925aaf72a4843496431d3789513cad98e15a57df5d0d93c4b0570d4",
+      "frames": 48
+    },
+    {
+      "video_id": "Standing/Person29",
+      "sha256": "f01889cad73e3a44eb6e1984de221f68b0e88383a14091089b373d95df964e61",
+      "frames": 48
+    },
+    {
+      "video_id": "Standing/Person35",
+      "sha256": "e84897f7bcbae438ca3d354905da0195cd0465da53eaea54b4b3240b3b25e099",
+      "frames": 48
+    },
+    {
+      "video_id": "Standing/Person36",
+      "sha256": "74b75799dc0b78e1c7de15b009979e55000e2e96e9386e3ee7d4d4eaa3b363fd",
+      "frames": 43
+    }
+  ],
+  "test_clips": [
+    {
+      "video_id": "Sitting/Person27",
+      "subject_id": "Person27",
+      "sha256": "5f15609b63d0720646c8182128c65842bb9b3977bce704e21d444d132c72852b",
+      "frames": 48,
+      "shown": 7,
+      "correct": 3
+    },
+    {
+      "video_id": "Sitting/Person30",
+      "subject_id": "Person30",
+      "sha256": "375c7c2915bcfe8b3171c0b24b6eae415ab7e24a38193e847eeae87724a9de6b",
+      "frames": 48,
+      "shown": 22,
+      "correct": 22
+    },
+    {
+      "video_id": "Sitting/Person31",
+      "subject_id": "Person31",
+      "sha256": "e9227fcf6b61460868ca7c0aed2d619242f86ebadc3f266f655de743b578904a",
+      "frames": 48,
+      "shown": 48,
+      "correct": 48
+    },
+    {
+      "video_id": "Sitting/Person32",
+      "subject_id": "Person32",
+      "sha256": "e188b68c21c0cc8d6f138939bef9e1f651186bb263036891bee6b69238b9e660",
+      "frames": 48,
+      "shown": 48,
+      "correct": 48
+    },
+    {
+      "video_id": "Standing/Person27",
+      "subject_id": "Person27",
+      "sha256": "d50909251a5f433b70f803f5f69224d404d111ffbb3325b771629d536dcffd71",
+      "frames": 48,
+      "shown": 18,
+      "correct": 18
+    },
+    {
+      "video_id": "Standing/Person30",
+      "subject_id": "Person30",
+      "sha256": "942f38dd922210748affd80fa22fcdd8912cbe08a47fafcb66550c591906721a",
+      "frames": 48,
+      "shown": 24,
+      "correct": 24
+    },
+    {
+      "video_id": "Standing/Person31",
+      "subject_id": "Person31",
+      "sha256": "a9a4eb7a2383027d2c17111d5cc4d5ed08d4800ddabfed305161481c916a28ba",
+      "frames": 48,
+      "shown": 5,
+      "correct": 5
+    },
+    {
+      "video_id": "Standing/Person32",
+      "subject_id": "Person32",
+      "sha256": "67ec24547b73617fc64ae5ab9886cbd09349359bdc266cb1ab39c175cf1629a9",
+      "frames": 48,
+      "shown": 48,
+      "correct": 48
+    }
+  ]
+}

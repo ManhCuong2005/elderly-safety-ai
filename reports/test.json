@@ -1,0 +1,155 @@
+{
+  "model_id": "pilot-93aa2711b8e0",
+  "videos": 11,
+  "people": 4,
+  "events": 4,
+  "detected": 4,
+  "missed": 0,
+  "recall": 1.0,
+  "false_alarms": 0,
+  "negative_s": 178.54999999999998,
+  "false_per_hour": 0.0,
+  "video_s": 255.222988,
+  "unclear_s": 11.702255333333328,
+  "no_person_s": 3.3797111111111127,
+  "other_unmatched": 0,
+  "latency_s": [
+    -0.16790000000000038,
+    0.8285222222222215,
+    -0.4925222222222221,
+    0.13746666666666663
+  ],
+  "median_latency_s": -0.015216666666666878,
+  "mistakes": [],
+  "per_video": [
+    {
+      "video_id": "Sitting/Person30",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 26.400000000000002,
+      "unclear_s": 0.3313555555555556,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Sitting/Person31",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 26.55,
+      "unclear_s": 0,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Sitting/Person32",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 28.55,
+      "unclear_s": 0,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Trip_n_Fall/Person27",
+      "label": "Fall",
+      "alarms_s": [
+        6.5221
+      ],
+      "matched_s": 6.5221,
+      "onset_s": 5.35,
+      "impact_s": 6.69,
+      "no_fall_s": 0,
+      "unclear_s": 0.7974777777777771,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Trip_n_Fall/Person30",
+      "label": "Fall",
+      "alarms_s": [
+        8.018522222222222
+      ],
+      "matched_s": 8.018522222222222,
+      "onset_s": 6.03,
+      "impact_s": 7.19,
+      "no_fall_s": 0,
+      "unclear_s": 0.2982000000000003,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Trip_n_Fall/Person31",
+      "label": "Fall",
+      "alarms_s": [
+        6.5274777777777775
+      ],
+      "matched_s": 6.5274777777777775,
+      "onset_s": 6.2,
+      "impact_s": 7.02,
+      "no_fall_s": 0,
+      "unclear_s": 0.8946444444444444,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Trip_n_Fall/Person32",
+      "label": "Fall",
+      "alarms_s": [
+        4.3074666666666666
+      ],
+      "matched_s": 4.3074666666666666,
+      "onset_s": 3.84,
+      "impact_s": 4.17,
+      "no_fall_s": 0,
+      "unclear_s": 3.180877555555556,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Walking/Person27",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 24.7,
+      "unclear_s": 1.3057999999999979,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Walking/Person30",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 21.75,
+      "unclear_s": 3.6016444444444407,
+      "no_person_s": 3.3797111111111127
+    },
+    {
+      "video_id": "Walking/Person31",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 22.0,
+      "unclear_s": 0.6958222222222226,
+      "no_person_s": 0
+    },
+    {
+      "video_id": "Walking/Person32",
+      "label": "No_Fall",
+      "alarms_s": [],
+      "matched_s": null,
+      "onset_s": null,
+      "impact_s": null,
+      "no_fall_s": 28.6,
+      "unclear_s": 0.5964333333333336,
+      "no_person_s": 0
+    }
+  ]
+}

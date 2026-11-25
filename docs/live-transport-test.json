@@ -1,8 +1,0 @@
-{
-  "project": "elderly-safety-ai",
-  "origin": "isolated transport test",
-  "firestore_watch": "PASS",
-  "fcm_validate_only": "PASS",
-  "fcm_device_receipt": "PENDING_DEVICE_TEST",
-  "cleanup": "PASS"
-}

@@ -1,0 +1,1070 @@
+{
+  "Trip_n_Fall/Person33": {
+    "label": "Fall",
+    "onset_s": 6.27,
+    "impact_s": 7.01,
+    "negative": [
+      [
+        0.2,
+        5.9
+      ]
+    ],
+    "note": "Bước chân lệch rồi thân đổ nhanh, tay chống xuống sàn thấy rõ khoảng 7,01 giây; sau đó hông hạ sàn.",
+    "video_id": "Trip_n_Fall/Person33",
+    "subject_id": "Person33",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "9b1ae1011a8cfbd89f2d201a78cccded9c10695225d42aca5cd931824dd0dad6",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Trip_n_Fall/Person35": {
+    "label": "Fall",
+    "onset_s": 4.77,
+    "impact_s": 6.51,
+    "negative": [
+      [
+        0.1,
+        4.35
+      ]
+    ],
+    "note": "Bước đang đi mất ổn định, thân đổ dần về trước. Tay đầu tiên đỡ tải trên sàn khoảng 6,51 giây, rồi hai tay và gối xuống sàn.",
+    "video_id": "Trip_n_Fall/Person35",
+    "subject_id": "Person35",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "2c1312caef1644e03ad8a6c6a8f86bff2ec27ef3076901dbf6048146333a9afb",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Trip_n_Fall/Person41": {
+    "label": "Fall",
+    "onset_s": 10.4,
+    "impact_s": 10.76,
+    "negative": [
+      [
+        0.2,
+        7.6
+      ]
+    ],
+    "note": "Sau đoạn khụy gối, hông trượt lệch nhanh và bàn tay chống chịu lực trên sàn khoảng 10,76 giây, sau đó ngồi hẳn trên sàn.",
+    "video_id": "Trip_n_Fall/Person41",
+    "subject_id": "Person41",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "c8beb3e68c1e753bacf65b31085cf144a82c91b7726a122d3602bde3635fd7bf",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person20": {
+    "label": "Fall",
+    "onset_s": 24.33,
+    "impact_s": 24.77,
+    "negative": [
+      [
+        19.9,
+        22.1
+      ]
+    ],
+    "note": "Sau đoạn đi, thân chao sang bên và hông sụp lệch. Khung khoảng 24,77 giây cho thấy cơ thể ngồi chạm sàn; mốc xấp xỉ vì vạt vải che một phần.",
+    "video_id": "Walk_n_Fall/Person20",
+    "subject_id": "Person20",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "d37b60fd25f654690c17602b788ce5a9786d6ed46993f32ffcedee5e72bf23f7",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Jogging/Person01": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        28.2
+      ]
+    ],
+    "note": "Đi nhanh, quay đầu và lặp lại, chân vẫn giữ thăng bằng.",
+    "video_id": "Jogging/Person01",
+    "subject_id": "Person01",
+    "original_label": "Jogging",
+    "video_sha256": "8a65cfe0c80dadeb58e04859365e7b8ca46ea8b93251d9eed688d8c69f3ab0d8",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Jogging/Person05": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.97,
+        10.54
+      ]
+    ],
+    "note": "Đi nhanh qua cửa và quay lại, không thấy ngã.",
+    "video_id": "Jogging/Person05",
+    "subject_id": "Person05",
+    "original_label": "Jogging",
+    "video_sha256": "2f8633fc05e42adf5c0fd69f38a70db1bcd3e30330d1e427c9feb075a80cb500",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sitting/Person02": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.1,
+        27.88
+      ]
+    ],
+    "note": "Ngồi có tựa, nói và đưa tay trong tư thế ổn định.",
+    "video_id": "Sitting/Person02",
+    "subject_id": "Person02",
+    "original_label": "Sitting",
+    "video_sha256": "fc77a1d017a10697b79a01688c0d37e6954684483dfbbf9fd224da99bf836ac8",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sitting/Person14": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.1,
+        26.3
+      ]
+    ],
+    "note": "Ngồi ghế xuyên suốt, chuyển động tay và chân nhỏ.",
+    "video_id": "Sitting/Person14",
+    "subject_id": "Person14",
+    "original_label": "Sitting",
+    "video_sha256": "66882a7d8446e3324a8b5a474026a8bf8eef1ddd11887c0e42121f53f989ed64",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sitting/Person20": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        29.15
+      ]
+    ],
+    "note": "Ngồi yên có tựa, dùng thiết bị cầm tay; máy quay lùi.",
+    "video_id": "Sitting/Person20",
+    "subject_id": "Person20",
+    "original_label": "Sitting",
+    "video_sha256": "ad5dd46fb9a1ad627385dbf77e02a0930a576bc303bf39a4df1e095b67f7628a",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sitting/Person33": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.1,
+        27.28
+      ]
+    ],
+    "note": "Ngồi trên ghế, chỉnh tay và thiết bị cầm tay.",
+    "video_id": "Sitting/Person33",
+    "subject_id": "Person33",
+    "original_label": "Sitting",
+    "video_sha256": "fa8bffa02c2a1315db5bb67fa674073c8ae865321ab638b7c7a2a675da27c692",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sitting/Person35": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.1,
+        28.4
+      ]
+    ],
+    "note": "Ngồi trên ghế, thay đổi hướng nhìn.",
+    "video_id": "Sitting/Person35",
+    "subject_id": "Person35",
+    "original_label": "Sitting",
+    "video_sha256": "ae3a342fca895582f33f608be9107bae6da9fd3dc96efd81789e7b696b2f9ada",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sitting/Person41": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.1,
+        20.5
+      ]
+    ],
+    "note": "Ngồi ghế, cử động tay và đầu nhẹ.",
+    "video_id": "Sitting/Person41",
+    "subject_id": "Person41",
+    "original_label": "Sitting",
+    "video_sha256": "7bbd8303e67091244d8c8806c002119eff32aea565a4a3d09d12fe04d72b3abd",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Stair_Climbing/Person06": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.7,
+        7.1
+      ]
+    ],
+    "note": "Vịn cửa bước lên bậc, giữ được thăng bằng.",
+    "video_id": "Stair_Climbing/Person06",
+    "subject_id": "Person06",
+    "original_label": "Stair_Climbing",
+    "video_sha256": "f87c3a68e24727d70684a4b592ee8114714b38e0bec815a9e281bf4aaa197bf4",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Stair_Climbing/Person21": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        10.4
+      ]
+    ],
+    "note": "Đi lên cầu thang có tay vịn ở bên cạnh.",
+    "video_id": "Stair_Climbing/Person21",
+    "subject_id": "Person21",
+    "original_label": "Stair_Climbing",
+    "video_sha256": "a609f6083a123be6f1575d3247584f1ea70394ed96205e9c789cb828ae099c34",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Stair_Descending/Person03": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        1.08,
+        11.25
+      ]
+    ],
+    "note": "Đi xuống lối dốc/bậc có tay vịn. Đầu clip máy lia khỏi người.",
+    "video_id": "Stair_Descending/Person03",
+    "subject_id": "Person03",
+    "original_label": "Stair_Descending",
+    "video_sha256": "cb58d808fcee30c1ed0040e29579b9091f1c2b7d0f3bffb16aee734a815588eb",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Stair_Descending/Person04": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.65,
+        6.94
+      ]
+    ],
+    "note": "Từ đứng yên chuyển sang bước qua bậc cửa, giữ được thăng bằng.",
+    "video_id": "Stair_Descending/Person04",
+    "subject_id": "Person04",
+    "original_label": "Stair_Descending",
+    "video_sha256": "4b54f4c4dd5a4d9855de4d9fed83552ab52e16b693143f3faa20244713b9c2ee",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Standing/Person01": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        29.15
+      ]
+    ],
+    "note": "Đứng sau bàn, cử động tay. Bàn che một phần cơ thể.",
+    "video_id": "Standing/Person01",
+    "subject_id": "Person01",
+    "original_label": "Standing",
+    "video_sha256": "e912cb9f8a7aede0ffa92833a4620d781b762105893005b2853fd25058d5b9ef",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Standing/Person06": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.1,
+        28.3
+      ]
+    ],
+    "note": "Đứng sử dụng điện thoại, đổi tay nhẹ.",
+    "video_id": "Standing/Person06",
+    "subject_id": "Person06",
+    "original_label": "Standing",
+    "video_sha256": "42ffdfd74e0ecf7c0e142b032d8427a891042f9b4eca5a716697019c885271e9",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Trip_n_Fall/Person05": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        2.5,
+        9.65
+      ]
+    ],
+    "note": "Ca khó: cúi thân và bước vấp nhẹ rồi đứng thẳng trở lại, không thấy tay/hông va xuống sàn.",
+    "video_id": "Trip_n_Fall/Person05",
+    "subject_id": "Person05",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "a41fa6830a56ba140f5559ba83aa8bf851f4093a40f1bdf92efb757a3e0918b9",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person03": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        9.85,
+        26.8
+      ]
+    ],
+    "note": "Đi bộ, đổi hướng khi ra cửa. Loại đoạn máy lia mất người. Đã rà khung sau khi xác minh xoay.",
+    "video_id": "Walking/Person03",
+    "subject_id": "Person03",
+    "original_label": "Walking",
+    "video_sha256": "3261763f7334f83d2be5f45dc3d936ec88df23b10b19554db5d13406290c84e5",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person05": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.98,
+        10.45
+      ]
+    ],
+    "note": "Đi gần camera, quay người cạnh cửa; ánh sáng gắt phía sau.",
+    "video_id": "Walking/Person05",
+    "subject_id": "Person05",
+    "original_label": "Walking",
+    "video_sha256": "8d3884a5dfec976d7429d6e09d5a7c66ae282bb423e7b53850c7b3e64934812f",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person14": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.16,
+        25.32
+      ]
+    ],
+    "note": "Đi tới lui giữa phòng và quay đầu.",
+    "video_id": "Walking/Person14",
+    "subject_id": "Person14",
+    "original_label": "Walking",
+    "video_sha256": "0b7f61b5f77de3af58e2d93d949db94e38579c427c5f990115d2aa2b3f2252db",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person20": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        7.05,
+        38.65
+      ]
+    ],
+    "note": "Đi qua cửa và quay lại, có thay đổi vị trí máy quay.",
+    "video_id": "Walking/Person20",
+    "subject_id": "Person20",
+    "original_label": "Walking",
+    "video_sha256": "98dfd085caa90b6552985d7f2c9771c8d0addf1650b03e7f5a08bda857a0c92e",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person21": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        26.45
+      ]
+    ],
+    "note": "Đi qua camera và quay lại; có thời điểm người sát mép ảnh.",
+    "video_id": "Walking/Person21",
+    "subject_id": "Person21",
+    "original_label": "Walking",
+    "video_sha256": "79e8f56d6b31dc74c5e8215e7fdf66e7465b4329f61e6be18c61f50368a26056",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person33": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.15,
+        18.4
+      ]
+    ],
+    "note": "Đi tới camera rồi quay lại; thân có lúc sát mép ảnh.",
+    "video_id": "Walking/Person33",
+    "subject_id": "Person33",
+    "original_label": "Walking",
+    "video_sha256": "f44fa9e75454d82352e9084f384e465bed0b509d08b4495a939eab35b34751b4",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person35": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.15,
+        28.05
+      ]
+    ],
+    "note": "Đi chậm về camera rồi quay lại, cầm điện thoại.",
+    "video_id": "Walking/Person35",
+    "subject_id": "Person35",
+    "original_label": "Walking",
+    "video_sha256": "47086d3c6b3b1d8149315a68aecffa7348d7d4365d15450fcef75b8754dbc9ae",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walking/Person41": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.15,
+        26.55
+      ]
+    ],
+    "note": "Đi tới lui, chỉnh hướng với cơ thể nhìn thấy phần lớn thời gian.",
+    "video_id": "Walking/Person41",
+    "subject_id": "Person41",
+    "original_label": "Walking",
+    "video_sha256": "9ad4372e1ca0d54e4c3260ecc23e6cf410795c4dbdb3701b0feb99be0d3e6849",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person01": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Ngồi ghế nhiều lần. Chưa thấy bằng chứng đủ rõ để phân biệt một cú ngã với chủ động ngồi.",
+    "video_id": "Sit_n_Fall/Person01",
+    "subject_id": "Person01",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "feaffd53ed1342aab2b8436102cac741b1e3e4b77cdfa9b19efd4f4bb716a477",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person04": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Cúi và hạ người lên ghế ở cuối clip. Chưa phân biệt được ngã với chủ động ngồi.",
+    "video_id": "Sit_n_Fall/Person04",
+    "subject_id": "Person04",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "0d9d6ee0b80efd62eeb5d7314f969813e91bd6bfa322121783554954df2ed53c",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person14": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Tay giữ ghế khi hạ thấp người. Tư thế hông và điểm chạm chưa nhìn rõ.",
+    "video_id": "Sit_n_Fall/Person14",
+    "subject_id": "Person14",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "ff15cbd120a13896994881c609e955bf98a20d93338853e84ca79f5ef7873ac4",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person20": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Động tác và bối cảnh rất giống Walk_n_Fall/Person20. Chỉ tính clip Walk có góc chạm rõ hơn trong pilot để tránh đếm trùng ca.",
+    "video_id": "Sit_n_Fall/Person20",
+    "subject_id": "Person20",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "846c836ada7ee62b8e7208efadb6aaca7cbd71948752eba6d9dffcc15d8f1bbb",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person33": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Hạ người chậm bên ghế và chống vào ghế. Không rõ có mất thăng bằng hay chủ động hạ thấp.",
+    "video_id": "Sit_n_Fall/Person33",
+    "subject_id": "Person33",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "417942fe437f3083e6c4f4f2d27485d5b7158ee24e952d6cf95117474037854c",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person41": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Lặp lại động tác hạ gối cạnh ghế và đứng lên. Cần xác định ca và bề mặt chạm.",
+    "video_id": "Sit_n_Fall/Person41",
+    "subject_id": "Person41",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "838218feaf4d33142560f6c9cd9436a7888008d3459eefbaa67664928dc5f141",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person44": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Ghế và vật thể tiền cảnh che phần dưới; không rõ điểm chạm.",
+    "video_id": "Sit_n_Fall/Person44",
+    "subject_id": "Person44",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "d9feeb6ac2e789a7cd7dd4ebc84721c3ebb08e62f93b0c5e8e9a83c8b0c5d40d",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sit_n_Fall/Person45": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Hạ người cạnh ghế, chân và hông bị che; không rõ đây là ngã hay ngồi.",
+    "video_id": "Sit_n_Fall/Person45",
+    "subject_id": "Person45",
+    "original_label": "Sit_n_Fall",
+    "video_sha256": "c1d2d22a176eeb9a37387b9e3934406938d8bc443e636bcdc6ca85d51dd80298",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Sitting/Person04": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Có nghi vấn mã người từ đối chiếu bối cảnh và trang phục. Giữ ngoài split.",
+    "video_id": "Sitting/Person04",
+    "subject_id": "unknown",
+    "original_label": "Sitting",
+    "video_sha256": "856fc8b2183af2265ebf521711a52948a3449092aeaa1822b254d6fb3b483bdb",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Stair_Climbing/Person02": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Có nghi vấn mã người từ đối chiếu bối cảnh và trang phục. Giữ ngoài split.",
+    "video_id": "Stair_Climbing/Person02",
+    "subject_id": "unknown",
+    "original_label": "Stair_Climbing",
+    "video_sha256": "ad90b892863948d9f3e0ce8700f5aa8f9d83142341cb3701d50ae1c4a67e85a9",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Trip_n_Fall/Person02": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Cúi và chống vào ghế cạnh người; cuối clip chưa thấy điểm chạm rõ.",
+    "video_id": "Trip_n_Fall/Person02",
+    "subject_id": "Person02",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "fb440868ec6f4229e852bb7a71fd0aedfab119792b10687f33f25cf6f1006871",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Trip_n_Fall/Person21": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Hạ người thành tư thế khụy sâu; chưa xác định được thời điểm chạm và phân biệt với chủ động quỳ.",
+    "video_id": "Trip_n_Fall/Person21",
+    "subject_id": "Person21",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "39d3a79387ff0f1128655e27d6a887dbc6a283f09d6f5e27f29cfe2af984389b",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Trip_n_Fall/Person49": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Chuyển động sát cửa và bị che một phần; chưa thấy rõ mốc chạm.",
+    "video_id": "Trip_n_Fall/Person49",
+    "subject_id": "Person49",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "6ffc740b62099394e02b5c2e54838f005855750ca1b4d71418b266fcd3c0f2ca",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person03": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Đi qua camera, nhiều đoạn sát mép hình; chưa thấy mốc chạm.",
+    "video_id": "Walk_n_Fall/Person03",
+    "subject_id": "Person03",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "378d4571b1d80c1dbb25af08c0d899450d3d7efb96aef2d8fd0a9afa965d9d4f",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person06": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Cuối clip hạ vào ghế, không đủ bằng chứng mất thăng bằng.",
+    "video_id": "Walk_n_Fall/Person06",
+    "subject_id": "Person06",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "c7e7353a8d53232d5df28591495eb6d529eec752445b2087010f97c1e9b4ea3e",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person16": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Cúi sát camera rồi quay người đi; chưa thấy điểm chạm ngoài khung.",
+    "video_id": "Walk_n_Fall/Person16",
+    "subject_id": "Person16",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "fd8a8c5d845cd67542703254087e25d979bcb4f06d2b94dc05b58fc726bba224",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person21": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Nhiều giai đoạn đi và quay đầu; chưa thấy ca ngã đủ rõ.",
+    "video_id": "Walk_n_Fall/Person21",
+    "subject_id": "Person21",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "244f9eeef0c55ace1435dddafd13759343c182d95bb3ae78443fbef182070a16",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person33": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Nhiều đoạn khom/ra sát mép ảnh, chưa thấy điểm chạm sàn.",
+    "video_id": "Walk_n_Fall/Person33",
+    "subject_id": "Person33",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "8bae7795b77668669a70299b56da446e7c0b5b1e6cb10f06d0cd2f2e3628e2a1",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person35": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Cơ thể che bởi mép khung khi đi gần camera, chưa xác định ca.",
+    "video_id": "Walk_n_Fall/Person35",
+    "subject_id": "Person35",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "bf52f053044dec52f4c9e9ccbec59028bc7ad886c4594c0604036b3990aac773",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person44": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Cúi sát mép ảnh cuối clip, phần dưới bị khuất.",
+    "video_id": "Walk_n_Fall/Person44",
+    "subject_id": "Person44",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "8c2d910feec037eacb908b2d33f463b47cf2dbbe65d561347f959ffce1d7c6b7",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Walk_n_Fall/Person45": {
+    "label": "unknown",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [],
+    "note": "Bước nhanh và điều chỉnh tư thế, cần rà thêm đoạn gần camera.",
+    "video_id": "Walk_n_Fall/Person45",
+    "subject_id": "Person45",
+    "original_label": "Walk_n_Fall",
+    "video_sha256": "ab68b747c5cdc9479288c194836d21d3fb31b9ef11ac4ab1d0d09dae2ad5ec56",
+    "confirmed_by": "codex-visual-pilot"
+  },
+  "Trip_n_Fall/Person22": {
+    "label": "Fall",
+    "onset_s": 26.67,
+    "impact_s": 27.17,
+    "negative": [
+      [
+        1,
+        18
+      ]
+    ],
+    "note": "Hạ chậm cạnh ghế. Đánh dấu đợt mất trụ cuối khi chân gập và trọng tâm chuyển nhanh xuống gối. Quan sát rõ đầu gối ở sàn khoảng 27,17 giây.",
+    "video_id": "Trip_n_Fall/Person22",
+    "subject_id": "Person22",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "a17ad5002c46bf30bb558428801385b332744d85ae4a1508771c4142be880666",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Trip_n_Fall/Person24": {
+    "label": "Fall",
+    "onset_s": 3.35,
+    "impact_s": 4.02,
+    "negative": [
+      [
+        0.1,
+        2.9
+      ]
+    ],
+    "note": "Bước lệch sang bên, thân chúi nhanh và bàn tay chống xuống sàn; sau đó hông tiếp xúc sàn.",
+    "video_id": "Trip_n_Fall/Person24",
+    "subject_id": "Person24",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "faa32a4452fb4d5819d80e945eda93cb8a27b7bc8813e80c86a1762fc2d8e08e",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Trip_n_Fall/Person27": {
+    "label": "Fall",
+    "onset_s": 5.35,
+    "impact_s": 6.69,
+    "negative": [
+      [
+        0.1,
+        4.5
+      ]
+    ],
+    "note": "Từ đang bước chuyển sang đổ người qua gối. Khung 6,69 giây cho thấy tay chịu tải cùng tư thế quỳ thấp. Trang phục che một phần mốc tiếp xúc đầu tiên.",
+    "video_id": "Trip_n_Fall/Person27",
+    "subject_id": "Person27",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "063c7e9dcda188dca99aec8d0aa6ed4d1763904f7c99ed060c60d96ff844558a",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Trip_n_Fall/Person29": {
+    "label": "Fall",
+    "onset_s": 6.86,
+    "impact_s": 7.36,
+    "negative": [
+      [
+        0.1,
+        6.0
+      ]
+    ],
+    "note": "Thân đổ nhanh sau bước chân, tay vươn và chống nền rồi ngồi sàn. Mốc chạm xấp xỉ khung 7,36 giây.",
+    "video_id": "Trip_n_Fall/Person29",
+    "subject_id": "Person29",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "b0a7490133927d75d15cd6bb3f1a9d10431b2f991b9ef3e3c8f54be6f749cdd4",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Trip_n_Fall/Person30": {
+    "label": "Fall",
+    "onset_s": 6.03,
+    "impact_s": 7.19,
+    "negative": [
+      [
+        0.1,
+        5.6
+      ]
+    ],
+    "note": "Tay dang để giữ thăng bằng, thân nghiêng lệch rồi gối/hông hạ xuống sàn. Khung 7,19 giây cho thấy thân đã tựa sàn.",
+    "video_id": "Trip_n_Fall/Person30",
+    "subject_id": "Person30",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "00e17051f4a198ea59abc02453852c69317056e1b72941d93b39dd4121abd6dc",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Trip_n_Fall/Person31": {
+    "label": "Fall",
+    "onset_s": 6.2,
+    "impact_s": 7.02,
+    "negative": [
+      [
+        0.1,
+        5.8
+      ]
+    ],
+    "note": "Mất thăng bằng khi dồn trọng tâm, khuỵu và chao sang bên để chống tay. Thấy tư thế gối chịu lực trên nền khoảng 7,02 giây.",
+    "video_id": "Trip_n_Fall/Person31",
+    "subject_id": "Person31",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "05f4e1018c264afc34c2599d32f891b86bf3b3c843b63e804dee76ef2e7dcc0c",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Trip_n_Fall/Person32": {
+    "label": "Fall",
+    "onset_s": 3.84,
+    "impact_s": 4.17,
+    "negative": [
+      [
+        0.1,
+        3.45
+      ]
+    ],
+    "note": "Bước chân chệch, thân đổ nhanh và bàn tay tì sàn khoảng 4,17 giây. Sau đó ngồi sàn.",
+    "video_id": "Trip_n_Fall/Person32",
+    "subject_id": "Person32",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "da3fbd05ed1edf5e37b3303285ae5676adf5b244876f38a1f0eb3d99b8dc9d34",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Trip_n_Fall/Person36": {
+    "label": "Fall",
+    "onset_s": 3.51,
+    "impact_s": 4.84,
+    "negative": [
+      [
+        0.1,
+        3.15
+      ]
+    ],
+    "note": "Bước không ổn định, thân chúi và ngồi rơi sang bên. Bàn tay ra sát mép ảnh; lấy mốc quan sát rõ hông chịu tải ở sàn khoảng 4,84 giây.",
+    "video_id": "Trip_n_Fall/Person36",
+    "subject_id": "Person36",
+    "original_label": "Trip_n_Fall",
+    "video_sha256": "2a32d680a6b56205e39ff44d708c07a020c7fc17f6a7cf285dbd1adf515ad89d",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Sitting/Person29": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        26.2
+      ]
+    ],
+    "note": "Ngồi ổn định trên ghế ở xa máy.",
+    "video_id": "Sitting/Person29",
+    "subject_id": "Person29",
+    "original_label": "Sitting",
+    "video_sha256": "0f84c5faa830117a7648b053aaa9ccd0ee09b77faed5e49c4a6720786ba47dd8",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Sitting/Person30": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        26.6
+      ]
+    ],
+    "note": "Ngồi ghế tựa và đổi vị trí chân nhẹ.",
+    "video_id": "Sitting/Person30",
+    "subject_id": "Person30",
+    "original_label": "Sitting",
+    "video_sha256": "375c7c2915bcfe8b3171c0b24b6eae415ab7e24a38193e847eeae87724a9de6b",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Sitting/Person31": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        26.75
+      ]
+    ],
+    "note": "Ngồi ghế, hai chân phía trước và chuyển động tay nhẹ.",
+    "video_id": "Sitting/Person31",
+    "subject_id": "Person31",
+    "original_label": "Sitting",
+    "video_sha256": "e9227fcf6b61460868ca7c0aed2d619242f86ebadc3f266f655de743b578904a",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Sitting/Person32": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        28.75
+      ]
+    ],
+    "note": "Ngồi trên ghế tựa và duỗi chân.",
+    "video_id": "Sitting/Person32",
+    "subject_id": "Person32",
+    "original_label": "Sitting",
+    "video_sha256": "e188b68c21c0cc8d6f138939bef9e1f651186bb263036891bee6b69238b9e660",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Sitting/Person36": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        27.2
+      ]
+    ],
+    "note": "Ngồi ghế ổn định ở cuối phòng.",
+    "video_id": "Sitting/Person36",
+    "subject_id": "Person36",
+    "original_label": "Sitting",
+    "video_sha256": "6c95ef364e8b1d86a2b4d99e039a5e9c75620364af7b341b95baea41936db437",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person22": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        40.95
+      ]
+    ],
+    "note": "Đi lại qua cửa rồi quay hướng, thấy người giữ thăng bằng.",
+    "video_id": "Walking/Person22",
+    "subject_id": "Person22",
+    "original_label": "Walking",
+    "video_sha256": "bfd6e5ab7f2b637747b58db7806ec64a06cb05b755d24ce867bc20feb97b2a3a",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person24": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        25.2
+      ]
+    ],
+    "note": "Đi lại nhiều hướng, đổi nhịp và quay đầu.",
+    "video_id": "Walking/Person24",
+    "subject_id": "Person24",
+    "original_label": "Walking",
+    "video_sha256": "88fac3e437c0cd7f65612b58f360b55a3effd0b95f3b1b734cf398bc447eedb4",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person27": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        24.9
+      ]
+    ],
+    "note": "Đi tới lui, có lúc gần mép khung nhưng vẫn đi ổn định.",
+    "video_id": "Walking/Person27",
+    "subject_id": "Person27",
+    "original_label": "Walking",
+    "video_sha256": "0dc684bad35a0c3b97f4066d0d505f5e59e3e899355cc1c1f888585fd44494ea",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person29": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        28.35
+      ]
+    ],
+    "note": "Đi thẳng, quay đầu ở cuối phòng rồi đi về.",
+    "video_id": "Walking/Person29",
+    "subject_id": "Person29",
+    "original_label": "Walking",
+    "video_sha256": "0eb07943a599bf602b8fe52cf115f7c612eff91f521250f7af99051175735140",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person30": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.1,
+        21.85
+      ]
+    ],
+    "note": "Đi qua camera và quay hướng. Dừng chấm khoảng trước khi vật che ống kính.",
+    "video_id": "Walking/Person30",
+    "subject_id": "Person30",
+    "original_label": "Walking",
+    "video_sha256": "8739282a1a408917c5d6ed91ae7026f6b95d4feb50db74c88b3c362b054d6dd3",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person31": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        22.2
+      ]
+    ],
+    "note": "Đi qua phòng và quay lại khi tới mép khung.",
+    "video_id": "Walking/Person31",
+    "subject_id": "Person31",
+    "original_label": "Walking",
+    "video_sha256": "c557ca5b55b06306def6e033c5df0ef558e61f3f474fa6e4536c08e39732c43b",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person32": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        28.8
+      ]
+    ],
+    "note": "Đi tới lui, có lúc người ở xa máy.",
+    "video_id": "Walking/Person32",
+    "subject_id": "Person32",
+    "original_label": "Walking",
+    "video_sha256": "2fd24d29f84c0377bf4bb5540a857d3e6cb0e7a256e35044307ceeacd5b9636f",
+    "confirmed_by": "codex-visual-pilot-02"
+  },
+  "Walking/Person36": {
+    "label": "No_Fall",
+    "onset_s": null,
+    "impact_s": null,
+    "negative": [
+      [
+        0.2,
+        28.95
+      ]
+    ],
+    "note": "Đi tới gần ống kính rồi quay lại. Có nhiều đoạn sát khung.",
+    "video_id": "Walking/Person36",
+    "subject_id": "Person36",
+    "original_label": "Walking",
+    "video_sha256": "1455cc348ffead3222c24c4ddb1b7ff6e971fef2784707b323ad1b5f90185fce",
+    "confirmed_by": "codex-visual-pilot-02"
+  }
+}

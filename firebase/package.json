@@ -1,5 +1,0 @@
-{
-  "name":"elderly-safety-rules-tests","private":true,"type":"module",
-  "scripts":{"test":"node --test tests/rules.test.mjs"},
-  "devDependencies":{"@firebase/rules-unit-testing":"4.0.1","firebase":"11.6.0"}
-}

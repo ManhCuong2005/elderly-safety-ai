@@ -1,0 +1,2 @@
+# The trained model verifies the original bytes of this split.
+/data/manifests/split.csv -text

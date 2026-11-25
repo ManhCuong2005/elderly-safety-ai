@@ -1,0 +1,71 @@
+{
+  "model_id": "pilot-93aa2711b8e0",
+  "classifier": "Logistic Regression",
+  "threshold": 0.98,
+  "artifact_sha256": "93aa2711b8e033e177c5f74020efd8bd526077b40ff2153d887f457f50976837",
+  "feature_schema": [
+    "hip_drop",
+    "shoulder_drop",
+    "hip_down_speed",
+    "shoulder_down_speed",
+    "hip_peak_down_speed",
+    "shoulder_peak_down_speed",
+    "trunk_angle_change",
+    "trunk_angle_end",
+    "apparent_height_drop",
+    "apparent_height_end",
+    "apparent_height_missing",
+    "visible_joint_ratio",
+    "hip_horizontal_shift"
+  ],
+  "config": {
+    "sample_hz": 10,
+    "window_s": 2,
+    "step_s": 0.25,
+    "confidence": 0.3,
+    "max_gap_s": 0.36,
+    "bridge_small_gaps": true,
+    "absent_s": 0.65,
+    "alarm_streak": 2,
+    "rearm_s": 0.75,
+    "cooldown_s": 3,
+    "match_before_s": 0.25,
+    "match_after_impact_s": 1.5,
+    "positive_after_onset_s": 0.2,
+    "positive_after_impact_s": 0.75,
+    "seed": 37
+  },
+  "movenet": {
+    "model": "MoveNet SinglePose Lightning v4, TFLite float16 weights",
+    "file": "4.tflite",
+    "source": "https://www.kaggle.com/models/google/movenet/tflite/singlepose-lightning-tflite-float16/1",
+    "download": "https://www.kaggle.com/api/v1/models/google/movenet/tflite/singlepose-lightning-tflite-float16/1/download",
+    "license": "Apache-2.0",
+    "sha256": "0fac2226112d0371903ca86e3853cec24ef603a0b2f96f589b180f0ebdd135ab",
+    "preprocessing": "RGB uint8, scale whole display-oriented image to fit 192 x 192, bilinear, center on black; reverse padding and rounded resize per axis. Store display-oriented original pixel x, y and confidence."
+  },
+  "keypoint_runtime": {
+    "schema": 1,
+    "video_sha256": "2f8633fc05e42adf5c0fd69f38a70db1bcd3e30330d1e427c9feb075a80cb500",
+    "pose_sha256": "0fac2226112d0371903ca86e3853cec24ef603a0b2f96f589b180f0ebdd135ab",
+    "sample_hz": 10,
+    "confidence": 0.3,
+    "rotation_override_ccw": null,
+    "av": "16.0.1",
+    "Pillow": "11.3.0",
+    "litert": "2.1.2"
+  },
+  "split_sha256": "c05a526831c46a52f87fae50304248682a85ca7b3db7e9de577871a54f2f8b5c",
+  "training_snapshot": "0ea640b2814c74b3ce555da30161adef4105a2fcd33b0286a59dc397108d5e44",
+  "trained_utc": "2026-11-24T14:41:46.917044+00:00",
+  "train_windows": {
+    "Fall": 8,
+    "No_Fall": 1331
+  },
+  "train_videos": 23,
+  "train_people": 10,
+  "train_events": 2,
+  "validation_target_false_per_hour": 1,
+  "validation_alarm_budget_count": 0,
+  "validation_detected": 1
+}
