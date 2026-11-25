@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import io
 import ipaddress
+import logging
 import math
 import secrets
 import threading
@@ -13,7 +14,7 @@ from flask import Flask, abort, jsonify, request, send_file, session as account_
 from PIL import Image, UnidentifiedImageError
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from .accounts import AccountAlerts, load_supabase, load_telegram, register_account_routes
+from .accounts import AccountAlerts, AccountError, load_supabase, load_telegram, register_account_routes
 from .dataset import RAW
 from .inference import Engine, TRACKING, web_result
 from .keypoints import get_keypoints
@@ -21,6 +22,7 @@ from .pose import CONFIG, MODEL, Cadence, Pose, sample_frames
 from .posture import load_posture
 from .review import ANNOTATIONS, VIDEOS, rotation_for, save_annotation
 from .storage import read_json, rows, safe, sha
+from .telegram import video_test_text
 from .train import SPLIT, load_model
 
 TTL = 8
@@ -28,6 +30,7 @@ MAX_SESSIONS = 12
 MAX_JPEG = 600_000
 MAX_UPLOAD = 64 * 1024**2
 MAX_VIDEO_SECONDS = 90
+logger = logging.getLogger(__name__)
 
 
 def reject_external_media(*args):
@@ -245,6 +248,7 @@ def create_app(host="127.0.0.1", start_sweeper=True):
         request.max_content_length = MAX_UPLOAD
         if not upload_lock.acquire(blocking=False):
             return jsonify(error="Đang phân tích một video khác. Thử lại khi video đó xử lý xong."), 429
+        alert_image = None
         try:
             data = request.get_data(cache=False)
             if data[4:8] == b"ftyp":
@@ -267,19 +271,35 @@ def create_app(host="127.0.0.1", start_sweeper=True):
                     if stream.average_rate and stream.average_rate > 61:
                         raise ValueError("Chọn video có tốc độ tối đa 60 khung hình/giây.")
                     estimator = get_pose()
-                    observations = (estimator.observe(t, frame) for t, frame in
-                                    sample_frames(container, cfg["sample_hz"], limit_s=MAX_VIDEO_SECONDS))
-                    trace = tracked_trace(observations)
+                    engine = Engine(cfg, model, threshold)
+                    trace = []
+                    for t, image in sample_frames(container, cfg["sample_hz"], limit_s=MAX_VIDEO_SECONDS):
+                        result = tracked_frame(engine, estimator.observe(t, image))
+                        trace.append(result)
+                        if result["alarm"] and alert_image is None and alerts is not None and telegram is not None:
+                            image.thumbnail((1280, 1280))
+                            alert_image = image
             except (av.FFmpegError, OSError):
                 raise ValueError("Không đọc được video. Thử một tệp MP4 hoặc WebM khác.") from None
             if not trace:
                 raise ValueError("Video không có khung hình đọc được.")
-            return jsonify(trace=trace, classifier_ready=True,
-                           alarms=[frame["t"] for frame in trace if frame["alarm"]],
-                           has_predictions=any(frame["score"] is not None for frame in trace),
-                           matches_train=hashlib.sha256(data).hexdigest() in train_hashes)
+            matches_train = hashlib.sha256(data).hexdigest() in train_hashes
         finally:
             upload_lock.release()
+        alarms = [frame["t"] for frame in trace if frame["alarm"]]
+        telegram_status = "unavailable" if alarms else None
+        if alert_image is not None:
+            try:
+                with io.BytesIO() as photo:
+                    alert_image.save(photo, format="JPEG", quality=85)
+                    sent = alerts.send_linked(account_session["user"]["id"], video_test_text(alarms[0]),
+                                              photo=photo.getvalue())
+                telegram_status = "sent" if sent else "unlinked"
+            except (AccountError, OSError) as error:
+                logger.warning("Không xác nhận được ảnh thử video trên Telegram. %s", error)
+                telegram_status = "error"
+        return jsonify(trace=trace, classifier_ready=True, alarms=alarms, telegram_status=telegram_status,
+                       has_predictions=any(frame["score"] is not None for frame in trace), matches_train=matches_train)
 
     @app.post("/api/annotation")
     def annotate():

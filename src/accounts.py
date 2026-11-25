@@ -116,9 +116,12 @@ class TelegramLinks:
     def delivery_lock(self, user_id):
         return self.delivery_locks[hash(user_id) % len(self.delivery_locks)]
 
-    def send(self, chat_id, text):
+    def send(self, chat_id, text, *, photo=None):
         try:
-            telegram.api(self.token, "sendMessage", {"chat_id": chat_id, "text": text})
+            if photo is None:
+                telegram.api(self.token, "sendMessage", {"chat_id": chat_id, "text": text})
+            else:
+                telegram.api(self.token, "sendPhoto", {"chat_id": chat_id, "caption": text}, photo=photo)
         except telegram.TelegramError as error:
             raise AccountError(str(error), 502) from None
 
@@ -209,6 +212,16 @@ class AccountAlerts:
         except Full:
             logger.warning("Hàng đợi cảnh báo đã đầy.")
 
+    def send_linked(self, user_id, text, *, photo=None):
+        if not self.links:
+            return False
+        with self.links.delivery_lock(user_id):
+            rows = self.db.user_rows("GET", "telegram_links", user_id, select="chat_id", limit=1)
+            if not rows:
+                return False
+            self.links.send(rows[0]["chat_id"], text, photo=photo)
+            return True
+
     def record(self, user_id, occurred_at):
         alert_id = str(uuid4())
         self.db.user_rows("POST", "fall_alerts", user_id, payload={
@@ -216,14 +229,7 @@ class AccountAlerts:
         })
         status = "error"
         try:
-            if self.links:
-                with self.links.delivery_lock(user_id):
-                    rows = self.db.user_rows("GET", "telegram_links", user_id, select="chat_id", limit=1)
-                    if rows:
-                        self.links.send(rows[0]["chat_id"], telegram.fall_text(occurred_at))
-            else:
-                rows = []
-            status = "sent" if rows else "unlinked"
+            status = "sent" if self.send_linked(user_id, telegram.fall_text(occurred_at)) else "unlinked"
         except AccountError as error:
             logger.warning("Không gửi được cảnh báo Telegram. %s", error)
         finally:

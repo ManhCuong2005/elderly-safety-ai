@@ -310,6 +310,7 @@ function selectMode(next, clipId) {
   element('video-actions').hidden = !['review', 'replay'].includes(mode);
   element('upload-actions').hidden = mode !== 'upload';
   element('upload-result').hidden = true;
+  element('upload-telegram').hidden = true;
   element('upload-source').hidden = true;
   element('annotation').hidden = mode !== 'review';
   element('session-panel').hidden = mode === 'review';
@@ -411,6 +412,7 @@ element('upload-actions').addEventListener('submit', async event => {
   replay = points = null;
   draw();
   element('upload-result').hidden = true;
+  element('upload-telegram').hidden = true;
   element('upload-source').hidden = true;
   clearEvents();
   showTimer(0);
@@ -441,6 +443,14 @@ element('upload-actions').addEventListener('submit', async event => {
       : data.has_predictions ? 'Không phát hiện té ngã trong video.' : 'Chưa đủ dữ liệu tư thế để kết luận.';
     summary.dataset.alarm = String(count > 0);
     summary.hidden = false;
+    const telegram = element('upload-telegram');
+    telegram.textContent = {
+      sent: 'Đã gửi ảnh kiểm thử qua Telegram.',
+      unlinked: 'Hãy kết nối Telegram trong mục Tôi để nhận ảnh kiểm thử.',
+      unavailable: 'Máy chủ chưa cấu hình gửi ảnh kiểm thử qua Telegram.',
+      error: 'Chưa xác nhận được ảnh kiểm thử đã gửi. Hãy kiểm tra Telegram.',
+    }[data.telegram_status] || '';
+    telegram.hidden = !telegram.textContent;
     element('upload-source').hidden = !data.matches_train;
     clearEvents();
     for (const time of data.alarms) showAlarm(time, true);

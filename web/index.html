@@ -65,6 +65,7 @@
           <input id="upload-file" type="file" accept=".mp4,.webm" required>
           <button id="analyze" class="primary" type="submit" disabled>Phân tích video</button>
           <p id="upload-limit" class="hint"></p>
+          <p class="hint">Nếu phát hiện nghi té ngã, CameraAI gửi một ảnh kiểm thử tới Telegram đã liên kết.</p>
         </form>
         <div id="video-actions" class="controls" hidden>
           <label for="clip">Video gốc</label>
@@ -93,6 +94,7 @@
           <div class="events">
             <h2>Sự kiện</h2>
             <p id="upload-result" class="upload-result" role="status" hidden></p>
+            <p id="upload-telegram" role="status" hidden></p>
             <p id="upload-source" hidden>File trùng với một video trong tập train té ngã.</p>
             <p id="empty-events">Chưa có cảnh báo trong phiên.</p>
             <ol id="event-list"></ol>

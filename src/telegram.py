@@ -2,6 +2,7 @@ import argparse
 import http.client
 import json
 import re
+import secrets
 from datetime import timedelta, timezone
 
 from .storage import read_json, safe, write_json
@@ -27,11 +28,25 @@ def read_config():
     return values
 
 
-def api(token, method, payload):
+def api(token, method, payload, *, photo=None):
+    if photo is None:
+        body = json.dumps(payload).encode("utf-8")
+        content_type = "application/json"
+    else:
+        boundary = secrets.token_hex(24)
+        content_type = f"multipart/form-data; boundary={boundary}"
+        fields = [f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode()
+                  for name, value in payload.items()]
+        fields.extend([
+            f'--{boundary}\r\nContent-Disposition: form-data; name="photo"; filename="fall-test.jpg"\r\n'
+            'Content-Type: image/jpeg\r\n\r\n'.encode(),
+            photo,
+            f"\r\n--{boundary}--\r\n".encode(),
+        ])
+        body = b"".join(fields)
     connection = http.client.HTTPSConnection(HOST, timeout=6)
     try:
-        connection.request("POST", f"/bot{token}/{method}", json.dumps(payload).encode("utf-8"),
-                           {"Content-Type": "application/json"})
+        connection.request("POST", f"/bot{token}/{method}", body, {"Content-Type": content_type})
         response = connection.getresponse()
         if response.status != 200:
             raise TelegramError(f"Telegram trả HTTP {response.status}.")
@@ -84,6 +99,13 @@ def fall_text(occurred_at):
     when = occurred_at.astimezone(VN_TIME).strftime("%H:%M:%S %d/%m/%Y")
     return (f"⚠️ Nghi té ngã qua camera\nThời điểm: {when} (giờ Việt Nam).\n"
             "Hãy kiểm tra tình trạng người đang được theo dõi.")
+
+
+def video_test_text(timestamp):
+    minutes, seconds = divmod(round(timestamp * 100), 6000)
+    return ("🧪 [THỬ VIDEO] CameraAI phát hiện nghi té ngã trong video tải lên.\n"
+            f"Mốc phát hiện đầu tiên: {minutes:02}:{seconds / 100:05.2f} trong video.\n"
+            "Đây là thông báo kiểm thử.")
 
 
 if __name__ == "__main__":

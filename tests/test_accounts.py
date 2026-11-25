@@ -1,11 +1,18 @@
+import io
 import unittest
 from datetime import datetime, timezone
+from email import policy
+from email.parser import BytesParser
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
+from PIL import Image
+
 from src.accounts import AccountAlerts, AccountError, Supabase, TelegramLinks
 from src.server import create_app
+from src.storage import safe
 from src.telegram import TelegramError
+from src.train import load_model, load_split
 
 
 class SupabaseFixture(Supabase):
@@ -147,3 +154,55 @@ class AccountTests(unittest.TestCase):
         with patch("src.accounts.telegram.api", side_effect=TelegramError("Telegram không phản hồi.")):
             AccountAlerts(self.db, self.links).record("alice", datetime.now(timezone.utc))
         self.assertEqual(self.alice.get("/api/account/history").json["events"][0]["telegram_status"], "error")
+
+    def test_uploaded_fall_sends_jpeg_only_to_linked_account(self):
+        if not safe("data/manifests/split.csv").is_file() or not load_model()[0]:
+            self.skipTest("Thiếu split hoặc classifier để thử video thật")
+        clips = {clip["video_id"]: safe(clip["relative_path"]) for clip in load_split()}
+        fall = clips.get("Trip_n_Fall/Person27")
+        walking = clips.get("Walking/Person27")
+        if not fall or not walking or not fall.is_file() or not walking.is_file():
+            self.skipTest("Thiếu clip test té ngã hoặc đi bộ")
+        self.login(self.alice, "alice")
+        self.login(self.bob, "bob")
+        self.db.links["alice"] = {"chat_id": 111}
+        self.db.links["bob"] = {"chat_id": 222}
+
+        def upload(client, clip):
+            response = client.post("/api/analyze-video", data=clip.read_bytes(), content_type="application/octet-stream")
+            self.assertEqual(response.status_code, 200)
+            return response.json
+
+        with patch("src.telegram.http.client.HTTPSConnection") as transport:
+            connection = transport.return_value
+            connection.getresponse.return_value.status = 200
+            connection.getresponse.return_value.read.return_value = b'{"ok":true,"result":{}}'
+            detected = upload(self.alice, fall)
+            self.assertTrue(detected["alarms"])
+            self.assertEqual(detected["telegram_status"], "sent")
+            connection.request.assert_called_once()
+            method, path, body, headers = connection.request.call_args.args
+            self.assertEqual((method, path), ("POST", "/bot1:test/sendPhoto"))
+            message = BytesParser(policy=policy.default).parsebytes(
+                f"Content-Type: {headers['Content-Type']}\r\n\r\n".encode() + body)
+            fields = {part.get_param("name", header="content-disposition"): part for part in message.iter_parts()}
+            self.assertEqual(fields["chat_id"].get_payload(decode=True), b"111")
+            caption = fields["caption"].get_payload(decode=True).decode()
+            self.assertIn("[THỬ VIDEO]", caption)
+            self.assertIn("00:06.52", caption)
+            self.assertEqual(fields["photo"].get_content_type(), "image/jpeg")
+            with Image.open(io.BytesIO(fields["photo"].get_payload(decode=True))) as image:
+                self.assertEqual(image.format, "JPEG")
+                self.assertLessEqual(max(image.size), 1280)
+                image.verify()
+            self.assertFalse(upload(self.alice, walking)["alarms"])
+            self.db.links.pop("alice")
+            self.assertEqual(upload(self.alice, fall)["telegram_status"], "unlinked")
+            connection.request.assert_called_once()
+
+            connection.request.side_effect = OSError("Simulated Telegram timeout")
+            failed = upload(self.bob, fall)
+            self.assertEqual(failed["alarms"], detected["alarms"])
+            self.assertEqual(failed["telegram_status"], "error")
+        self.assertEqual(self.alice.get("/api/account/history").json["events"], [])
+        self.assertEqual(self.bob.get("/api/account/history").json["events"], [])

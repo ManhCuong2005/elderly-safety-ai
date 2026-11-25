@@ -40,7 +40,7 @@ Lưu `{"bot_token": "..."}` vào `.secrets/telegram.json` và khởi động l�
 
 Nếu bật xác nhận email cho người dùng bên ngoài nhóm Supabase, cấu hình [SMTP riêng](https://supabase.com/docs/guides/auth/auth-smtp) để gửi email đăng ký.
 
-Camera trực tiếp ghi sự kiện **Nghi té ngã** cho tài khoản đã mở phiên. Bot chỉ gửi tới chat đã liên kết với tài khoản đó. Trong **Tôi** có lịch sử 50 cảnh báo gần nhất, nút gửi tin nhắn thử và nút ngắt kết nối. Cảnh báo từ video tải lên hoặc phát lại hiển thị trên web. [Telegram Bot API](https://core.telegram.org/bots/api#sendmessage)
+Camera trực tiếp ghi sự kiện **Nghi té ngã** cho tài khoản đã mở phiên. Bot chỉ gửi tới chat đã liên kết với tài khoản đó. Trong **Tôi** có lịch sử 50 cảnh báo gần nhất từ camera, nút gửi tin nhắn thử và nút ngắt kết nối. Khi **Thử video** phát hiện nghi té ngã, bot gửi một ảnh ở mốc cảnh báo đầu tiên với nhãn **[THỬ VIDEO]**. Web hiển thị kết quả phân tích và trạng thái gửi ảnh. Chế độ **Phát lại** hiển thị cảnh báo trên web. [Telegram Bot API](https://core.telegram.org/bots/api#sendphoto)
 
 ## Chuẩn bị lại từng bước
 
