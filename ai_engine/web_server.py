@@ -64,7 +64,7 @@ class PoseSession:
             before=time.perf_counter()
             pose,reason=self.tracker.process(frame,t)
             h,w=frame.shape[:2]
-            result=self.engine.process(t,pose,w,h,reason)
+            result=self.engine.process(t,pose,w,h,reason,world_landmarks=self.tracker.last_world_landmarks, people_count=self.tracker.last_people_count)
             self.frames+=1
             result.update({'landmarks':pose,'width':w,'height':h,'processed_frames':self.frames,
                            'inference_ms':(time.perf_counter()-before)*1000,'mode':'local','notifications':False})
@@ -123,7 +123,10 @@ class Handler(BaseHTTPRequestHandler):
         if not self.allowed():return
         if self.path!='/api/health':self.reply(404,{'error':'Endpoint không tồn tại.'});return
         self.reply(200,{'status':'ready','mode':'local','notifications':False,
-                        'model_present':self.server.pose.model.is_file(),'api_version':'1.0.0'})
+                        'model_present':self.server.pose.model.is_file(),
+                        'ml_model_present':bool(self.server.pose.config.ml_model_path),
+                        'algorithm_version':'2.0-ml' if self.server.pose.config.ml_model_path else '1.4',
+                        'api_version':'2.0.0'})
 
     def do_POST(self):
         if not self.allowed(mutating=True):return
@@ -151,7 +154,8 @@ class Handler(BaseHTTPRequestHandler):
 
 def make_server(port=8765,config=None,model=None,origins=None):
     server=LocalServer(('127.0.0.1',port),Handler)
-    server.pose=PoseSession(config or Config.load(HERE/'configs/calibrated-v1_4.json'),
+    default_cfg=HERE/'configs/v2_ml.json' if (HERE/'configs/v2_ml.json').is_file() else HERE/'configs/calibrated-v1_4.json'
+    server.pose=PoseSession(config or Config.load(default_cfg),
                             model or HERE/'models/pose_landmarker_full.task')
     server.origins=set(origins or ['http://localhost:7357','http://127.0.0.1:7357'])
     return server

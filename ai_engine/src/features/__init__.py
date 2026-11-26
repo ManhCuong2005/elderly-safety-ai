@@ -30,9 +30,52 @@ class Features:
     body_height: float = 0.0
     body_width: float = 0.0
     thigh_vertical: float = 0.0
+    head_y: float = 0.0
+    shoulder_y: float = 0.0
+    head_below_hip: float = 0.0
+    z_lean_3d: float = 0.0
+    head_droop: float = -0.35
+    torso_inverted: bool = False
 
 
-def extract(landmarks, width, height, config):
+def _head_metrics(data, xy, shoulder, torso):
+    """Return (head_y, head_droop) using real distinct head landmarks when present."""
+    head_ids = [i for i in (0, 2, 5, 7, 8) if data[i, 3] >= 0.4]
+    if head_ids:
+        pts = xy[head_ids]
+        spread = float(np.max(np.ptp(pts, axis=0))) if len(head_ids) > 1 else 0.0
+        # Guard against degenerate synthetic arrays (all identical coords, or dummy points far from nose).
+        if len(head_ids) > 1 and spread < 1e-4:
+            return float(np.mean(pts[:, 1])), -0.35
+        if 0 in head_ids and spread > 0.6 * max(torso, 1e-4):
+            head_y = float(xy[0, 1])
+        else:
+            head_y = float(np.mean(pts[:, 1]))
+        droop = float((head_y - shoulder[1]) / max(torso, 1e-4))
+        return head_y, droop
+    return float(shoulder[1]), -0.35
+
+
+def _lean_3d(world_landmarks, fallback_lean):
+    """Compute 3D torso lean angle (degrees from vertical Y axis) using MediaPipe world landmarks."""
+    if world_landmarks is None or len(world_landmarks) != 33:
+        return float(fallback_lean)
+    w = np.asarray(world_landmarks, dtype=float)
+    if w.shape != (33, 4) or not np.isfinite(w).all():
+        return float(fallback_lean)
+    if np.min(w[[11, 12, 23, 24], 3]) < 0.4:
+        return float(fallback_lean)
+    shoulder = (w[11, :3] + w[12, :3]) / 2.0
+    hip = (w[23, :3] + w[24, :3]) / 2.0
+    vec = shoulder - hip
+    horiz = math.hypot(float(vec[0]), float(vec[2]))
+    vert = abs(float(vec[1]))
+    if horiz < 1e-6 and vert < 1e-6:
+        return float(fallback_lean)
+    return float(math.degrees(math.atan2(horiz, vert)))
+
+
+def extract(landmarks, width, height, config, world_landmarks=None):
     if width <= 0 or height <= 0 or landmarks is None or len(landmarks) != 33:
         return None
     data = np.asarray(landmarks, dtype=float)
@@ -62,6 +105,9 @@ def extract(landmarks, width, height, config):
     body = xy[ids]
     extent = np.ptp(body, axis=0)
     lean = math.degrees(math.atan2(abs(shoulder[0]-hip[0]), abs(shoulder[1]-hip[1])))
+    head_y, head_droop = _head_metrics(data, xy, shoulder, torso)
+    lean_3d = _lean_3d(world_landmarks, lean)
+    torso_inv = bool(shoulder[1] >= hip[1] + 0.05 * torso)
     return Features(float(hip[0]), float(hip[1]), torso, lean,
                     float(np.mean(knees)), float(np.mean(hips)),
                     float(extent[1] / max(extent[0], 1e-6)),
@@ -69,10 +115,12 @@ def extract(landmarks, width, height, config):
                     float((xy[27, 0]-xy[28, 0]) / torso) if len(trusted)==2 else 0.0,
                     tuple(map(tuple, xy[core])), float(np.min(data[ids, 3])),len(trusted)==2,
                     'FULL' if len(trusted)==2 else 'ONE_LEG',float(extent[1]),float(extent[0]),
-                    float((knee_mid[1]-hip[1])/torso))
+                    float((knee_mid[1]-hip[1])/torso),
+                    head_y, float(shoulder[1]), float((head_y - hip[1]) / torso), lean_3d,
+                    head_droop, torso_inv)
 
 
-def extract_core(landmarks, width, height, config):
+def extract_core(landmarks, width, height, config, world_landmarks=None):
     """High-confidence visible torso only; never invent leg angles or a posture label."""
     if landmarks is None or width<=0 or height<=0:
         return None
@@ -90,6 +138,11 @@ def extract_core(landmarks, width, height, config):
     if torso<config.min_torso:return None
     extent=np.ptp(xy[core],axis=0)
     lean=math.degrees(math.atan2(abs(shoulder[0]-hip[0]),abs(shoulder[1]-hip[1])))
+    head_y, head_droop = _head_metrics(data, xy, shoulder, torso)
+    lean_3d = _lean_3d(world_landmarks, lean)
+    torso_inv = bool(shoulder[1] >= hip[1] + 0.05 * torso)
     return Features(float(hip[0]),float(hip[1]),torso,lean,0,0,
                     float(extent[1]/max(extent[0],1e-6)),0,0,tuple(map(tuple,xy[core])),
-                    float(np.min(data[core,3])),False,'CORE_ONLY',float(extent[1]),float(extent[0]))
+                    float(np.min(data[core,3])),False,'CORE_ONLY',float(extent[1]),float(extent[0]),
+                    0.0, head_y, float(shoulder[1]), float((head_y - hip[1]) / torso), lean_3d,
+                    head_droop, torso_inv)

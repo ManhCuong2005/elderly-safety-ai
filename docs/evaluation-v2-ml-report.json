@@ -1,0 +1,1055 @@
+{
+  "algorithm_version": "2.0-ml",
+  "selected_model": "MLP_NeuralNet",
+  "selected_threshold": 0.8,
+  "selected_min_consecutive": 4,
+  "model_bundle_path": "ai_engine/trained_models/fall_activity_model.joblib",
+  "model_bundle_kb": 47.5,
+  "feature_count": 25,
+  "feature_names": [
+    "lean",
+    "z_lean_3d",
+    "lean_max",
+    "angle_delta",
+    "angle_speed",
+    "aspect",
+    "aspect_min",
+    "aspect_ratio_change",
+    "hip_y",
+    "hip_drop",
+    "hip_down_speed",
+    "hip_down_accel",
+    "head_y",
+    "head_below_hip",
+    "head_drop",
+    "head_down_speed",
+    "body_height_ratio",
+    "knee_angle",
+    "hip_angle",
+    "leg_vertical",
+    "motion_energy",
+    "post_drop_speed",
+    "prior_upright_ratio",
+    "occlusion_ratio",
+    "is_core_only"
+  ],
+  "feature_importances": {
+    "lean": 0.01741,
+    "z_lean_3d": 0.05435,
+    "lean_max": 0.02661,
+    "angle_delta": 0.0141,
+    "angle_speed": 0.00788,
+    "aspect": 0.01753,
+    "aspect_min": 0.03769,
+    "aspect_ratio_change": 0.01926,
+    "hip_y": 0.18085,
+    "hip_drop": 0.01048,
+    "hip_down_speed": 0.00592,
+    "hip_down_accel": 0.00712,
+    "head_y": 0.02703,
+    "head_below_hip": 0.02657,
+    "head_drop": 0.02797,
+    "head_down_speed": 0.03027,
+    "body_height_ratio": 0.00268,
+    "knee_angle": 0.05858,
+    "hip_angle": 0.09073,
+    "leg_vertical": 0.02661,
+    "motion_energy": 0.00825,
+    "post_drop_speed": 0.01877,
+    "prior_upright_ratio": 0.0216,
+    "occlusion_ratio": 0.00558,
+    "is_core_only": 0.01104
+  },
+  "train_cv_comparison_40_videos": {
+    "RandomForest": {
+      "frame_cv": {
+        "roc_auc": 0.9573,
+        "pr_auc": 0.8772,
+        "precision": 0.916,
+        "recall": 0.6633,
+        "f1": 0.7694
+      },
+      "selected_threshold": 0.7,
+      "selected_min_consecutive": 3,
+      "video_cv": {
+        "tp": 18,
+        "fp": 2,
+        "fn": 2,
+        "tn": 18,
+        "confusion_matrix": [
+          [
+            18,
+            2
+          ],
+          [
+            2,
+            18
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.9,
+        "recall": 0.9,
+        "f1": 0.9,
+        "false_positive_rate": 0.1,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      }
+    },
+    "ExtraTrees": {
+      "frame_cv": {
+        "roc_auc": 0.9544,
+        "pr_auc": 0.8753,
+        "precision": 0.9911,
+        "recall": 0.5659,
+        "f1": 0.7205
+      },
+      "selected_threshold": 0.8,
+      "selected_min_consecutive": 3,
+      "video_cv": {
+        "tp": 17,
+        "fp": 0,
+        "fn": 3,
+        "tn": 20,
+        "confusion_matrix": [
+          [
+            20,
+            0
+          ],
+          [
+            3,
+            17
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 1.0,
+        "recall": 0.85,
+        "f1": 0.9189189189189189,
+        "false_positive_rate": 0.0,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      }
+    },
+    "HistGradientBoosting": {
+      "frame_cv": {
+        "roc_auc": 0.9562,
+        "pr_auc": 0.8772,
+        "precision": 0.766,
+        "recall": 0.787,
+        "f1": 0.7764
+      },
+      "selected_threshold": 0.55,
+      "selected_min_consecutive": 3,
+      "video_cv": {
+        "tp": 19,
+        "fp": 7,
+        "fn": 1,
+        "tn": 13,
+        "confusion_matrix": [
+          [
+            13,
+            7
+          ],
+          [
+            1,
+            19
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.7307692307692307,
+        "recall": 0.95,
+        "f1": 0.8260869565217392,
+        "false_positive_rate": 0.35,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      }
+    },
+    "SVM_RBF": {
+      "frame_cv": {
+        "roc_auc": 0.9535,
+        "pr_auc": 0.8689,
+        "precision": 0.9156,
+        "recall": 0.5943,
+        "f1": 0.7208
+      },
+      "selected_threshold": 0.55,
+      "selected_min_consecutive": 3,
+      "video_cv": {
+        "tp": 17,
+        "fp": 1,
+        "fn": 3,
+        "tn": 19,
+        "confusion_matrix": [
+          [
+            19,
+            1
+          ],
+          [
+            3,
+            17
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.9444444444444444,
+        "recall": 0.85,
+        "f1": 0.8947368421052632,
+        "false_positive_rate": 0.05,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      }
+    },
+    "MLP_NeuralNet": {
+      "frame_cv": {
+        "roc_auc": 0.9378,
+        "pr_auc": 0.8758,
+        "precision": 0.9315,
+        "recall": 0.6897,
+        "f1": 0.7925
+      },
+      "selected_threshold": 0.8,
+      "selected_min_consecutive": 4,
+      "video_cv": {
+        "tp": 18,
+        "fp": 1,
+        "fn": 2,
+        "tn": 19,
+        "confusion_matrix": [
+          [
+            19,
+            1
+          ],
+          [
+            2,
+            18
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.9473684210526315,
+        "recall": 0.9,
+        "f1": 0.9230769230769231,
+        "false_positive_rate": 0.05,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      }
+    }
+  },
+  "holdout_20_videos_21_to_30": {
+    "v1_rule_based": {
+      "metrics": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 9,
+        "tn": 9,
+        "confusion_matrix": [
+          [
+            9,
+            1
+          ],
+          [
+            9,
+            1
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.5,
+        "recall": 0.1,
+        "f1": 0.16666666666666669,
+        "false_positive_rate": 0.1,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "verified_metrics": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 10,
+        "tn": 10,
+        "confusion_matrix": [
+          [
+            10,
+            0
+          ],
+          [
+            10,
+            0
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "mean_latency_s": 0.833,
+      "median_latency_s": 0.833,
+      "engine_mean_ms_per_frame": 0.205
+    },
+    "v2_ml_engine": {
+      "metrics": {
+        "tp": 9,
+        "fp": 2,
+        "fn": 1,
+        "tn": 8,
+        "confusion_matrix": [
+          [
+            8,
+            2
+          ],
+          [
+            1,
+            9
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.8181818181818182,
+        "recall": 0.9,
+        "f1": 0.8571428571428572,
+        "false_positive_rate": 0.2,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "verified_metrics": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 10,
+        "tn": 10,
+        "confusion_matrix": [
+          [
+            10,
+            0
+          ],
+          [
+            10,
+            0
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "mean_latency_s": 0.47,
+      "median_latency_s": 0.333,
+      "engine_mean_ms_per_frame": 0.45
+    },
+    "v2_videos": [
+      {
+        "video_id": "fall-21",
+        "label": "FALL",
+        "split": "test_v1_3",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": 0.6667,
+        "detection_latency_s": null,
+        "max_fall_score": 0.9961,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.97,
+            "WALKING": 0.03,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 0.8
+          },
+          "observed_s": 1.0,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-21",
+        "label": "NON_FALL",
+        "split": "test_v1_3",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.1496,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.2,
+            "WALKING": 0.7,
+            "SITTING": 0.03,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 8.37
+          },
+          "observed_s": 0.93,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 1,
+          "active_ratio": 0.964,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "fall-22",
+        "label": "FALL",
+        "split": "test_v1_3",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 0.433,
+        "fall_onset_s": 0.1,
+        "detection_latency_s": 0.333,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.0,
+            "WALKING": 0.0,
+            "SITTING": 0.17,
+            "BENDING": 0.0,
+            "LYING": 0.17,
+            "UNKNOWN": 1.5
+          },
+          "observed_s": 0.33,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 0.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-22",
+        "label": "NON_FALL",
+        "split": "test_v1_3",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.2486,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.47,
+            "WALKING": 0.3,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 7.2
+          },
+          "observed_s": 0.77,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "fall-23",
+        "label": "FALL",
+        "split": "test_v1_3",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 2.2,
+        "fall_onset_s": 0.8667,
+        "detection_latency_s": 1.333,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.17,
+            "WALKING": 0.0,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.3
+          },
+          "observed_s": 1.17,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-23",
+        "label": "NON_FALL",
+        "split": "test_v1_3",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.0217,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.6,
+            "WALKING": 0.63,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 6.07
+          },
+          "observed_s": 1.23,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "fall-24",
+        "label": "FALL",
+        "split": "test_v1_3",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 0.667,
+        "fall_onset_s": 0.3667,
+        "detection_latency_s": 0.3,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.0,
+            "WALKING": 0.0,
+            "SITTING": 0.27,
+            "BENDING": 0.0,
+            "LYING": 0.33,
+            "UNKNOWN": 1.37
+          },
+          "observed_s": 0.6,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 0.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-24",
+        "label": "NON_FALL",
+        "split": "test_v1_3",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 0.9,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.9948,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.0,
+            "WALKING": 0.0,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.3
+          },
+          "observed_s": 1.0,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "fall-25",
+        "label": "FALL",
+        "split": "test_v1_3",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 2.267,
+        "fall_onset_s": 1.4667,
+        "detection_latency_s": 0.8,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.4,
+            "WALKING": 0.3,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.1
+          },
+          "observed_s": 1.7,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-25",
+        "label": "NON_FALL",
+        "split": "test_v1_3",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.7337,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.57,
+            "WALKING": 0.67,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.4
+          },
+          "observed_s": 2.23,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "ACTIVE"
+        }
+      },
+      {
+        "video_id": "fall-26",
+        "label": "FALL",
+        "split": "test_v1_4",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 0.4,
+        "fall_onset_s": 0.4,
+        "detection_latency_s": 0.0,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.0,
+            "WALKING": 0.0,
+            "SITTING": 0.2,
+            "BENDING": 0.0,
+            "LYING": 0.17,
+            "UNKNOWN": 1.63
+          },
+          "observed_s": 0.37,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 0.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-26",
+        "label": "NON_FALL",
+        "split": "test_v1_4",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.9947,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.93,
+            "WALKING": 0.53,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 0.67
+          },
+          "observed_s": 2.47,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "ACTIVE"
+        }
+      },
+      {
+        "video_id": "fall-27",
+        "label": "FALL",
+        "split": "test_v1_4",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 2.367,
+        "fall_onset_s": 1.6667,
+        "detection_latency_s": 0.7,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.57,
+            "WALKING": 0.37,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.1
+          },
+          "observed_s": 1.93,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-27",
+        "label": "NON_FALL",
+        "split": "test_v1_4",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.7454,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 2.77,
+            "WALKING": 0.27,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 0.27
+          },
+          "observed_s": 3.03,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "ACTIVE"
+        }
+      },
+      {
+        "video_id": "fall-28",
+        "label": "FALL",
+        "split": "test_v1_4",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 0.9,
+        "fall_onset_s": 0.8667,
+        "detection_latency_s": 0.033,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.0,
+            "WALKING": 0.0,
+            "SITTING": 0.67,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.5
+          },
+          "observed_s": 0.67,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 0.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-28",
+        "label": "NON_FALL",
+        "split": "test_v1_4",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.8718,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.0,
+            "WALKING": 0.0,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.8
+          },
+          "observed_s": 1.0,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "fall-29",
+        "label": "FALL",
+        "split": "test_v1_4",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 2.3,
+        "fall_onset_s": 1.6,
+        "detection_latency_s": 0.7,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.5,
+            "WALKING": 0.3,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.47
+          },
+          "observed_s": 1.8,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-29",
+        "label": "NON_FALL",
+        "split": "test_v1_4",
+        "detected": false,
+        "verified_detected": false,
+        "first_alert_s": null,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 0.6722,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 3.43,
+            "WALKING": 0.43,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 0.27
+          },
+          "observed_s": 3.87,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "ACTIVE"
+        }
+      },
+      {
+        "video_id": "fall-30",
+        "label": "FALL",
+        "split": "test_v1_4",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 0.833,
+        "fall_onset_s": 0.8,
+        "detection_latency_s": 0.033,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 0.0,
+            "WALKING": 0.0,
+            "SITTING": 0.6,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 1.7
+          },
+          "observed_s": 0.6,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 0.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      },
+      {
+        "video_id": "adl-30",
+        "label": "NON_FALL",
+        "split": "test_v1_4",
+        "detected": true,
+        "verified_detected": false,
+        "first_alert_s": 7.1,
+        "fall_onset_s": null,
+        "detection_latency_s": null,
+        "max_fall_score": 1.0,
+        "activity_summary": {
+          "durations_s": {
+            "STANDING": 1.33,
+            "WALKING": 0.0,
+            "SITTING": 0.0,
+            "BENDING": 0.0,
+            "LYING": 0.0,
+            "UNKNOWN": 11.97
+          },
+          "observed_s": 1.33,
+          "sit_to_stand_count": 0,
+          "stand_to_sit_count": 0,
+          "active_ratio": 1.0,
+          "activity_level": "INSUFFICIENT_DATA"
+        }
+      }
+    ]
+  },
+  "test_v1_4_10_videos_26_to_30": {
+    "v1_rule_based": {
+      "metrics": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 5,
+        "tn": 4,
+        "confusion_matrix": [
+          [
+            4,
+            1
+          ],
+          [
+            5,
+            0
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.2,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "verified_metrics": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 5,
+        "tn": 5,
+        "confusion_matrix": [
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            0
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "mean_latency_s": null,
+      "median_latency_s": null,
+      "engine_mean_ms_per_frame": 0.238
+    },
+    "v2_ml_engine": {
+      "metrics": {
+        "tp": 5,
+        "fp": 1,
+        "fn": 0,
+        "tn": 4,
+        "confusion_matrix": [
+          [
+            4,
+            1
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.8333333333333334,
+        "recall": 1.0,
+        "f1": 0.9090909090909091,
+        "false_positive_rate": 0.2,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "verified_metrics": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 5,
+        "tn": 5,
+        "confusion_matrix": [
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            0
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "mean_latency_s": 0.293,
+      "median_latency_s": 0.033,
+      "engine_mean_ms_per_frame": 0.481
+    }
+  },
+  "all_60_videos_benchmark": {
+    "v1_rule_based": {
+      "metrics": {
+        "tp": 11,
+        "fp": 1,
+        "fn": 19,
+        "tn": 29,
+        "confusion_matrix": [
+          [
+            29,
+            1
+          ],
+          [
+            19,
+            11
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.9166666666666666,
+        "recall": 0.36666666666666664,
+        "f1": 0.5238095238095238,
+        "false_positive_rate": 0.03333333333333333,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "verified_metrics": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 30,
+        "tn": 30,
+        "confusion_matrix": [
+          [
+            30,
+            0
+          ],
+          [
+            30,
+            0
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "mean_latency_s": 0.855,
+      "median_latency_s": 0.834,
+      "engine_mean_ms_per_frame": 0.231
+    },
+    "v2_ml_5fold_oof": {
+      "metrics": {
+        "tp": 30,
+        "fp": 2,
+        "fn": 0,
+        "tn": 28,
+        "confusion_matrix": [
+          [
+            28,
+            2
+          ],
+          [
+            0,
+            30
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 0.9375,
+        "recall": 1.0,
+        "f1": 0.967741935483871,
+        "false_positive_rate": 0.06666666666666667,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      },
+      "verified_metrics": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 29,
+        "tn": 30,
+        "confusion_matrix": [
+          [
+            30,
+            0
+          ],
+          [
+            29,
+            1
+          ]
+        ],
+        "matrix_order": "rows actual NON_FALL,FALL; columns predicted NON_FALL,FALL",
+        "precision": 1.0,
+        "recall": 0.03333333333333333,
+        "f1": 0.06451612903225806,
+        "false_positive_rate": 0.0,
+        "false_positive_rate_definition": "FP / (FP + TN), video level"
+      }
+    }
+  },
+  "edge_performance": {
+    "mediapipe_pose_mean_fps": 22.41,
+    "mediapipe_pose_mean_ms": 45.55,
+    "v2_ml_engine_mean_ms": 0.45,
+    "combined_estimated_fps": 21.74
+  }
+}

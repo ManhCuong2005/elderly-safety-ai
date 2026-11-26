@@ -10,7 +10,9 @@ String postureLabel(String? value) =>
     const {
       'STANDING': 'Đang đứng',
       'SITTING': 'Đang ngồi',
+      'BENDING': 'Đang cúi người',
       'LYING': 'Đang nằm',
+      'SLUMPED': 'Gục người / trượt tường',
       'WALKING': 'Đang đi lại',
       'UNKNOWN': 'Chưa xác định',
     }[value] ??

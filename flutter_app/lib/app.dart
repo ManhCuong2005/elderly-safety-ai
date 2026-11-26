@@ -59,7 +59,7 @@ class SafetyApp extends StatelessWidget {
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         elevation: 0,
       ),
@@ -353,7 +353,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: DropdownButtonFormField<String>(
-                value: profile,
+                initialValue: profile,
                 decoration: const InputDecoration(
                   labelText: 'Hồ sơ đang theo dõi',
                 ),

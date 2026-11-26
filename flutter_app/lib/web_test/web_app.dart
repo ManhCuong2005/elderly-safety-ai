@@ -20,7 +20,7 @@ class WebAiTestApp extends StatelessWidget {
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff007f86)),
       scaffoldBackgroundColor: const Color(0xfff1f6f6),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       ),
@@ -33,20 +33,44 @@ String poseName(String? value) =>
     const {
       'STANDING': 'Đang đứng',
       'SITTING': 'Đang ngồi',
+      'BENDING': 'Đang cúi người',
       'LYING': 'Đang nằm',
+      'SLUMPED': 'Gục người / trượt tường',
       'WALKING': 'Đang đi lại',
       'UNKNOWN': 'Chưa xác định',
     }[value] ??
     'Chưa có kết quả';
-String fsmName(String? value) =>
+String activityLevelName(String? value) =>
     const {
-      'NORMAL': 'Bình thường',
-      'SUSPECTED_FALL': 'Nghi ngờ té ngã',
-      'VERIFYING': 'Đang xác minh',
-      'ALERT': 'Có cảnh báo nghi ngờ',
-      'RECOVERED': 'Đã phục hồi',
+      'ACTIVE': 'Tích cực',
+      'MODERATE': 'Trung bình',
+      'SEDENTARY': 'Ít vận động',
+      'INSUFFICIENT_DATA': 'Đang thu thập…',
     }[value] ??
-    'Chưa phân tích';
+    'Chưa có dữ liệu';
+String fsmName(String? value, {String? basis}) {
+  if (value == 'ALERT') {
+    switch (basis) {
+      case 'convulsion':
+        return 'Báo động: Co giật / giãy giụa (đã khóa an toàn)';
+      case 'stroke_slump':
+        return 'Báo động: Nghi đột quỵ / ngồi gục bất động (đã khóa)';
+      case 'slow_collapse':
+        return 'Báo động: Trượt ngã chậm / gục xuống (đã khóa)';
+      case 'unrecovered_on_floor':
+        return 'Báo động: Kẹt dưới sàn không đứng dậy (đã khóa)';
+      default:
+        return 'Báo động té ngã (đã khóa an toàn)';
+    }
+  }
+  return const {
+        'NORMAL': 'Bình thường',
+        'SUSPECTED_FALL': 'Nghi ngờ té ngã',
+        'VERIFYING': 'Đang xác minh',
+        'RECOVERED': 'Đã phục hồi',
+      }[value] ??
+      'Chưa phân tích';
+}
 
 String eventName(String? value) =>
     const {
@@ -56,6 +80,8 @@ String eventName(String? value) =>
       'UNVERIFIED_CANDIDATE': 'Chưa đủ bằng chứng xác minh',
       'LYING_TOO_LONG': 'Nằm kéo dài',
       'ABNORMAL_INACTIVITY': 'Bất động kéo dài',
+      'CONVULSION_SUSPECTED': 'Nghi co giật / giãy giụa',
+      'ASSISTANCE_DETECTED': 'Có người đến hỗ trợ',
     }[value] ??
     value ??
     'Sự kiện';
@@ -426,8 +452,26 @@ class _WebAiTestPageState extends State<WebAiTestPage> {
   Widget resultPanel() {
     final features = result?['features'] as Map?;
     final confidence = (features?['confidence'] as num?);
+    final fallScore = (result?['fall_score'] as num?)?.toDouble() ?? 0.0;
+    final mlPred = result?['ml_prediction'] as Map?;
+    final mlModel = mlPred?['model_name'] as String?;
+    final algoVer = result?['algorithm_version'] as String? ?? '2.0-ml';
+    final actSummary = result?['activity_summary'] as Map?;
+    final durations = actSummary?['durations_s'] as Map?;
     final inference = result?['inference_ms'] as num?;
     final person = result?['person_status'] as String?;
+    final riskColor =
+        fallScore >= 0.75
+            ? Colors.red.shade700
+            : fallScore >= 0.35
+            ? Colors.orange.shade800
+            : const Color(0xff007f86);
+    final riskLabel =
+        fallScore >= 0.75
+            ? 'Cao'
+            : fallScore >= 0.35
+            ? 'Trung bình'
+            : 'Thấp';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -437,9 +481,24 @@ class _WebAiTestPageState extends State<WebAiTestPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Kết quả nhận diện',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Kết quả nhận diện',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Chip(
+                      label: Text(
+                        mlModel != null ? 'ML: $mlModel' : 'Engine $algoVer',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 14),
                 metric(
@@ -449,13 +508,67 @@ class _WebAiTestPageState extends State<WebAiTestPage> {
                 ),
                 const Divider(),
                 metric(
-                  'Trạng thái phân tích',
-                  fsmName(result?['fsm']),
+                  'Trạng thái phân tích (FSM)',
+                  fsmName(
+                    result?['fsm'] as String?,
+                    basis: result?['alert_basis'] as String?,
+                  ),
                   Icons.health_and_safety_outlined,
                   color:
-                      ['SUSPECTED_FALL', 'ALERT'].contains(result?['fsm'])
+                      result?['fsm'] == 'ALERT'
+                          ? Colors.red.shade700
+                          : result?['fsm'] == 'SUSPECTED_FALL'
                           ? Colors.deepOrange
                           : null,
+                ),
+                if (result?['assisted'] == true &&
+                    ['SUSPECTED_FALL', 'VERIFYING', 'ALERT']
+                        .contains(result?['fsm']))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Có người đến hỗ trợ — đang giữ khóa an toàn cho đến khi xác nhận phục hồi.',
+                      style: TextStyle(
+                        color: Colors.orange.shade800,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Điểm rủi ro té ngã (ML Risk Meter)',
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                          Text(
+                            '${(fallScore * 100).toStringAsFixed(0)}% • $riskLabel',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: riskColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: fallScore.clamp(0.0, 1.0),
+                          minHeight: 10,
+                          backgroundColor: Colors.black12,
+                          valueColor: AlwaysStoppedAnimation<Color>(riskColor),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const Divider(),
                 metric(
@@ -482,9 +595,69 @@ class _WebAiTestPageState extends State<WebAiTestPage> {
                   ),
                 const SizedBox(height: 14),
                 const Text(
-                  'Độ tin cậy pose là chất lượng khớp cơ thể, không phải xác suất té ngã.',
+                  'Độ tin cậy pose là chất lượng khớp MediaPipe; Điểm rủi ro té ngã là xác suất dự đoán từ mô hình Machine Learning V2.',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Thống kê hoạt động',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Chip(
+                      label: Text(
+                        activityLevelName(
+                          actSummary?['activity_level'] as String?,
+                        ),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                if (durations == null)
+                  const Text('Chưa có dữ liệu hoạt động trong phiên.')
+                else ...[
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final entry in const [
+                        ('STANDING', 'Đứng'),
+                        ('WALKING', 'Đi lại'),
+                        ('SITTING', 'Ngồi'),
+                        ('BENDING', 'Cúi người'),
+                        ('LYING', 'Nằm'),
+                        ('SLUMPED', 'Gục người'),
+                      ])
+                        Chip(
+                          label: Text(
+                            '${entry.$2}: ${((durations[entry.$1] as num?) ?? 0).toStringAsFixed(1)}s',
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Chuyển tư thế: ${actSummary?['sit_to_stand_count'] ?? 0} đứng lên • ${actSummary?['stand_to_sit_count'] ?? 0} ngồi xuống',
+                    style: const TextStyle(color: Colors.black54, fontSize: 13),
+                  ),
+                ],
               ],
             ),
           ),
@@ -645,7 +818,7 @@ class _WebAiTestPageState extends State<WebAiTestPage> {
                 ),
                 const SizedBox(height: 18),
                 const Text(
-                  'LOCAL TEST • Thuật toán V1 đang thử nghiệm. Phiên này không gửi Firebase hoặc thông báo.',
+                  'LOCAL EDGE AI • Phiên bản V2 (MediaPipe 2D/3D + Machine Learning Classifier + FSM). Phiên này chạy cục bộ, không gửi Firebase hoặc thông báo.',
                   style: TextStyle(color: Colors.black54, fontSize: 12),
                 ),
               ],

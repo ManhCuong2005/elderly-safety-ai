@@ -18,7 +18,7 @@ def main():
     p.add_argument('--input-layout',choices=['auto','rgb','ur-rgbd'],default='auto')
     p.add_argument('--mode', choices=['local','connected'], default='local')
     p.add_argument('--profile', help='Provisioned Firestore profile ID; required in connected mode')
-    p.add_argument('--config', default=str(HERE/'configs/calibrated-v1_4.json'))
+    p.add_argument('--config', default=str(HERE/'configs/v2_ml.json'))
     p.add_argument('--model', default=str(HERE/'models/pose_landmarker_full.task'))
     p.add_argument('--demo', action='store_true', help='Short lying/inactivity timers; LOCAL ONLY')
     p.add_argument('--headless', action='store_true')
@@ -49,7 +49,7 @@ def main():
             before = time.perf_counter()
             pose, reason = tracker.process(frame, t)
             h, w = frame.shape[:2]
-            result = engine.process(t, pose, w, h, reason)
+            result = engine.process(t, pose, w, h, reason, world_landmarks=tracker.last_world_landmarks, people_count=tracker.last_people_count)
             if publisher:
                 safe = publisher.take_safe_confirmations()
                 for event_id in safe:
@@ -61,8 +61,9 @@ def main():
             elapsed = time.perf_counter()-before
             if not args.headless:
                 tracker.draw(frame, pose)
-                lines = [f"{args.mode.upper()} | {result['posture']} | {result['person_status']}",
-                         f"FSM {result['fsm']} | motion {result['motion']['speed']:.2f} torso/s",
+                risk_pct = int(round(result.get('fall_score', 0.0) * 100))
+                lines = [f"{args.mode.upper()} [{result.get('algorithm_version','1.4')}] | {result['posture']} | {result['person_status']}",
+                         f"FSM {result['fsm']} | Fall Risk {risk_pct}% | motion {result['motion']['speed']:.2f} torso/s",
                          f"AI {1/max(elapsed,1e-6):.1f} FPS | Firebase {publisher.health if publisher else 'DISABLED'}",
                          'Q stop | SPACE pause | R select person again']
                 if args.demo:

@@ -85,4 +85,7 @@ void main() {
       findsOneWidget,
     );
   });
+  test('bending posture label is supported in Vietnamese', () {
+    expect(postureLabel('BENDING'), 'Đang cúi người');
+  });
 }

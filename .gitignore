@@ -1,27 +1,138 @@
-tools/
-.venv/
-__pycache__/
-.pytest_cache/
-*.pyc
+# ============================================================
+# OS & Editor / IDE
+# ============================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+*.part
+.claude/
+.cursor/
+.gemini/
+
+# ============================================================
+# Secrets & Credentials (KHÔNG BAO GIỜ PUSH)
+# ============================================================
 .env
+.env.*
+!.env.example
+secrets/
 *-adminsdk-*.json
 *service-account*.json
-secrets/
+*service_account*.json
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+flutter_app/android/key.properties
+
+# ============================================================
+# Python & Local Tools
+# ============================================================
+tools/
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.coverage
+htmlcov/
+coverage.xml
+*.egg-info/
+.eggs/
+dist/
+.ipynb_checkpoints/
+
+# ============================================================
+# AI Models, Datasets & Media (File dung lượng lớn)
+# Lưu ý: giữ lại ai_engine/trained_models/fall_activity_model.joblib (~48 KB)
+# ============================================================
 ai_engine/models/
+*.task
+*.pt
+*.pth
+*.onnx
+*.h5
+*.tflite
+*.ckpt
+*.weights
+
 ai_engine/datasets/raw/*
 ai_engine/datasets/processed/*
+ai_engine/datasets/custom/*
+!ai_engine/datasets/custom/sources.example.csv
 !**/.gitkeep
-*.log
+
+# Video & file nén (dataset, clip test, bản ghi webcam)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.flv
+*.wmv
+*.m4v
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# ============================================================
+# Flutter / Dart / Android / Web
+# ============================================================
 .dart_tool/
-.flutter-plugins*
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
 build/
 flutter_app/android/local.properties
 flutter_app/android/.gradle/
-flutter_app/android/key.properties
-*.jks
+flutter_app/android/.cxx/
+flutter_app/android/captures/
+*.apk
+*.aab
+*.ipa
+app.*.symbols
+app.*.map.json
+
+# ============================================================
+# Firebase & Node.js
+# ============================================================
 node_modules/
 .firebase/
-firebase-debug.log
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+pubsub-debug.log*
+
+# ============================================================
+# Logs, Local Reports & Office Documents
+# ============================================================
+*.log
 docs/provisioning-status.json
 docs/camera-probe.json
 docs/LOCAL_QUICKSTART.md
+~$*
+*.docx
+*.doc
+*.pptx
+*.xlsx

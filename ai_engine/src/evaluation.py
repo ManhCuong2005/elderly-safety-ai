@@ -33,7 +33,10 @@ def replay(record, cache, config):
         row = json.loads(line)
         if record.get('input_layout')=='ur-rgbd' and row['width']/row['height']>2:
             raise ValueError('Legacy RGB/depth composite cache: extract again into a new cache tag before evaluating RGB accuracy.')
-        result = engine.process(row['t'], row['landmarks'], row['width'], row['height'], row['reason'])
+        result = engine.process(
+            row['t'], row['landmarks'], row['width'], row['height'],
+            row['reason'], world_landmarks=row.get('world_landmarks'),
+        )
         total += 1
         coverage[result.get('pose_coverage','NONE')]+=1
         if result['features']:

@@ -1,0 +1,7 @@
+url,label,start_s,end_s,note
+# Copy file nay thanh sources.csv roi dan link video cong khai (YouTube, TikTok, Facebook Reels, Pexels...)
+# Cac nhan hop le: FALL, BENDING, LYING, SITTING, WALKING, STANDING, OTHER
+# Vi du:
+# https://www.youtube.com/watch?v=EXAMPLE_ID,FALL,4,12,Nga truot chan trong phong khach
+# https://www.pexels.com/video/EXAMPLE_ID/,BENDING,0,8,Cui nguoi nhat do tranh bao dong gia
+# https://www.tiktok.com/@user/video/EXAMPLE_ID,WALKING,1,10,Nguoi cao tuoi di bo trong nha
