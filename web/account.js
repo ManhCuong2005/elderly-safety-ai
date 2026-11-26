@@ -1,17 +1,27 @@
 'use strict';
 
 const accountForm = element('account-form');
+const confirmationForm = element('account-confirmation');
 const passwordInput = element('account-password');
+const codeInput = element('account-code');
+const resendButton = element('confirmation-resend');
+const confirmButton = element('confirmation-submit');
+const confirmationBack = element('confirmation-back');
 const workspace = element('workspace');
 const screens = document.querySelectorAll('[data-screen]');
 let registering = false;
+let confirmationEmail = '';
+let confirmationBusy = false;
+let resendAfter = 0;
+let resendTimer;
 let telegramStep = '';
 let currentRoute;
 
-function accountMessage(id, text) {
+function accountMessage(id, text, error = false) {
   const item = element(id);
   item.textContent = text;
   item.hidden = !text;
+  item.dataset.tone = error ? 'alert' : '';
 }
 
 function accountsMode(signup) {
@@ -27,10 +37,13 @@ function accountsMode(signup) {
 }
 
 function showMonitor(user) {
-  element('profile-name').textContent = user.name || 'Chưa đặt tên';
-  element('profile-email').textContent = user.email;
-  const initials = Array.from((user.name || '').trim() || user.email.trim())[0];
-  element('account-avatar').textContent = initials?.toLocaleUpperCase('vi-VN') || '';
+  clearTimeout(resendTimer);
+  confirmationForm.hidden = true;
+  const name = (user.name || '').trim();
+  element('profile-name').textContent = element('me-name').textContent = name || 'Chưa đặt tên';
+  element('profile-email').textContent = element('me-email').textContent = user.email;
+  const initial = Array.from(name || user.email.trim())[0]?.toLocaleUpperCase('vi-VN') || '';
+  element('account-avatar').textContent = element('me-avatar').textContent = initial;
   element('account-screen').hidden = true;
   workspace.hidden = false;
   element('skip-link').href = '#main-content';
@@ -73,6 +86,7 @@ function renderRoute() {
 window.addEventListener('hashchange', renderRoute);
 
 function showSignIn(configured) {
+  confirmationForm.hidden = true;
   accountForm.hidden = !configured;
   accountMessage('account-message', configured ? '' : 'Máy chủ chưa cấu hình Supabase. Kiểm tra cấu hình rồi tải lại trang.');
   const hash = new URLSearchParams(location.hash.slice(1));
@@ -89,29 +103,111 @@ element('account-switch').addEventListener('click', () => {
   element(registering ? 'account-name' : 'account-email').focus();
 });
 
+function postAccount(action, body) {
+  return api(`/api/account/${action}`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
+  });
+}
+
+function updateResendButton() {
+  clearTimeout(resendTimer);
+  const seconds = Math.max(0, Math.ceil((resendAfter - Date.now()) / 1000));
+  resendButton.disabled = confirmationBusy || seconds > 0;
+  resendButton.textContent = seconds ? `Gửi lại sau ${seconds} giây` : 'Gửi lại mã';
+  if (seconds && !confirmationForm.hidden) resendTimer = setTimeout(updateResendButton, 1000);
+}
+
+function showConfirmation(email, waitSeconds = 0) {
+  if (confirmationEmail !== email) resendAfter = 0;
+  if (waitSeconds) resendAfter = Date.now() + waitSeconds * 1000;
+  confirmationEmail = email;
+  element('confirmation-email').textContent = email;
+  codeInput.value = '';
+  accountForm.hidden = true;
+  confirmationForm.hidden = false;
+  accountMessage('account-message', '');
+  updateResendButton();
+  codeInput.focus();
+}
+
+function setConfirmationBusy(busy) {
+  confirmationBusy = busy;
+  confirmButton.disabled = confirmationBack.disabled = busy;
+  updateResendButton();
+}
+
 accountForm.addEventListener('submit', async event => {
   event.preventDefault();
   const submit = element('account-submit');
   const toggle = element('account-switch');
+  const email = element('account-email').value.trim();
   submit.disabled = toggle.disabled = true;
   accountMessage('account-message', 'Đang xử lý…');
   try {
-    const data = await api(registering ? '/api/account/register' : '/api/account/login', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email: element('account-email').value, password: passwordInput.value,
-        name: element('account-name').value}),
+    const data = await postAccount(registering ? 'register' : 'login', {
+      email, password: passwordInput.value, name: element('account-name').value,
     });
     passwordInput.value = '';
-    if (data.confirmation_required) {
-      accountsMode(false);
-      accountMessage('account-message', 'Hãy mở email xác nhận, sau đó quay lại đăng nhập.');
-      passwordInput.focus();
-    } else showMonitor(data.user);
+    if (data.confirmation_required) showConfirmation(email, 60);
+    else showMonitor(data.user);
   } catch (error) {
-    accountMessage('account-message', error.message);
+    if (error.code === 'email_not_confirmed') {
+      passwordInput.value = '';
+      showConfirmation(email);
+    } else {
+      if (registering && error.retryAfter > 0) {
+        passwordInput.value = '';
+        showConfirmation(email, error.retryAfter);
+      }
+      accountMessage('account-message', error.message, true);
+    }
   } finally {
     submit.disabled = toggle.disabled = false;
   }
+});
+
+confirmationForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (confirmationBusy) return;
+  setConfirmationBusy(true);
+  accountMessage('account-message', 'Đang xác nhận mã…');
+  try {
+    const data = await postAccount('verify-email', {email: confirmationEmail, token: codeInput.value});
+    codeInput.value = '';
+    showMonitor(data.user);
+  } catch (error) {
+    accountMessage('account-message', error.message, true);
+    codeInput.focus();
+    codeInput.select();
+  } finally {
+    setConfirmationBusy(false);
+  }
+});
+
+resendButton.addEventListener('click', async () => {
+  if (confirmationBusy || Date.now() < resendAfter) return;
+  setConfirmationBusy(true);
+  accountMessage('account-message', 'Đang yêu cầu mã mới…');
+  try {
+    await postAccount('resend-email', {email: confirmationEmail});
+    resendAfter = Date.now() + 60_000;
+    codeInput.value = '';
+    accountMessage('account-message', 'Đã yêu cầu gửi lại. Mở thư mới nhất, kể cả khi Gmail gộp nhiều thư cùng tiêu đề.');
+    codeInput.focus();
+  } catch (error) {
+    if (error.retryAfter > 0) resendAfter = Date.now() + error.retryAfter * 1000;
+    accountMessage('account-message', error.message, true);
+  } finally {
+    setConfirmationBusy(false);
+  }
+});
+
+confirmationBack.addEventListener('click', () => {
+  codeInput.value = '';
+  accountsMode(false);
+  showSignIn(true);
+  updateResendButton();
+  passwordInput.focus();
 });
 
 window.addEventListener('account-expired', () => {
@@ -121,17 +217,17 @@ window.addEventListener('account-expired', () => {
   }
 });
 
-element('logout').addEventListener('click', async () => {
-  const button = element('logout');
-  button.disabled = true;
+const logoutButton = element('logout');
+logoutButton.addEventListener('click', async () => {
+  logoutButton.disabled = true;
+  accountMessage('logout-message', '');
   try {
     await api('/api/account/logout', {method: 'POST'});
     stopCamera();
     location.reload();
   } catch (error) {
-    accountMessage('logout-message', error.message);
-  } finally {
-    button.disabled = false;
+    accountMessage('logout-message', error.message, true);
+    logoutButton.disabled = false;
   }
 });
 

@@ -1,4 +1,5 @@
 import io
+import json
 import unittest
 from datetime import datetime, timezone
 from email import policy
@@ -23,15 +24,35 @@ class SupabaseFixture(Supabase):
         self.links = {}
         self.events = {}
         self.settings = {}
+        self.pending_signups = {}
 
     def request(self, method, path, payload=None, *, database=False, prefer=None):
         route = urlsplit(path)
         if route.path == "/auth/v1/signup":
+            email = payload["email"]
+            self.pending_signups[email] = ("012345", payload["data"]["name"])
             return {"id": "pending-confirmation"}
+        if route.path in {"/auth/v1/verify", "/auth/v1/resend"}:
+            assert method == "POST" and payload["type"] == "signup"
+            email = payload["email"]
+            token, name = self.pending_signups.get(email, (None, ""))
+            if route.path == "/auth/v1/resend":
+                assert payload == {"email": email, "type": "signup"}
+                if token:
+                    self.pending_signups[email] = ("06543210", name)
+                return {}
+            if payload["token"] != token:
+                raise AccountError("Mã xác nhận sai hoặc đã hết hạn.", 400)
+            self.pending_signups.pop(email)
+            return {"access_token": "private-test-token", "user": {
+                "id": email.split("@")[0], "email": email, "user_metadata": {"name": name},
+            }}
         if route.path == "/auth/v1/token":
             if payload["password"] != "valid-pass":
                 raise AccountError("Email hoặc mật khẩu không đúng.", 401)
             email = payload["email"]
+            if email in self.pending_signups:
+                raise AccountError("Hãy xác nhận email trước khi đăng nhập.", 403, code="email_not_confirmed")
             return {"access_token": "private-test-token", "user": {
                 "id": email.split("@")[0], "email": email, "user_metadata": {"name": "Người kiểm thử"},
             }}
@@ -220,7 +241,7 @@ class AccountTests(unittest.TestCase):
             self.assertEqual(self.guest.get(route).status_code, 401)
         self.assertEqual(self.guest.post("/api/session").status_code, 401)
         self.assertEqual(self.guest.post("/api/account/register", json={
-            "email": "alice@example.com", "password": "valid-pass", "name": "Alice",
+            "email": "pending@example.com", "password": "valid-pass", "name": "Pending",
         }).status_code, 202)
         self.assertEqual(self.login(self.alice, "alice", "bad-pass").status_code, 401)
         response = self.login(self.alice, "alice")
@@ -232,6 +253,74 @@ class AccountTests(unittest.TestCase):
         self.assertEqual(self.alice.post("/api/account/logout", headers={"Origin": "https://elsewhere.test"}).status_code, 403)
         self.assertEqual(self.alice.post("/api/account/logout").status_code, 204)
         self.assertEqual(self.alice.get("/api/account/history").status_code, 401)
+
+    def test_signup_verification_resends_and_signs_in_once(self):
+        prefix = "/api/account/"
+        email = "new@example.com"
+        self.assertEqual(self.guest.post(prefix + "register", json={
+            "email": email, "password": "valid-pass", "name": "Người mới",
+        }).json, {"confirmation_required": True})
+        pending = self.login(self.guest, "new")
+        self.assertEqual(pending.status_code, 403)
+        self.assertEqual(pending.json["code"], "email_not_confirmed")
+
+        def verify(token, **options):
+            return self.guest.post(prefix + "verify-email", json={"email": email, "token": token}, **options)
+
+        self.assertEqual(verify(123456).status_code, 400)
+        self.assertEqual(verify("１２３４５６").status_code, 400)
+        self.assertEqual(verify("12345").status_code, 400)
+        self.assertEqual(verify("12345678901").status_code, 400)
+        self.assertEqual(verify("012345", headers={"Origin": "https://elsewhere.test"}).status_code, 403)
+        self.assertEqual(self.guest.post(prefix + "resend-email", json={"email": "bad"}).status_code, 400)
+        self.assertEqual(self.guest.post(prefix + "resend-email", json={"email": email}).status_code, 204)
+        self.assertEqual(verify("012345").status_code, 400)
+        self.assertEqual(verify("065432").status_code, 400)
+        self.assertIsNone(self.guest.get("/api/account").json["user"])
+        accepted = verify("06543210")
+        self.assertEqual(accepted.status_code, 200)
+        self.assertEqual(accepted.json, {"user": {"id": "new", "email": email, "name": "Người mới"}})
+        self.assertIn("HttpOnly", accepted.headers["Set-Cookie"])
+        self.assertEqual(self.guest.get("/api/status").status_code, 200)
+        self.assertEqual(verify("06543210").status_code, 400)
+
+    def test_supabase_signup_reports_mail_failure_without_exposing_upstream_details(self):
+        db = Supabase("test.supabase.co", "publishable", "secret")
+        with patch("src.accounts.http.client.HTTPSConnection") as connection:
+            response = connection.return_value.getresponse.return_value
+            response.status = 500
+            response.read.return_value = json.dumps({
+                "error_code": "unexpected_failure", "msg": "Error sending confirmation email: private SMTP detail",
+            }).encode()
+            with self.assertLogs("src.accounts", level="WARNING") as logged:
+                with self.assertRaises(AccountError) as failure:
+                    db.authenticate({"email": "new@example.com"}, True)
+            self.assertEqual(failure.exception.status, 502)
+            self.assertIn("gửi email xác nhận", str(failure.exception))
+            self.assertIn("unexpected_failure", logged.output[0])
+            self.assertNotIn("private SMTP detail", str(failure.exception) + logged.output[0])
+
+            response.status = 403
+            response.read.return_value = b'{"error_code":"otp_expired"}'
+            with self.assertRaises(AccountError) as invalid:
+                db.verify_signup("new@example.com", "065432")
+            self.assertEqual(invalid.exception.status, 400)
+            self.assertIn("không chấp nhận mã", str(invalid.exception))
+
+    def test_confirmation_email_uses_supabase_retry_after(self):
+        db = Supabase("test.supabase.co", "publishable", "secret")
+        with patch("src.accounts.http.client.HTTPSConnection") as connection:
+            response = connection.return_value.getresponse.return_value
+            response.status = 429
+            response.read.return_value = json.dumps({
+                "error_code": "over_email_send_rate_limit",
+                "msg": "For security purposes, you can only request this after 12 seconds.",
+            }).encode()
+            with patch.object(self.db, "resend_signup", db.resend_signup):
+                delayed = self.guest.post("/api/account/resend-email", json={"email": "new@example.com"})
+            self.assertEqual(delayed.status_code, 429)
+            self.assertEqual(delayed.headers["Retry-After"], "13")
+            self.assertIn("13 giây", delayed.json["error"])
 
     def test_two_telegram_links_and_private_history(self):
         self.login(self.alice, "alice")

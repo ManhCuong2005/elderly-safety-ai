@@ -27,7 +27,12 @@ async function api(url, options) {
   if (response.status === 401 && !['/api/account/login', '/api/account/register'].includes(url)) {
     window.dispatchEvent(new Event('account-expired'));
   }
-  if (!response.ok) throw new Error(data.error || `Máy xử lý trả về mã ${response.status}.`);
+  if (!response.ok) {
+    const error = new Error(data.error || `Máy xử lý trả về mã ${response.status}.`);
+    error.code = data.code;
+    error.retryAfter = Number(response.headers.get('Retry-After'));
+    throw error;
+  }
   return data;
 }
 

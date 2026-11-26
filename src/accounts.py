@@ -21,9 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 class AccountError(Exception):
-    def __init__(self, message, status=503):
+    def __init__(self, message, status=503, *, code=None, retry_after=None):
         super().__init__(message)
         self.status = status
+        self.code = code
+        self.retry_after = retry_after
 
 
 class Supabase:
@@ -39,20 +41,32 @@ class Supabase:
         headers = {"apikey": key, "Content-Type": "application/json"}
         if prefer is not None:
             headers["Prefer"] = prefer
-        connection = http.client.HTTPSConnection(self.host, timeout=5)
+        sends_confirmation = path in {"/auth/v1/signup", "/auth/v1/resend"}
+        connection = http.client.HTTPSConnection(self.host, timeout=20 if sends_confirmation else 5)
         try:
             connection.request(method, path, json.dumps(payload) if payload is not None else None, headers)
             response = connection.getresponse()
             raw = response.read(1024 * 1024)
-            result = json.loads(raw) if raw else None
-        except (OSError, ValueError, http.client.HTTPException):
+        except TimeoutError:
+            if sends_confirmation:
+                raise AccountError("Supabase phản hồi quá lâu khi gửi email xác nhận. Kiểm tra hộp thư rồi thử lại.", 504) from None
+            raise AccountError("Supabase phản hồi quá lâu. Vui lòng thử lại.", 504) from None
+        except (OSError, http.client.HTTPException):
             raise AccountError("Không kết nối được với Supabase. Vui lòng thử lại.") from None
         finally:
             connection.close()
+        try:
+            result = json.loads(raw) if raw else None
+        except ValueError:
+            logger.warning("Supabase trả về phản hồi không đọc được (HTTP %s).", response.status)
+            raise AccountError(f"Supabase trả về phản hồi không đọc được (HTTP {response.status}).", 502) from None
         if response.status < 300:
             return result
-        code = result if isinstance(result, dict) else {}
-        code = code.get("error_code") or code.get("code")
+        details = result if isinstance(result, dict) else {}
+        code = details.get("error_code") or details.get("code")
+        provider_message = details.get("msg") or details.get("message") or details.get("error_description")
+        if not isinstance(code, str) or not re.fullmatch(r"[a-z0-9_]{1,64}", code):
+            code = None
         if database:
             if code == "23505":
                 raise AccountError("Tài khoản CameraAI hoặc Telegram này đã có liên kết.", 409)
@@ -60,23 +74,56 @@ class Supabase:
                 raise AccountError("Supabase chưa có bảng cài đặt camera. Hãy chạy lại supabase/schema.sql.")
             logger.warning("Không truy cập được dữ liệu tài khoản Supabase (%s).", response.status)
             raise AccountError("Lịch sử hoặc kết nối Telegram chưa khả dụng. Kiểm tra cấu hình Supabase.")
-        if response.status == 429 or code in {"over_email_send_rate_limit", "over_request_rate_limit"}:
+        if code == "over_email_send_rate_limit":
+            wait = re.fullmatch(r"For security purposes, you can only request this after ([0-9]{1,5}) seconds?\.",
+                                provider_message) if isinstance(provider_message, str) else None
+            if wait:
+                seconds = int(wait[1]) + 1
+                raise AccountError(f"Chờ {seconds} giây trước khi yêu cầu mã mới.", 429, retry_after=seconds)
+            raise AccountError("Đã tới giới hạn gửi email xác nhận. Vui lòng đợi rồi thử lại.", 429)
+        if response.status == 429 or code == "over_request_rate_limit":
             raise AccountError("Có quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.", 429)
         if code == "email_not_confirmed":
-            raise AccountError("Hãy xác nhận email trước khi đăng nhập.", 403)
-        if code == "invalid_credentials" or response.status == 401:
+            raise AccountError("Hãy xác nhận email trước khi đăng nhập.", 403, code=code)
+        if path == "/auth/v1/verify" and code == "otp_expired":
+            raise AccountError("Supabase không chấp nhận mã này. Nhập mã trong thư mới nhất hoặc gửi lại mã.", 400)
+        if code == "invalid_credentials" or (response.status == 401 and path.startswith("/auth/v1/token?")):
             raise AccountError("Email hoặc mật khẩu không đúng.", 401)
-        if code in {"email_address_invalid", "email_address_not_authorized", "validation_failed", "weak_password"}:
+        if code == "email_address_not_authorized":
+            raise AccountError("Supabase không được phép gửi thư đến địa chỉ này. Kiểm tra cấu hình SMTP trong Supabase.", 403)
+        if code == "signup_disabled":
+            raise AccountError("Supabase đang tắt tính năng đăng ký tài khoản mới.", 403)
+        if code in {"email_address_invalid", "validation_failed", "weak_password"}:
             raise AccountError("Supabase không chấp nhận email hoặc mật khẩu này.", 400)
-        raise AccountError("Supabase chưa xử lý được yêu cầu tài khoản. Vui lòng thử lại.")
+        if (sends_confirmation and isinstance(provider_message, str)
+                and provider_message.lower().startswith("error sending confirmation email")):
+            logger.warning("Supabase Auth báo lỗi gửi thư xác nhận trên %s (HTTP %s, %s).",
+                           path, response.status, code or "không có mã lỗi")
+            raise AccountError("Supabase báo lỗi ở bước gửi email xác nhận. Xem Auth Logs trong Supabase để kiểm tra SMTP hoặc mẫu thư.", 502)
+        logger.warning("Supabase Auth trả lỗi trên %s (HTTP %s, %s).",
+                       path.partition("?")[0], response.status, code or "không có mã lỗi")
+        raise AccountError(f"Supabase trả lỗi HTTP {response.status} khi xử lý tài khoản. Xem Auth Logs trong Supabase.", 502)
 
     def authenticate(self, payload, signup):
         path = "/auth/v1/signup" if signup else "/auth/v1/token?grant_type=password"
         result = self.request("POST", path, payload)
         if signup and isinstance(result, dict) and not result.get("access_token"):
             return None
+        return self.authenticated_user(result)
+
+    def verify_signup(self, email, token):
+        result = self.request("POST", "/auth/v1/verify", {"email": email, "token": token, "type": "signup"})
+        return self.authenticated_user(result)
+
+    def resend_signup(self, email):
+        self.request("POST", "/auth/v1/resend", {"email": email, "type": "signup"})
+
+    @staticmethod
+    def authenticated_user(result):
         user = result.get("user") if isinstance(result, dict) else None
-        if not isinstance(user, dict) or not isinstance(user.get("id"), str) or not user.get("email"):
+        if (not isinstance(user, dict) or not isinstance(user.get("id"), str)
+                or not isinstance(user.get("email"), str) or not user["email"]
+                or not isinstance(result.get("access_token"), str) or not result["access_token"]):
             raise AccountError("Supabase không trả về thông tin tài khoản hợp lệ.")
         metadata = user.get("user_metadata") or {}
         return {"id": user["id"], "email": user["email"], "name": str(metadata.get("name", ""))[:80]}
@@ -302,6 +349,10 @@ def register_account_routes(app, db, links, stop_sessions):
 
     @app.errorhandler(AccountError)
     def account_error(error):
+        if error.retry_after is not None:
+            return jsonify(error=str(error)), error.status, {"Retry-After": str(error.retry_after)}
+        if error.code:
+            return jsonify(error=str(error), code=error.code), error.status
         return jsonify(error=str(error)), error.status
 
     @app.get("/api/account")
@@ -316,23 +367,34 @@ def register_account_routes(app, db, links, stop_sessions):
                 links.cancel(login_id)
         session.clear()
 
-    @app.post("/api/account/register")
-    @app.post("/api/account/login")
-    def authenticate():
+    def sign_in(user):
+        end_session()
+        session.permanent = True
+        session.update(user=user, login_id=secrets.token_urlsafe(24))
+        return jsonify(user=user)
+
+    def email_request():
         if db is None:
             raise AccountError("Máy chủ chưa cấu hình Supabase.")
-        signup = request.path.endswith("/register")
         request.max_content_length = 8192
         body = request.get_json(silent=True)
         if not isinstance(body, dict):
-            raise AccountError("Dữ liệu đăng nhập không hợp lệ.", 400)
-        email, password = body.get("email"), body.get("password")
-        name = body.get("name", "")
+            raise AccountError("Dữ liệu tài khoản không hợp lệ.", 400)
+        email = body.get("email")
         if not isinstance(email, str) or len(email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+", email.strip()):
             raise AccountError("Nhập địa chỉ email hợp lệ.", 400)
+        return body, email.strip()
+
+    @app.post("/api/account/register")
+    @app.post("/api/account/login")
+    def authenticate():
+        body, email = email_request()
+        signup = request.path.endswith("/register")
+        password = body.get("password")
+        name = body.get("name", "")
         if not isinstance(password, str) or not ((8 if signup else 1) <= len(password) <= 256):
             raise AccountError("Mật khẩu đăng ký cần ít nhất 8 ký tự." if signup else "Nhập mật khẩu hợp lệ.", 400)
-        payload = {"email": email.strip(), "password": password}
+        payload = {"email": email, "password": password}
         if signup:
             if not isinstance(name, str) or len(name.strip()) > 80:
                 raise AccountError("Tên hiển thị tối đa 80 ký tự.", 400)
@@ -340,10 +402,21 @@ def register_account_routes(app, db, links, stop_sessions):
         user = db.authenticate(payload, signup)
         if user is None:
             return jsonify(confirmation_required=True), 202
-        end_session()
-        session.permanent = True
-        session.update(user=user, login_id=secrets.token_urlsafe(24))
-        return jsonify(user=user)
+        return sign_in(user)
+
+    @app.post("/api/account/verify-email")
+    def verify_email():
+        body, email = email_request()
+        token = body.get("token")
+        if not isinstance(token, str) or not re.fullmatch(r"[0-9]{6,10}", token):
+            raise AccountError("Nhập đầy đủ mã xác nhận từ 6 đến 10 chữ số trong email.", 400)
+        return sign_in(db.verify_signup(email, token))
+
+    @app.post("/api/account/resend-email")
+    def resend_email():
+        _, email = email_request()
+        db.resend_signup(email)
+        return "", 204
 
     @app.post("/api/account/logout")
     def logout():

@@ -28,7 +28,7 @@ from .train import SPLIT, load_model
 TTL = 8
 MAX_SESSIONS = 12
 MAX_JPEG = 600_000
-MAX_UPLOAD = 64 * 1024**2
+MAX_UPLOAD = 128 * 1024**2
 MAX_VIDEO_SECONDS = 90
 ABSENCE_DEFAULT = 60
 ABSENCE_MIN = 10
@@ -224,7 +224,8 @@ def create_app(host="127.0.0.1", start_sweeper=True):
             origin = request.headers.get("Origin")
             if origin and origin != request.host_url.rstrip("/"):
                 abort(403)
-        if (request.path.startswith("/api/") and request.endpoint not in {"account", "authenticate", "logout"}
+        if (request.path.startswith("/api/")
+                and request.endpoint not in {"account", "authenticate", "verify_email", "resend_email", "logout"}
                 and not account_session.get("login_id")):
             return jsonify(error="Hãy đăng nhập để tiếp tục."), 401
 

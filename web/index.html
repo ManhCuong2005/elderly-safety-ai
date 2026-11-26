@@ -26,7 +26,7 @@
     <div class="auth-pane">
       <div class="account-card">
         <form id="account-form" hidden>
-          <h2 id="account-heading">Đăng nhập</h2>
+          <h2 class="auth-heading" id="account-heading">Đăng nhập</h2>
           <div class="form-field" id="account-name-field" hidden>
             <label for="account-name">Tên hiển thị</label>
             <input id="account-name" name="name" autocomplete="name" maxlength="80">
@@ -43,6 +43,23 @@
             <button class="primary" id="account-submit" type="submit">Đăng nhập</button>
             <button class="text-button" id="account-switch" type="button">Tạo tài khoản</button>
           </div>
+        </form>
+        <form id="account-confirmation" aria-labelledby="confirmation-heading" hidden>
+          <h2 class="auth-heading" id="confirmation-heading">Xác nhận email</h2>
+          <p class="confirmation-recipient" id="confirmation-recipient">Nhập đầy đủ mã trong thư gửi đến <strong id="confirmation-email"></strong>.</p>
+          <div class="form-field">
+            <label for="account-code">Mã xác nhận</label>
+            <input id="account-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+                   pattern="[0-9]{6,10}" maxlength="10" aria-describedby="confirmation-recipient" required>
+          </div>
+          <div class="auth-actions">
+            <button class="primary" id="confirmation-submit" type="submit">Xác nhận và đăng nhập</button>
+            <div class="confirmation-actions">
+              <button class="text-button" id="confirmation-resend" type="button">Gửi lại mã</button>
+              <button class="text-button" id="confirmation-back" type="button">Về đăng nhập</button>
+            </div>
+          </div>
+          <p class="hint">Nếu thư có liên kết xác nhận, bạn cũng có thể mở liên kết rồi đăng nhập.</p>
         </form>
         <p id="account-message" class="message" role="status">Đang kiểm tra phiên đăng nhập…</p>
       </div>
@@ -63,9 +80,15 @@
           <a href="#camera" data-route="camera" class="nav-link" aria-current="page"><span class="mode-icon icon-camera" aria-hidden="true"></span>Camera</a>
           <a href="#thu-video" data-route="thu-video" class="nav-link" id="upload-nav" hidden><span class="mode-icon icon-video" aria-hidden="true"></span>Thử video</a>
         </nav>
-        <div class="backend-status" id="backend-status">
-          <span class="status-dot" aria-hidden="true"></span>
-          <div><strong>Máy xử lý</strong><p id="backend" role="status">Đang kết nối…</p></div>
+        <div class="sidebar-footer">
+          <button class="sidebar-logout" type="button" id="logout" aria-describedby="logout-message">
+            <span class="logout-icon" aria-hidden="true"></span>Đăng xuất
+          </button>
+          <div class="backend-status" id="backend-status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <div><strong>Máy xử lý</strong><p id="backend" role="status">Đang kết nối…</p></div>
+          </div>
+          <p id="logout-message" class="message" role="status" hidden></p>
         </div>
       </aside>
 
@@ -124,22 +147,35 @@
           </div>
         </section>
 
-        <section class="screen detail-screen" id="me-screen" aria-labelledby="me-title" data-screen="toi" hidden>
+        <section class="screen me-screen" id="me-screen" aria-labelledby="me-title" data-screen="toi" hidden>
           <header class="page-head"><h1 id="me-title" tabindex="-1">Tôi</h1></header>
-          <nav class="panel menu-list" aria-label="Mục Tôi">
-            <a class="menu-row" href="#tai-khoan">
-              <span><strong>Tài khoản &amp; Telegram</strong><span>Thông tin cá nhân và cài đặt nhận cảnh báo</span></span>
-              <span class="chevron" aria-hidden="true"></span>
-            </a>
-            <a class="menu-row" href="#cai-dat-camera">
-              <span><strong>Cài đặt camera</strong><span>Chọn thời gian báo khi không thấy người</span></span>
-              <span class="chevron" aria-hidden="true"></span>
-            </a>
-            <a class="menu-row" href="#lich-su">
-              <span><strong>Lịch sử cảnh báo</strong><span>Xem lại sự kiện theo ngày, giờ và ảnh</span></span>
-              <span class="chevron" aria-hidden="true"></span>
-            </a>
-          </nav>
+          <div class="me-layout">
+            <div class="me-profile">
+              <span class="focus-mark" aria-hidden="true"></span>
+              <span class="avatar me-avatar" id="me-avatar" aria-hidden="true"></span>
+              <div class="me-identity">
+                <h2 id="me-name"></h2>
+                <p id="me-email"></p>
+              </div>
+            </div>
+            <nav class="panel menu-list" aria-label="Cài đặt và lịch sử">
+              <a class="menu-row" href="#tai-khoan">
+                <span class="menu-icon menu-icon-account" aria-hidden="true"></span>
+                <span class="menu-copy"><strong>Tài khoản &amp; Telegram</strong><span>Thông tin cá nhân và kết nối nhận cảnh báo</span></span>
+                <span class="chevron" aria-hidden="true"></span>
+              </a>
+              <a class="menu-row" href="#cai-dat-camera">
+                <span class="menu-icon menu-icon-camera" aria-hidden="true"></span>
+                <span class="menu-copy"><strong>Cài đặt camera</strong><span>Chọn thời gian báo khi không thấy người</span></span>
+                <span class="chevron" aria-hidden="true"></span>
+              </a>
+              <a class="menu-row" href="#lich-su">
+                <span class="menu-icon menu-icon-history" aria-hidden="true"></span>
+                <span class="menu-copy"><strong>Lịch sử cảnh báo</strong><span>Tra cứu sự kiện và ảnh theo ngày</span></span>
+                <span class="chevron" aria-hidden="true"></span>
+              </a>
+            </nav>
+          </div>
         </section>
 
         <section class="screen detail-screen" id="profile-screen" aria-labelledby="profile-heading" data-screen="tai-khoan" hidden>
@@ -152,8 +188,6 @@
                 <dt>Tên hiển thị</dt><dd id="profile-name"></dd>
                 <dt>Email</dt><dd id="profile-email"></dd>
               </dl>
-              <button type="button" id="logout">Đăng xuất</button>
-              <p id="logout-message" class="message" role="status" hidden></p>
             </section>
             <section class="panel settings-panel" aria-labelledby="telegram-heading">
               <h2 id="telegram-heading">Kết nối Telegram</h2>
