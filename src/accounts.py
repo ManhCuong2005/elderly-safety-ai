@@ -5,13 +5,13 @@ import os
 import re
 import secrets
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from queue import Full, Queue
 from time import monotonic
 from urllib.parse import urlencode
 from uuid import uuid4
 
-from flask import jsonify, request, session
+from flask import Response, jsonify, request, session
 from flask.sessions import SecureCookieSessionInterface
 
 from . import telegram
@@ -222,19 +222,27 @@ class AccountAlerts:
             self.links.send(rows[0]["chat_id"], text, photo=photo)
             return True
 
-    def record(self, user_id, occurred_at):
+    def record(self, user_id, occurred_at, *, video_time=None, photo=None):
         alert_id = str(uuid4())
-        self.db.user_rows("POST", "fall_alerts", user_id, payload={
+        event = {
             "id": alert_id, "occurred_at": occurred_at.isoformat(), "telegram_status": "pending",
-        })
+        }
+        if video_time is not None:
+            event["source"] = "video_test"
+            if photo is not None:
+                event["photo_jpeg"] = "\\x" + photo.hex()
+        self.db.user_rows("POST", "fall_alerts", user_id, payload=event)
         status = "error"
         try:
-            status = "sent" if self.send_linked(user_id, telegram.fall_text(occurred_at)) else "unlinked"
+            if video_time is None or (photo is not None and self.links):
+                text = telegram.fall_text(occurred_at) if video_time is None else telegram.video_test_text(video_time)
+                status = "sent" if self.send_linked(user_id, text, photo=photo) else "unlinked"
         except AccountError as error:
             logger.warning("Không gửi được cảnh báo Telegram. %s", error)
         finally:
             self.db.user_rows("PATCH", "fall_alerts", user_id, id=f"eq.{alert_id}",
                               payload={"telegram_status": status})
+        return status
 
     def run(self):
         while True:
@@ -316,8 +324,38 @@ def register_account_routes(app, db, links, stop_sessions):
 
     @app.get("/api/account/history")
     def history():
-        return jsonify(events=user_rows("GET", "fall_alerts", select="id,occurred_at,telegram_status",
-                                        order="occurred_at.desc,id.desc", limit=50))
+        selected = request.args.get("date", "")
+        page = request.args.get("page", "1")
+        if not re.fullmatch(r"[1-9][0-9]{0,4}", page):
+            raise AccountError("Trang lịch sử không hợp lệ.", 400)
+        filters = {}
+        if selected:
+            try:
+                if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", selected):
+                    raise ValueError
+                day = date.fromisoformat(selected)
+                start = datetime.combine(day, datetime.min.time(), telegram.VN_TIME).astimezone(timezone.utc)
+                end = start + timedelta(days=1)
+            except (ValueError, OverflowError):
+                raise AccountError("Ngày lọc lịch sử không hợp lệ.", 400) from None
+            filters["and"] = f"(occurred_at.gte.{start.isoformat()},occurred_at.lt.{end.isoformat()})"
+        events = user_rows("GET", "fall_alerts", select="id,occurred_at,telegram_status,source,has_photo",
+                           order="occurred_at.desc,id.desc", limit=51, offset=(int(page) - 1) * 50, **filters)
+        return jsonify(events=events[:50], has_more=len(events) > 50)
+
+    @app.get("/api/account/history/<uuid:alert_id>/photo")
+    def history_photo(alert_id):
+        rows = user_rows("GET", "fall_alerts", select="photo_jpeg", id=f"eq.{alert_id}", limit=1)
+        value = rows[0]["photo_jpeg"] if rows else None
+        if value is None:
+            raise AccountError("Cảnh báo này chưa có ảnh.", 404)
+        try:
+            photo = bytes.fromhex(value[2:]) if value.startswith("\\x") else b""
+        except (AttributeError, ValueError):
+            photo = b""
+        if not photo.startswith(b"\xff\xd8"):
+            raise AccountError("Không đọc được ảnh cảnh báo.", 502)
+        return Response(photo, mimetype="image/jpeg", headers={"Cross-Origin-Resource-Policy": "same-origin"})
 
     @app.get("/api/account/telegram")
     def telegram_status():

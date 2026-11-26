@@ -12,9 +12,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Web
 
 Mở [website tại 127.0.0.1](http://127.0.0.1:8765/) và đăng nhập. Chọn **Camera → Bắt đầu theo dõi** và cấp quyền camera. Đặt laptop cố định, đưa một người vào khung sao cho thấy vai, hông và chân. Hai giây đầu thấy rõ tư thế dùng để làm đầy cửa sổ. Nút **Dừng** giải phóng camera và đóng phiên. Khi rời trang hoặc máy xử lý mất kết nối, phiên kết thúc và buffer được giải phóng.
 
-Chọn **Phát lại**, chọn clip có nhãn **Test** rồi bấm Play trong khung. Danh sách sự kiện cập nhật theo thời gian video. Chọn **Rà nhãn** để xem căn cứ và hai mốc thật độc lập với cảnh báo. Hồ sơ từ model đến split, video gốc và mốc nằm trong [model_videos.csv](data/manifests/model_videos.csv). Xem số đo tại [Đánh giá model](reports/model_evaluation.md) và [Kiểm kê dữ liệu](reports/dataset_summary.md).
+Hồ sơ từ model đến split, video gốc và mốc nằm trong [model_videos.csv](data/manifests/model_videos.csv). Xem số đo tại [Đánh giá model](reports/model_evaluation.md) và [Kiểm kê dữ liệu](reports/dataset_summary.md).
 
-Clip demo của pilot hiện tại là **Test · Trip_n_Fall/Person27**. Khi phát từ đầu, cảnh báo xuất hiện khoảng 6,52 giây, trước mốc chạm đã xác nhận 6,69 giây. Bảng cuối báo cáo đánh giá có thêm clip No_Fall của test và clip gốc đã dùng để train. [Mở thẳng clip test trong web](http://127.0.0.1:8765/?replay=Trip_n_Fall%2FPerson27)
+Clip demo của pilot hiện tại là **Test · Trip_n_Fall/Person27**. Khi phân tích trong **Thử video**, cảnh báo xuất hiện khoảng 6,52 giây, trước mốc chạm đã xác nhận 6,69 giây. Bảng cuối báo cáo đánh giá có thêm clip No_Fall của test và clip gốc đã dùng để train.
 
 Để thử một video trên máy, mở **Thử video**, chọn MP4 hoặc WebM, rồi bấm **Phân tích video**. Giới hạn mỗi tệp là 64 MiB, 90 giây, 4K và khoảng 60 khung hình/giây. Kết quả cho biết model có cảnh báo hay thiếu dữ liệu tư thế và cho phép bấm mốc để tua. Tệp chỉ được gửi tới máy xử lý localhost. Ứng dụng không đưa tệp vào dữ liệu huấn luyện. Nếu tệp giống byte với một video train, giao diện sẽ báo. Bản cắt hoặc mã hóa lại có thể có checksum khác.
 
@@ -23,6 +23,8 @@ Clip demo của pilot hiện tại là **Test · Trip_n_Fall/Person27**. Khi ph�
 ## Thiết lập tài khoản và cảnh báo
 
 Trong Supabase, bật **Data API**, rồi chạy toàn bộ [schema.sql](supabase/schema.sql) trong **SQL Editor**. Trong **Authentication → URL Configuration**, đặt **Site URL** thành `http://127.0.0.1:8765` để liên kết xác nhận email quay về web local. Khi triển khai, thay bằng URL HTTPS của web.
+
+Với project đã cấu hình, chạy lại [schema.sql](supabase/schema.sql) một lần để bổ sung nguồn và ảnh trong lịch sử. Các bản ghi có từ trước khi thêm nguồn được gắn nhãn **Camera**.
 
 Lưu cấu hình phía máy chủ vào `.secrets/supabase.json`.
 
@@ -36,11 +38,13 @@ Lưu cấu hình phía máy chủ vào `.secrets/supabase.json`.
 
 Lưu `{"bot_token": "..."}` vào `.secrets/telegram.json` và khởi động lại web. Giữ `.secrets` ngoài Git. Khi triển khai có thể dùng `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `TELEGRAM_BOT_TOKEN` và một `CAMERAAI_SESSION_SECRET` ngẫu nhiên ở phía máy chủ. Với cấu hình local mặc định, khởi động lại web sẽ yêu cầu đăng nhập lại.
 
-Đăng ký bằng email, xác nhận qua email nếu Supabase yêu cầu, rồi đăng nhập. Trong **Tôi → Kết nối Telegram**, tạo liên kết, mở bot và bấm **Start**. Quay lại CameraAI, bấm **Kiểm tra kết nối** rồi **Xác nhận liên kết** khi thấy đúng tài khoản. Một chat Telegram chỉ liên kết với một tài khoản CameraAI. Dùng một máy chủ CameraAI cho mỗi bot và tắt webhook Telegram nếu đã cấu hình webhook trước đó.
+Đăng ký bằng email, xác nhận qua email nếu Supabase yêu cầu, rồi đăng nhập. Trong **Tôi → Tài khoản & Telegram**, tạo liên kết, mở bot và bấm **Start**. Quay lại CameraAI, bấm **Kiểm tra kết nối** rồi **Xác nhận liên kết** khi thấy đúng tài khoản. Một chat Telegram chỉ liên kết với một tài khoản CameraAI. Dùng một máy chủ CameraAI cho mỗi bot và tắt webhook Telegram nếu đã cấu hình webhook trước đó.
 
 Nếu bật xác nhận email cho người dùng bên ngoài nhóm Supabase, cấu hình [SMTP riêng](https://supabase.com/docs/guides/auth/auth-smtp) để gửi email đăng ký.
 
-Camera trực tiếp ghi sự kiện **Nghi té ngã** cho tài khoản đã mở phiên. Bot chỉ gửi tới chat đã liên kết với tài khoản đó. Trong **Tôi** có lịch sử 50 cảnh báo gần nhất từ camera, nút gửi tin nhắn thử và nút ngắt kết nối. Khi **Thử video** phát hiện nghi té ngã, bot gửi một ảnh ở mốc cảnh báo đầu tiên với nhãn **[THỬ VIDEO]**. Web hiển thị kết quả phân tích và trạng thái gửi ảnh. Chế độ **Phát lại** hiển thị cảnh báo trên web. [Telegram Bot API](https://core.telegram.org/bots/api#sendphoto)
+Camera trực tiếp ghi sự kiện **Nghi té ngã** cho tài khoản đã mở phiên. Bot chỉ gửi tới chat đã liên kết với tài khoản đó. **Tôi → Lịch sử cảnh báo** nhóm sự kiện theo ngày, hiện giờ Việt Nam và cho phép chọn ngày hoặc chuyển trang. Khi **Thử video** phát hiện nghi té ngã, bot gửi một ảnh ở mốc cảnh báo đầu tiên với nhãn **[THỬ VIDEO]** và lưu một mục lịch sử có nguồn **Thử video**, kể cả khi Telegram chưa kết nối hoặc gửi lỗi. Web hiển thị kết quả phân tích và trạng thái gửi ảnh. [Telegram Bot API](https://core.telegram.org/bots/api#sendphoto)
+
+Ảnh khung hình của lượt **Thử video** mới hiện trong lịch sử riêng của tài khoản. Bấm vào ảnh thu nhỏ để xem kích thước đầy đủ.
 
 ## Chuẩn bị lại từng bước
 
@@ -63,7 +67,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Sheets
 
 Kaggle cấp quyền công khai trong lần tải đã chạy. Nếu nhận HTTP 401/403, mở trang dataset bằng tài khoản của bạn, kiểm tra quyền hoặc điều khoản, và đặt credential vào `.secrets/kaggle.json` hoặc `.secrets/access_token`. Có thể dùng `KAGGLE_API_TOKEN` hoặc cặp `KAGGLE_USERNAME` và `KAGGLE_KEY` của phiên PowerShell. Giữ `.secrets` ngoài Git và ngoài gói bàn giao.
 
-Sau kiểm kê, mở web và chọn **Rà nhãn**. Với ca ngã, tua chậm để đặt mốc bắt đầu mất thăng bằng và mốc chạm bề mặt thấp hơn. Mốc chạm là khung đầu có tiếp xúc chịu tải quan sát được, ví dụ tay chống sàn. Với sinh hoạt, đánh dấu các khoảng thấy rõ là No_Fall. Chọn **Không rõ** khi còn nghi vấn. Các mốc lưu bằng giây trong [confirmed.json](data/annotations/confirmed.json) kèm checksum, mã người, nhãn nguồn và căn cứ quan sát. Khung đối chiếu nằm ở `data/review/`. Trạng thái `review` giữ clip cho lần rà tiếp theo. Kiểm kê đánh dấu bản trùng hoặc file lỗi theo manifest và giữ file gốc tại chỗ.
+Các mốc đã rà lưu bằng giây trong [confirmed.json](data/annotations/confirmed.json) kèm checksum, mã người, nhãn nguồn và căn cứ quan sát. Với ca ngã, mốc chạm là khung đầu có tiếp xúc chịu tải quan sát được, ví dụ tay chống sàn. Khung đối chiếu nằm ở `data/review/`. Trạng thái `review` giữ clip cho lần rà tiếp theo. Kiểm kê đánh dấu bản trùng hoặc file lỗi theo manifest và giữ file gốc tại chỗ.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Split
@@ -93,7 +97,7 @@ Camera của trình duyệt cần ngữ cảnh an toàn. Laptop truy cập qua l
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1 Web -HostAddress 192.168.1.20 -Cert .secrets/lan.pem -Key .secrets/lan-key.pem
 ```
 
-Trên điện thoại mở `https://192.168.1.20:8765/` với IP thực của laptop, bấm **Bắt đầu theo dõi**, cấp quyền camera và dùng **Đổi camera** nếu có nhiều camera. HTTP tới IP LAN thường thiếu quyền truy cập camera. Chỉ giao diện camera được phục vụ cho thiết bị LAN. Rà nhãn và video nghiên cứu truy cập qua localhost. Thiết bị thật và chứng chỉ của mạng chấm cần được xác nhận tại chỗ. [MDN về quyền camera và HTTPS](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
+Trên điện thoại mở `https://192.168.1.20:8765/` với IP thực của laptop, bấm **Bắt đầu theo dõi**, cấp quyền camera và dùng **Đổi camera** nếu có nhiều camera. HTTP tới IP LAN thường thiếu quyền truy cập camera. **Thử video** được phục vụ qua localhost. Thiết bị thật và chứng chỉ của mạng chấm cần được xác nhận tại chỗ. [MDN về quyền camera và HTTPS](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 
 ## Nguồn
 

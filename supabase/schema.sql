@@ -13,6 +13,15 @@ create table if not exists public.fall_alerts (
     telegram_status text not null check (telegram_status in ('pending', 'unlinked', 'sent', 'error'))
 );
 
+alter table public.fall_alerts add column if not exists source text not null default 'camera'
+    check (source in ('camera', 'video_test'));
+
+alter table public.fall_alerts add column if not exists photo_jpeg bytea
+    check (octet_length(photo_jpeg) <= 500000);
+
+alter table public.fall_alerts add column if not exists has_photo boolean
+    generated always as (photo_jpeg is not null) stored;
+
 create index if not exists fall_alerts_user_time on public.fall_alerts (user_id, occurred_at desc);
 
 alter table public.telegram_links enable row level security;

@@ -47,11 +47,23 @@ class SupabaseFixture(Supabase):
         else:
             events = self.events.setdefault(owner, {})
             if method == "POST":
-                events[payload["id"]] = payload.copy()
+                events[payload["id"]] = {"source": "camera", "photo_jpeg": None, **payload,
+                                         "has_photo": payload.get("photo_jpeg") is not None}
             elif method == "PATCH":
                 events[query["id"][0][3:]].update(payload)
             else:
-                return [{key: row[key] for key in query["select"][0].split(",")} for row in events.values()]
+                latest = sorted(events.values(), key=lambda row: (row["occurred_at"], row["id"]), reverse=True)
+                if "id" in query:
+                    latest = [row for row in latest if row["id"] == query["id"][0][3:]]
+                if "and" in query:
+                    gte, lt = query["and"][0][1:-1].split(",")
+                    start = datetime.fromisoformat(gte.removeprefix("occurred_at.gte."))
+                    end = datetime.fromisoformat(lt.removeprefix("occurred_at.lt."))
+                    latest = [row for row in latest if start <= datetime.fromisoformat(row["occurred_at"]) < end]
+                offset = int(query.get("offset", [0])[0])
+                limit = int(query.get("limit", [len(latest)])[0])
+                latest = latest[offset:offset + limit]
+                return [{key: row[key] for key in query["select"][0].split(",")} for row in latest]
 
 
 class AccountTests(unittest.TestCase):
@@ -65,6 +77,32 @@ class AccountTests(unittest.TestCase):
 
     def login(self, client, name, password="valid-pass"):
         return client.post("/api/account/login", json={"email": f"{name}@example.com", "password": password})
+
+    def test_history_filters_vietnam_day_before_paginating(self):
+        self.login(self.alice, "alice")
+        self.login(self.bob, "bob")
+
+        def store(owner, event_id, timestamp):
+            self.db.user_rows("POST", "fall_alerts", owner, payload={
+                "id": event_id, "occurred_at": timestamp, "telegram_status": "sent",
+            })
+
+        store("alice", "day-before", "2026-11-25T16:59:59+00:00")
+        store("alice", "start", "2026-11-25T17:00:00+00:00")
+        for second in range(50):
+            store("alice", f"alert-{second}", f"2026-11-26T03:00:{second:02d}+00:00")
+        store("alice", "day-after", "2026-11-26T17:00:00+00:00")
+        store("bob", "private", "2026-11-26T10:00:00+00:00")
+        url = "/api/account/history?date=2026-11-26"
+        first = self.alice.get(url).json
+        self.assertEqual(len(first["events"]), 50)
+        self.assertTrue(first["has_more"])
+        self.assertEqual(first["events"][0]["id"], "alert-49")
+        second = self.alice.get(url + "&page=2").json
+        self.assertEqual([event["id"] for event in second["events"]], ["start"])
+        self.assertFalse(second["has_more"])
+        for query in ("date=2026-02-29", "date=0001-01-01", "page=0", "page=100000"):
+            self.assertEqual(self.alice.get(f"/api/account/history?{query}").status_code, 400)
 
     def test_authentication_and_web_gate(self):
         self.assertEqual(self.guest.get("/api/account").json, {"user": None, "configured": True})
@@ -136,12 +174,15 @@ class AccountTests(unittest.TestCase):
             alice = self.alice.get("/api/account/history?user_id=bob").json["events"]
             bob = self.bob.get("/api/account/history").json["events"]
             self.assertEqual(alice[0]["telegram_status"], "sent")
+            self.assertEqual(alice[0]["source"], "camera")
+            self.assertFalse(alice[0]["has_photo"])
+            self.assertEqual(self.alice.get(f'/api/account/history/{alice[0]["id"]}/photo').status_code, 404)
             self.assertNotEqual(alice[0]["id"], bob[0]["id"])
             self.assertEqual(self.alice.post(prefix + "unlink").status_code, 204)
             alerts.enqueue("alice")
             alerts.pending.join()
             self.assertEqual(len(outgoing), 3)
-            self.assertEqual(self.alice.get("/api/account/history").json["events"][-1]["telegram_status"], "unlinked")
+            self.assertEqual(self.alice.get("/api/account/history").json["events"][0]["telegram_status"], "unlinked")
 
     def test_expired_link_and_error_delivery(self):
         self.login(self.alice, "alice")
@@ -180,6 +221,12 @@ class AccountTests(unittest.TestCase):
             detected = upload(self.alice, fall)
             self.assertTrue(detected["alarms"])
             self.assertEqual(detected["telegram_status"], "sent")
+            alice_history = self.alice.get("/api/account/history").json["events"]
+            self.assertEqual(len(alice_history), 1)
+            self.assertEqual((alice_history[0]["source"], alice_history[0]["telegram_status"]), ("video_test", "sent"))
+            self.assertTrue(alice_history[0]["has_photo"])
+            self.assertNotIn("photo_jpeg", alice_history[0])
+            self.assertEqual(self.bob.get("/api/account/history").json["events"], [])
             connection.request.assert_called_once()
             method, path, body, headers = connection.request.call_args.args
             self.assertEqual((method, path), ("POST", "/bot1:test/sendPhoto"))
@@ -191,11 +238,19 @@ class AccountTests(unittest.TestCase):
             self.assertIn("[THỬ VIDEO]", caption)
             self.assertIn("00:06.52", caption)
             self.assertEqual(fields["photo"].get_content_type(), "image/jpeg")
-            with Image.open(io.BytesIO(fields["photo"].get_payload(decode=True))) as image:
+            jpeg = fields["photo"].get_payload(decode=True)
+            with Image.open(io.BytesIO(jpeg)) as image:
                 self.assertEqual(image.format, "JPEG")
-                self.assertLessEqual(max(image.size), 1280)
+                self.assertLessEqual(max(image.size), 640)
                 image.verify()
+            photo_url = f'/api/account/history/{alice_history[0]["id"]}/photo'
+            photo = self.alice.get(photo_url)
+            self.assertEqual((photo.status_code, photo.mimetype, photo.data), (200, "image/jpeg", jpeg))
+            self.assertEqual(photo.headers["Cache-Control"], "no-store")
+            self.assertEqual(self.bob.get(photo_url).status_code, 404)
+            self.assertEqual(self.guest.get(photo_url).status_code, 401)
             self.assertFalse(upload(self.alice, walking)["alarms"])
+            self.assertEqual(self.alice.get("/api/account/history").json["events"], alice_history)
             self.db.links.pop("alice")
             self.assertEqual(upload(self.alice, fall)["telegram_status"], "unlinked")
             connection.request.assert_called_once()
@@ -204,5 +259,19 @@ class AccountTests(unittest.TestCase):
             failed = upload(self.bob, fall)
             self.assertEqual(failed["alarms"], detected["alarms"])
             self.assertEqual(failed["telegram_status"], "error")
-        self.assertEqual(self.alice.get("/api/account/history").json["events"], [])
-        self.assertEqual(self.bob.get("/api/account/history").json["events"], [])
+        alice = self.alice.get("/api/account/history").json["events"]
+        bob = self.bob.get("/api/account/history").json["events"]
+        self.assertEqual([(e["source"], e["telegram_status"]) for e in alice],
+                         [("video_test", "unlinked"), ("video_test", "sent")])
+        self.assertEqual([(e["source"], e["telegram_status"]) for e in bob], [("video_test", "error")])
+        self.assertTrue(alice[0]["has_photo"])
+        self.assertTrue(bob[0]["has_photo"])
+
+    def test_skips_alert_delivery_when_history_insert_fails(self):
+        self.db.links["alice"] = {"chat_id": 111}
+        with (patch.object(self.db, "user_rows", side_effect=AccountError("Supabase is offline")),
+              patch("src.telegram.api") as bot):
+            with self.assertRaises(AccountError):
+                AccountAlerts(self.db, self.links).record("alice", datetime.now(timezone.utc),
+                                                         video_time=0, photo=b"test JPEG")
+            bot.assert_not_called()

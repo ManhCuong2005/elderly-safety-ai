@@ -1,176 +1,191 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-type="software" data-radius="soft" data-buttons="solid">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Theo dõi té ngã</title>
+  <meta name="page-type" content="software">
+  <meta name="site-kind" content="software">
+  <meta name="theme-color" content="#182023">
+  <meta name="description" content="Theo dõi té ngã qua camera, thử video và xem lại cảnh báo trên CameraAI.">
+  <title>CameraAI · Theo dõi té ngã</title>
   <link rel="stylesheet" href="/assets/style.css">
   <script src="/assets/app.js" defer></script>
   <script src="/assets/account.js" defer></script>
 </head>
 <body>
-  <main id="account-screen">
-    <div class="account-card">
-      <header>
-        <h1>CameraAI</h1>
-        <p>Theo dõi té ngã qua camera</p>
-      </header>
-      <form id="account-form" hidden>
-        <h2 id="account-heading">Đăng nhập</h2>
-        <div id="account-name-field" hidden>
-          <label for="account-name">Tên hiển thị</label>
-          <input id="account-name" autocomplete="name" maxlength="80">
-        </div>
-        <label for="account-email">Email</label>
-        <input id="account-email" type="email" autocomplete="email" maxlength="254" required>
-        <label for="account-password">Mật khẩu</label>
-        <input id="account-password" type="password" autocomplete="current-password" maxlength="256" required>
-        <div class="controls">
-          <button class="primary" id="account-submit" type="submit">Đăng nhập</button>
-          <button id="account-switch" type="button">Tạo tài khoản</button>
-        </div>
-      </form>
-      <p id="account-message" class="message" role="status">Đang kiểm tra phiên đăng nhập…</p>
+  <a class="skip-link" id="skip-link" href="#account-screen">Đến nội dung chính</a>
+  <main id="account-screen" class="auth-shell" tabindex="-1">
+    <section class="auth-intro hero" aria-labelledby="auth-title" data-enter>
+      <span class="brand"><span class="brand-mark" aria-hidden="true"></span>CameraAI</span>
+      <div class="auth-story">
+        <div class="focus-visual" aria-hidden="true"><span class="focus-mark"></span></div>
+        <h1 id="auth-title">Theo dõi té ngã qua camera</h1>
+        <p>Nhận cảnh báo qua Telegram và xem lại sự kiện theo ngày.</p>
+      </div>
+    </section>
+    <div class="auth-pane">
+      <div class="account-card">
+        <form id="account-form" hidden>
+          <h2 id="account-heading">Đăng nhập</h2>
+          <div class="form-field" id="account-name-field" hidden>
+            <label for="account-name">Tên hiển thị</label>
+            <input id="account-name" name="name" autocomplete="name" maxlength="80">
+          </div>
+          <div class="form-field">
+            <label for="account-email">Email</label>
+            <input id="account-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+          </div>
+          <div class="form-field">
+            <label for="account-password">Mật khẩu</label>
+            <input id="account-password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
+          </div>
+          <div class="auth-actions">
+            <button class="primary" id="account-submit" type="submit">Đăng nhập</button>
+            <button class="text-button" id="account-switch" type="button">Tạo tài khoản</button>
+          </div>
+        </form>
+        <p id="account-message" class="message" role="status">Đang kiểm tra phiên đăng nhập…</p>
+      </div>
     </div>
   </main>
-  <main id="monitor" hidden>
-    <header class="monitor-header">
-      <div>
-        <h1>Theo dõi té ngã</h1>
-        <p id="backend" role="status">Đang kết nối với máy xử lý…</p>
+
+  <div id="workspace" hidden>
+    <header class="app-header">
+      <a class="brand" href="#camera" aria-label="CameraAI, về trang camera"><span class="brand-mark" aria-hidden="true"></span>CameraAI</a>
+      <div class="header-actions">
+        <span class="live-note" id="camera-running" hidden><span class="status-dot" aria-hidden="true"></span>Camera đang bật</span>
+        <a id="open-account" class="account-link" href="#toi" data-route="toi"><span id="account-avatar" class="avatar" aria-hidden="true"></span>Tôi</a>
       </div>
-      <button id="open-account" type="button" aria-haspopup="dialog">Tôi</button>
     </header>
-    <nav aria-label="Chế độ" class="mode">
-      <button data-mode="camera" aria-pressed="true">Camera</button>
-      <button data-mode="upload" aria-pressed="false" hidden>Thử video</button>
-      <button data-mode="replay" aria-pressed="false" hidden>Phát lại</button>
-      <button data-mode="review" aria-pressed="false" hidden>Rà nhãn</button>
-    </nav>
-    <div class="layout">
-      <section class="viewer" aria-label="Hình ảnh theo dõi">
-        <div id="stage" class="stage">
-          <div class="placeholder" id="placeholder">Camera đang tắt</div>
-          <video id="video" playsinline preload="metadata" hidden></video>
-          <canvas id="skeleton" aria-hidden="true"></canvas>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <nav class="mode" aria-label="Giám sát">
+          <a href="#camera" data-route="camera" class="nav-link" aria-current="page"><span class="mode-icon icon-camera" aria-hidden="true"></span>Camera</a>
+          <a href="#thu-video" data-route="thu-video" class="nav-link" id="upload-nav" hidden><span class="mode-icon icon-video" aria-hidden="true"></span>Thử video</a>
+        </nav>
+        <div class="backend-status" id="backend-status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div><strong>Máy xử lý</strong><p id="backend" role="status">Đang kết nối…</p></div>
         </div>
-        <div id="camera-actions" class="controls">
-          <button class="primary" id="start" disabled>Bắt đầu theo dõi</button>
-          <button id="stop" disabled>Dừng</button>
-          <button id="flip" disabled>Đổi camera</button>
-          <label class="tick"><input type="checkbox" id="show-bones" checked> Hiện khung xương</label>
-        </div>
-        <form id="upload-actions" class="controls" hidden>
-          <label for="upload-file">Chọn video</label>
-          <input id="upload-file" type="file" accept=".mp4,.webm" required>
-          <button id="analyze" class="primary" type="submit" disabled>Phân tích video</button>
-          <p id="upload-limit" class="hint"></p>
-          <p class="hint">Nếu phát hiện nghi té ngã, CameraAI gửi một ảnh kiểm thử tới Telegram đã liên kết.</p>
-        </form>
-        <div id="video-actions" class="controls" hidden>
-          <label for="clip">Video gốc</label>
-          <select id="clip"></select>
-          <label for="speed">Tốc độ</label>
-          <select id="speed">
-            <option value="0.25">0,25×</option>
-            <option value="0.5">0,5×</option>
-            <option value="1" selected>1×</option>
-            <option value="1.5">1,5×</option>
-          </select>
-        </div>
-        <a id="original" class="original" hidden>Tải video gốc</a>
-        <p id="message" class="message" role="status" hidden></p>
-      </section>
-      <aside>
-        <section id="session-panel" aria-label="Trạng thái phiên">
-          <dl>
-            <dt>Trạng thái</dt>
-            <dd id="state" class="state" aria-live="polite">Đang chờ</dd>
-            <dt id="posture-label" hidden>Tư thế</dt>
-            <dd id="posture-value" hidden></dd>
-            <dt>Thời gian phiên</dt>
-            <dd id="timer" class="timer">00:00</dd>
-          </dl>
-          <div class="events">
-            <h2>Sự kiện</h2>
-            <p id="upload-result" class="upload-result" role="status" hidden></p>
-            <p id="upload-telegram" role="status" hidden></p>
-            <p id="upload-source" hidden>File trùng với một video trong tập train té ngã.</p>
-            <p id="empty-events">Chưa có cảnh báo trong phiên.</p>
-            <ol id="event-list"></ol>
+      </aside>
+
+      <main id="main-content" class="content" tabindex="-1">
+        <section id="monitor" class="screen" aria-labelledby="monitor-title" data-screen="monitor" hidden>
+          <header class="page-head">
+            <div>
+              <h1 id="monitor-title" tabindex="-1">Theo dõi té ngã</h1>
+              <p id="monitor-description">Theo dõi trực tiếp từ camera của thiết bị này.</p>
+            </div>
+            <a class="button subtle" href="#lich-su">Xem lịch sử</a>
+          </header>
+          <div class="monitor-grid">
+            <section class="panel viewer" aria-labelledby="viewer-title">
+              <header class="panel-head"><h2 id="viewer-title">Khung camera</h2></header>
+              <div id="stage" class="stage">
+                <div id="placeholder" class="placeholder">
+                  <span class="focus-mark" aria-hidden="true"></span>
+                  <span id="placeholder-text">Camera đang tắt</span>
+                </div>
+                <video id="video" aria-label="Khung hình theo dõi" playsinline preload="metadata" hidden></video>
+                <canvas id="skeleton" aria-hidden="true"></canvas>
+              </div>
+              <div id="camera-actions" class="controls viewer-controls">
+                <button class="primary" id="start" disabled>Bắt đầu theo dõi</button>
+                <button id="stop" disabled>Dừng</button>
+                <button id="flip" disabled>Đổi camera</button>
+                <label class="tick"><input type="checkbox" id="show-bones" checked> Hiện khung xương</label>
+              </div>
+              <form id="upload-actions" class="controls viewer-controls upload-controls" hidden>
+                <label class="file-field" for="upload-file"><span>Video phân tích</span><input id="upload-file" type="file" accept=".mp4,.webm" aria-describedby="upload-limit" required></label>
+                <button id="analyze" class="primary" type="submit" disabled>Phân tích video</button>
+                <p id="upload-limit" class="hint"></p>
+                <p class="hint">Gửi một ảnh kiểm thử tới Telegram đã liên kết nếu phát hiện nghi té ngã.</p>
+              </form>
+              <p id="message" class="message viewer-message" role="status" hidden></p>
+            </section>
+            <aside id="session-panel" class="session-panel" aria-label="Thông tin phiên">
+              <section class="panel readings" aria-labelledby="session-title">
+                <h2 id="session-title">Trạng thái phiên</h2>
+                <dl>
+                  <dt>Trạng thái</dt><dd id="state" class="state" aria-live="polite">Camera đang tắt</dd>
+                  <dt id="posture-label" hidden>Tư thế</dt><dd id="posture-value" hidden></dd>
+                  <dt id="timer-label">Thời gian phiên</dt><dd id="timer" class="timer">00:00</dd>
+                </dl>
+              </section>
+              <section class="panel events" aria-labelledby="event-title">
+                <h2 id="event-title">Sự kiện trong phiên</h2>
+                <p id="upload-result" class="upload-result" role="status" hidden></p>
+                <p id="upload-telegram" role="status" hidden></p>
+                <p id="upload-source" hidden>Video trùng với một tệp trong tập huấn luyện.</p>
+                <p id="empty-events">Chưa có cảnh báo.</p>
+                <ol id="event-list"></ol>
+              </section>
+            </aside>
           </div>
         </section>
-        <form id="annotation" hidden>
-          <h2>Xác nhận nhãn</h2>
-          <p id="clip-label"></p>
-          <label for="label">Nhãn đã quan sát</label>
-          <select id="label">
-            <option value="unknown">Không rõ</option>
-            <option value="Fall">Fall · Có té ngã</option>
-            <option value="No_Fall">No_Fall · Không té ngã</option>
-          </select>
-          <div id="fall-marks" hidden>
-            <label for="onset">Mất thăng bằng (giây)</label>
-            <div class="mark"><input id="onset" type="number" min="0" step="0.001"><button type="button" data-mark="onset">Lấy mốc hiện tại</button></div>
-            <label for="impact">Chạm bề mặt thấp hơn (giây)</label>
-            <div class="mark"><input id="impact" type="number" min="0" step="0.001"><button type="button" data-mark="impact">Lấy mốc hiện tại</button></div>
+
+        <section class="screen detail-screen" id="me-screen" aria-labelledby="me-title" data-screen="toi" hidden>
+          <header class="page-head"><h1 id="me-title" tabindex="-1">Tôi</h1></header>
+          <nav class="panel menu-list" aria-label="Mục Tôi">
+            <a class="menu-row" href="#tai-khoan">
+              <span><strong>Tài khoản &amp; Telegram</strong><span>Thông tin cá nhân và cài đặt nhận cảnh báo</span></span>
+              <span class="chevron" aria-hidden="true"></span>
+            </a>
+            <a class="menu-row" href="#lich-su">
+              <span><strong>Lịch sử cảnh báo</strong><span>Xem lại sự kiện theo ngày, giờ và ảnh</span></span>
+              <span class="chevron" aria-hidden="true"></span>
+            </a>
+          </nav>
+        </section>
+
+        <section class="screen detail-screen" id="profile-screen" aria-labelledby="profile-heading" data-screen="tai-khoan" hidden>
+          <a class="back-link" href="#toi"><span class="chevron" aria-hidden="true"></span>Quay lại mục Tôi</a>
+          <header class="page-head"><h1 id="profile-heading" tabindex="-1">Tài khoản &amp; Telegram</h1></header>
+          <div class="settings-list">
+            <section class="panel settings-panel" aria-labelledby="profile-info">
+              <h2 id="profile-info">Thông tin cá nhân</h2>
+              <dl class="profile-info">
+                <dt>Tên hiển thị</dt><dd id="profile-name"></dd>
+                <dt>Email</dt><dd id="profile-email"></dd>
+              </dl>
+              <button type="button" id="logout">Đăng xuất</button>
+              <p id="logout-message" class="message" role="status" hidden></p>
+            </section>
+            <section class="panel settings-panel" aria-labelledby="telegram-heading">
+              <h2 id="telegram-heading">Kết nối Telegram</h2>
+              <p id="telegram-status" role="status"></p>
+              <p id="telegram-candidate" hidden></p>
+              <div class="controls settings-actions">
+                <button type="button" id="telegram-start" class="primary" hidden>Kết nối Telegram</button>
+                <a class="button" id="telegram-open" target="_blank" rel="noopener noreferrer" hidden>Mở bot Telegram</a>
+                <button type="button" id="telegram-check" hidden>Kiểm tra kết nối</button>
+                <button type="button" class="primary" id="telegram-confirm" hidden>Xác nhận liên kết</button>
+                <button type="button" id="telegram-test" hidden>Gửi tin nhắn thử</button>
+                <button type="button" id="telegram-unlink" hidden>Ngắt kết nối</button>
+              </div>
+              <p id="telegram-message" class="message" role="status" hidden></p>
+            </section>
           </div>
-          <div id="normal-marks" hidden>
-            <p>Khoảng No_Fall đáng tin cậy</p>
-            <div id="intervals"></div>
-            <button type="button" id="add-interval">Thêm khoảng No_Fall</button>
+        </section>
+
+        <section class="screen history-screen" id="history-screen" aria-labelledby="history-heading" data-screen="lich-su" hidden>
+          <a class="back-link" href="#toi"><span class="chevron" aria-hidden="true"></span>Quay lại mục Tôi</a>
+          <header class="page-head"><div><h1 id="history-heading" tabindex="-1">Lịch sử cảnh báo</h1><p>Thời gian hiển thị theo giờ Việt Nam (UTC+7).</p></div></header>
+          <div class="history-tools">
+            <label for="history-date">Lọc theo ngày<input id="history-date" type="date"></label>
+            <button type="button" id="history-clear" hidden>Bỏ lọc</button>
+            <button type="button" id="history-refresh" class="subtle">Tải lại</button>
           </div>
-          <label for="note">Căn cứ quan sát</label>
-          <textarea id="note" rows="3" maxlength="500" required></textarea>
-          <button type="submit" class="primary" id="save">Lưu nhãn</button>
-        </form>
-      </aside>
+          <p id="history-status" class="message history-status" role="status" hidden></p>
+          <div id="history-events"></div>
+          <nav class="history-pages" aria-label="Trang lịch sử" id="history-pages" hidden>
+            <button type="button" id="history-prev">Trang trước</button>
+            <span id="history-page"></span>
+            <button type="button" id="history-next">Trang sau</button>
+          </nav>
+        </section>
+      </main>
     </div>
-  </main>
-  <dialog id="account-dialog" aria-labelledby="profile-heading">
-    <header class="monitor-header">
-      <h2 id="profile-heading">Tôi</h2>
-      <form method="dialog"><button type="submit">Đóng</button></form>
-    </header>
-    <section class="account-section" aria-labelledby="profile-info">
-      <h3 id="profile-info">Thông tin cơ bản</h3>
-      <dl class="profile-info">
-        <dt>Tên hiển thị</dt><dd id="profile-name"></dd>
-        <dt>Email</dt><dd id="profile-email"></dd>
-      </dl>
-      <button type="button" id="logout">Đăng xuất</button>
-      <p id="logout-message" class="message" role="status" hidden></p>
-    </section>
-    <section class="account-section" aria-labelledby="telegram-heading">
-      <h3 id="telegram-heading">Kết nối Telegram</h3>
-      <p id="telegram-status" role="status"></p>
-      <p id="telegram-candidate" hidden></p>
-      <div class="controls">
-        <button type="button" id="telegram-start" hidden>Kết nối Telegram</button>
-        <a id="telegram-open" target="_blank" rel="noopener noreferrer" hidden>Mở bot Telegram</a>
-        <button type="button" id="telegram-check" hidden>Kiểm tra kết nối</button>
-        <button type="button" class="primary" id="telegram-confirm" hidden>Xác nhận liên kết</button>
-        <button type="button" id="telegram-test" hidden>Gửi tin nhắn thử</button>
-        <button type="button" id="telegram-unlink" hidden>Ngắt kết nối</button>
-      </div>
-      <p id="telegram-message" class="message" role="status" hidden></p>
-    </section>
-    <section class="account-section" aria-labelledby="history-heading">
-      <div class="monitor-header">
-        <h3 id="history-heading">Lịch sử cảnh báo</h3>
-        <button type="button" id="history-refresh">Tải lại</button>
-      </div>
-      <p id="history-status" class="message" role="status"></p>
-      <ol id="history-events"></ol>
-    </section>
-  </dialog>
-  <template id="interval-template">
-    <fieldset>
-      <legend>Khoảng (giây)</legend>
-      <div class="mark"><input class="begin" aria-label="Giây bắt đầu" type="number" min="0" step="0.001"><button type="button" class="mark-begin">Lấy mốc đầu</button></div>
-      <div class="mark"><input class="end" aria-label="Giây kết thúc" type="number" min="0" step="0.001"><button type="button" class="mark-end">Lấy mốc cuối</button></div>
-      <button type="button" class="remove-interval">Bỏ khoảng</button>
-    </fieldset>
-  </template>
+  </div>
 </body>
 </html>

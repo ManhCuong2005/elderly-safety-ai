@@ -8,6 +8,7 @@ import secrets
 import threading
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 import av
 from flask import Flask, abort, jsonify, request, send_file, session as account_session
@@ -22,7 +23,6 @@ from .pose import CONFIG, MODEL, Cadence, Pose, sample_frames
 from .posture import load_posture
 from .review import ANNOTATIONS, VIDEOS, rotation_for, save_annotation
 from .storage import read_json, rows, safe, sha
-from .telegram import video_test_text
 from .train import SPLIT, load_model
 
 TTL = 8
@@ -276,8 +276,8 @@ def create_app(host="127.0.0.1", start_sweeper=True):
                     for t, image in sample_frames(container, cfg["sample_hz"], limit_s=MAX_VIDEO_SECONDS):
                         result = tracked_frame(engine, estimator.observe(t, image))
                         trace.append(result)
-                        if result["alarm"] and alert_image is None and alerts is not None and telegram is not None:
-                            image.thumbnail((1280, 1280))
+                        if result["alarm"] and alert_image is None and alerts is not None:
+                            image.thumbnail((640, 640))
                             alert_image = image
             except (av.FFmpegError, OSError):
                 raise ValueError("Không đọc được video. Thử một tệp MP4 hoặc WebM khác.") from None
@@ -288,16 +288,23 @@ def create_app(host="127.0.0.1", start_sweeper=True):
             upload_lock.release()
         alarms = [frame["t"] for frame in trace if frame["alarm"]]
         telegram_status = "unavailable" if alarms else None
-        if alert_image is not None:
+        if alarms and alerts is not None:
+            jpeg = None
+            if alert_image is not None:
+                try:
+                    with io.BytesIO() as photo:
+                        alert_image.save(photo, format="JPEG", quality=82, optimize=True)
+                        jpeg = photo.getvalue()
+                except OSError as error:
+                    logger.warning("Không tạo được ảnh thử video. %s", error)
             try:
-                with io.BytesIO() as photo:
-                    alert_image.save(photo, format="JPEG", quality=85)
-                    sent = alerts.send_linked(account_session["user"]["id"], video_test_text(alarms[0]),
-                                              photo=photo.getvalue())
-                telegram_status = "sent" if sent else "unlinked"
-            except (AccountError, OSError) as error:
-                logger.warning("Không xác nhận được ảnh thử video trên Telegram. %s", error)
-                telegram_status = "error"
+                status = alerts.record(account_session["user"]["id"], datetime.now(timezone.utc),
+                                       video_time=alarms[0], photo=jpeg)
+                if telegram is not None:
+                    telegram_status = status
+            except AccountError as error:
+                logger.warning("Không cập nhật được lịch sử thử video. %s", error)
+                telegram_status = "history_error"
         return jsonify(trace=trace, classifier_ready=True, alarms=alarms, telegram_status=telegram_status,
                        has_predictions=any(frame["score"] is not None for frame in trace), matches_train=matches_train)
 

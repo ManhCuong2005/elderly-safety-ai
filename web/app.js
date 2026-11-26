@@ -11,16 +11,13 @@ const limbs = [[0, 5], [0, 6], [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
   [5, 11], [6, 12], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16]];
 let mode = 'camera';
 let status;
-let clips = [];
 let active;
 let opening = 0;
 let cameraId;
-let currentClip;
-let replay;
-let replayRequest;
+let traceData;
+let uploadRequest;
 let viewLoader = 0;
 let points;
-let rotation = 0;
 let uploadUrl;
 
 async function api(url, options) {
@@ -80,23 +77,21 @@ function showAlarm(t, seekable = false) {
 }
 
 function updateControls() {
+  element('camera-running').hidden = !active;
   element('start').disabled = Boolean(!status?.ready || active || opening);
   element('stop').disabled = !active && !opening;
   element('flip').disabled = !active || active.devices.length < 2;
-  element('analyze').disabled = !status?.ready || !element('upload-file').files.length || Boolean(replayRequest);
+  element('analyze').disabled = !status?.ready || !element('upload-file').files.length || Boolean(uploadRequest);
 }
 
 function positionMedia() {
-  const nativeWidth = video.videoWidth;
-  const nativeHeight = video.videoHeight;
-  const rotated = rotation % 180 !== 0;
-  const [width, height] = rotated ? [nativeHeight, nativeWidth] : [nativeWidth, nativeHeight];
+  const width = video.videoWidth;
+  const height = video.videoHeight;
   stage.classList.toggle('portrait', height > width && !video.hidden);
   if (!width || !height) return null;
   const scale = Math.min(stage.clientWidth / width, stage.clientHeight / height);
-  video.style.width = `${nativeWidth * scale}px`;
-  video.style.height = `${nativeHeight * scale}px`;
-  video.style.transform = `translate(-50%, -50%) rotate(${-rotation}deg)`;
+  video.style.width = `${width * scale}px`;
+  video.style.height = `${height * scale}px`;
   return [width * scale, height * scale];
 }
 
@@ -109,7 +104,7 @@ function draw() {
     canvas.height = h;
   }
   pen.clearRect(0, 0, w, h);
-  if (!points || !size || !element('show-bones').checked || mode === 'review') return;
+  if (!points || !size || !element('show-bones').checked) return;
   const coords = points.map(point => point && [
     (w - size[0]) / 2 + point[0] * size[0],
     (h - size[1]) / 2 + point[1] * size[1],
@@ -235,7 +230,14 @@ async function switchCameraAvailable(run) {
 function nextFrame(run) {
   if (active !== run) return;
   if (video.requestVideoFrameCallback) {
-    video.requestVideoFrameCallback((_, data) => sendFrame(run, data.mediaTime));
+    const callback = video.requestVideoFrameCallback((_, data) => {
+      clearTimeout(wakeup);
+      sendFrame(run, data.mediaTime);
+    });
+    const wakeup = setTimeout(() => {
+      video.cancelVideoFrameCallback(callback);
+      sendFrame(run, video.currentTime);
+    }, 300);
   } else {
     requestAnimationFrame(() => sendFrame(run, video.currentTime));
   }
@@ -296,25 +298,24 @@ element('flip').addEventListener('click', () => {
 });
 window.addEventListener('pagehide', () => stopCamera());
 
-const byId = id => '/api/video?id=' + encodeURIComponent(id);
-const partitions = {train: 'Train', validation: 'Validation', test: 'Test'};
-
-function selectMode(next, clipId) {
+function selectMode(next) {
+  if (mode === next) return;
   if (mode === 'camera') stopCamera();
-  replayRequest?.abort();
-  replayRequest = null;
+  uploadRequest?.abort();
+  uploadRequest = null;
   element('upload-file').disabled = false;
   mode = next;
-  document.querySelectorAll('[data-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
-  element('camera-actions').hidden = mode !== 'camera';
-  element('video-actions').hidden = !['review', 'replay'].includes(mode);
-  element('upload-actions').hidden = mode !== 'upload';
+  const isUpload = mode === 'upload';
+  element('monitor-title').textContent = isUpload ? 'Thử video' : 'Theo dõi té ngã';
+  element('monitor-description').textContent = isUpload ? 'Phân tích video từ thiết bị của bạn.'
+    : 'Theo dõi trực tiếp từ camera của thiết bị này.';
+  element('viewer-title').textContent = isUpload ? 'Xem trước video' : 'Khung camera';
+  element('timer-label').textContent = isUpload ? 'Thời gian video' : 'Thời gian phiên';
+  element('camera-actions').hidden = isUpload;
+  element('upload-actions').hidden = !isUpload;
   element('upload-result').hidden = true;
-  element('upload-telegram').hidden = true;
   element('upload-source').hidden = true;
-  element('annotation').hidden = mode !== 'review';
-  element('session-panel').hidden = mode === 'review';
-  element('original').hidden = true;
+  element('upload-telegram').hidden = true;
   video.pause();
   video.removeAttribute('src');
   video.load();
@@ -324,92 +325,26 @@ function selectMode(next, clipId) {
   }
   video.hidden = true;
   element('placeholder').hidden = false;
-  element('placeholder').textContent = mode === 'camera' ? 'Camera đang tắt'
-    : mode === 'upload' ? 'Chọn video từ máy để phân tích' : 'Chọn video gốc';
-  points = replay = null;
-  rotation = 0;
+  element('placeholder-text').textContent = isUpload ? 'Chưa chọn video' : 'Camera đang tắt';
+  points = traceData = null;
   draw();
   message('');
-  updateControls();
-  if (mode === 'camera' || mode === 'upload') {
-    showState(mode === 'camera' ? 'Camera đang tắt' : 'Chờ video');
-    showTimer(0);
-    clearEvents();
-    return;
-  }
-  const select = element('clip');
-  const order = mode === 'replay'
-    ? [...clips].sort((a, b) => Number(b.split === 'test') - Number(a.split === 'test'))
-    : [...clips].sort((a, b) => Number(b.status === 'review') - Number(a.status === 'review'));
-  select.replaceChildren(new Option('Chọn một clip…', ''));
-  for (const clip of order) {
-    const split = partitions[clip.split] || 'Chưa chia tập';
-    const subject = clip.source_folder_id !== clip.source_subject_id ? ` (${clip.source_subject_id})` : '';
-    select.add(new Option(`${split} · ${clip.video_id}${subject}${clip.annotation?.label === 'unknown' ? ' · chưa rõ nhãn' : ''}`, clip.video_id));
-  }
-  select.value = order.some(clip => clip.video_id === clipId) ? clipId : order[0]?.video_id || '';
-  openClip();
-}
-
-async function openClip() {
-  replayRequest?.abort();
-  const id = element('clip').value;
-  currentClip = clips.find(clip => clip.video_id === id);
-  video.pause();
-  replay = points = null;
-  clearEvents();
+  showState(isUpload ? 'Chờ video' : 'Camera đang tắt');
   showTimer(0);
-  message('');
-  if (!currentClip) {
-    video.removeAttribute('src');
-    video.load();
-    video.hidden = element('save').disabled = element('original').hidden = true;
-    element('placeholder').hidden = false;
-    showState('Chọn một clip');
-    return;
-  }
-  rotation = currentClip.rotation_override_ccw === '' ? 0
-    : Number(currentClip.rotation_override_ccw) - Number(currentClip.rotation_ccw);
-  video.muted = false;
-  video.controls = true;
-  video.src = byId(id);
-  video.hidden = false;
-  element('placeholder').hidden = true;
-  element('original').href = byId(id);
-  element('original').download = currentClip.relative_path.split('/').at(-1);
-  element('original').hidden = false;
-  video.playbackRate = Number(element('speed').value);
-  fillAnnotation();
-  if (mode !== 'replay') return;
-  showState('Đang chuẩn bị dữ liệu tư thế…');
-  const controller = new AbortController();
-  replayRequest = controller;
-  try {
-    const data = await api('/api/replay?id=' + encodeURIComponent(id), {signal: controller.signal});
-    if (controller.signal.aborted) return;
-    replay = data;
-    if (!data.classifier_ready) message('Đang phát lại tư thế MoveNet. Chưa có bộ phân loại té ngã.');
-    updateReplay();
-  } catch (error) {
-    if (!controller.signal.aborted) {
-      showState('Chưa xử lý được video');
-      message(cameraError(error), true);
-    }
-  } finally {
-    if (replayRequest === controller) replayRequest = null;
-  }
+  clearEvents();
+  updateControls();
 }
 
 element('upload-file').addEventListener('change', updateControls);
 element('upload-actions').addEventListener('submit', async event => {
   event.preventDefault();
   const file = element('upload-file').files[0];
-  if (mode !== 'upload' || !file || replayRequest || !status?.ready) return;
+  if (mode !== 'upload' || !file || uploadRequest || !status?.ready) return;
   if (!/\.(mp4|webm)$/i.test(file.name) || file.size === 0 || file.size > status.upload_max_bytes) {
     message(`Chọn video MP4 hoặc WebM, tối đa ${status.upload_max_bytes / 1048576} MiB.`, true);
     return;
   }
-  replay = points = null;
+  traceData = points = null;
   draw();
   element('upload-result').hidden = true;
   element('upload-telegram').hidden = true;
@@ -427,7 +362,7 @@ element('upload-actions').addEventListener('submit', async event => {
   showState('Đang phân tích video…');
   message('');
   const controller = new AbortController();
-  replayRequest = controller;
+  uploadRequest = controller;
   element('upload-file').disabled = true;
   updateControls();
   try {
@@ -436,7 +371,7 @@ element('upload-actions').addEventListener('submit', async event => {
       body: file, signal: controller.signal,
     });
     if (controller.signal.aborted) return;
-    replay = data;
+    traceData = data;
     const count = data.alarms.length;
     const summary = element('upload-result');
     summary.textContent = count ? `Nghi té ngã · ${count} cảnh báo`
@@ -449,6 +384,7 @@ element('upload-actions').addEventListener('submit', async event => {
       unlinked: 'Hãy kết nối Telegram trong mục Tôi để nhận ảnh kiểm thử.',
       unavailable: 'Máy chủ chưa cấu hình gửi ảnh kiểm thử qua Telegram.',
       error: 'Chưa xác nhận được ảnh kiểm thử đã gửi. Hãy kiểm tra Telegram.',
+      history_error: 'Chưa cập nhật được lịch sử thử video. Hãy kiểm tra Supabase và Telegram.',
     }[data.telegram_status] || '';
     telegram.hidden = !telegram.textContent;
     element('upload-source').hidden = !data.matches_train;
@@ -459,135 +395,55 @@ element('upload-actions').addEventListener('submit', async event => {
       video.hidden = false;
       element('placeholder').hidden = true;
     }
-    updateReplay();
+    updateVideoPreview();
   } catch (error) {
     if (!controller.signal.aborted) {
       showState('Chưa phân tích được video');
       message(cameraError(error), true);
     }
   } finally {
-    if (replayRequest === controller) {
-      replayRequest = null;
+    if (uploadRequest === controller) {
+      uploadRequest = null;
       element('upload-file').disabled = false;
       updateControls();
     }
   }
 });
 
-function updateReplay() {
-  if (!['replay', 'upload'].includes(mode) || !replay) return;
+function updateVideoPreview() {
+  if (mode !== 'upload' || !traceData) return;
   const t = video.currentTime;
   let lo = 0;
-  let hi = replay.trace.length;
+  let hi = traceData.trace.length;
   while (lo < hi) {
     const middle = (lo + hi) >> 1;
-    if (replay.trace[middle].t <= t) lo = middle + 1;
+    if (traceData.trace[middle].t <= t) lo = middle + 1;
     else hi = middle;
   }
-  const event = replay.trace[lo - 1];
+  const event = traceData.trace[lo - 1];
   showTimer(t);
-  if (replay.classifier_ready) {
-    if (mode === 'replay') {
-      clearEvents();
-      for (let i = 0; i < lo; i++) if (replay.trace[i].alarm) showAlarm(replay.trace[i].t);
-    }
-    showState(event?.state || 'Đang chờ frame', event?.activity);
-  } else {
-    showState('Chưa có bộ phân loại');
-  }
+  showState(event?.state || 'Đang chờ khung hình', event?.activity);
   points = event?.points;
   draw();
 }
 
-for (const event of ['timeupdate', 'seeked', 'ended']) video.addEventListener(event, updateReplay);
+for (const event of ['timeupdate', 'seeked', 'ended']) video.addEventListener(event, updateVideoPreview);
 video.addEventListener('error', () => {
   if (mode === 'upload' && uploadUrl) message('Trình duyệt không phát được video này. Máy xử lý vẫn có thể đọc tệp.', true);
-  else if (mode !== 'camera' && currentClip) message('Trình duyệt không phát được MP4 này. Mở video gốc để kiểm tra.', true);
-});
-element('clip').addEventListener('change', openClip);
-element('speed').addEventListener('change', e => { video.playbackRate = Number(e.target.value); });
-document.querySelectorAll('[data-mode]').forEach(button => {
-  button.addEventListener('click', () => { if (button.dataset.mode !== mode) selectMode(button.dataset.mode); });
-});
-
-function addInterval(start, end) {
-  const interval = element('interval-template').content.firstElementChild.cloneNode(true);
-  const startInput = interval.querySelector('.begin');
-  const endInput = interval.querySelector('.end');
-  startInput.value = start ?? '';
-  endInput.value = end ?? '';
-  interval.querySelector('.mark-begin').onclick = () => { startInput.value = video.currentTime.toFixed(3); };
-  interval.querySelector('.mark-end').onclick = () => { endInput.value = video.currentTime.toFixed(3); };
-  interval.querySelector('.remove-interval').onclick = () => interval.remove();
-  element('intervals').append(interval);
-}
-
-function annotationControls() {
-  const label = element('label').value;
-  element('fall-marks').hidden = label !== 'Fall';
-  element('normal-marks').hidden = label === 'unknown';
-  if (label === 'No_Fall' && !element('intervals').children.length) addInterval();
-}
-
-function fillAnnotation() {
-  const mark = currentClip.annotation;
-  element('clip-label').textContent = `${currentClip.original_label} · ${currentClip.subject_id} · ${currentClip.reason}`;
-  element('save').disabled = false;
-  element('label').value = mark?.label || 'unknown';
-  element('onset').value = mark?.onset_s ?? '';
-  element('impact').value = mark?.impact_s ?? '';
-  element('note').value = mark?.note || '';
-  element('intervals').replaceChildren();
-  for (const interval of mark?.negative || []) addInterval(...interval);
-  annotationControls();
-}
-
-element('label').addEventListener('change', annotationControls);
-element('add-interval').addEventListener('click', () => addInterval());
-document.querySelectorAll('[data-mark]').forEach(button => {
-  button.onclick = () => { element(button.dataset.mark).value = video.currentTime.toFixed(3); };
-});
-
-element('annotation').addEventListener('submit', async event => {
-  event.preventDefault();
-  const clip = currentClip;
-  if (!clip) return;
-  const label = element('label').value;
-  const negative = label === 'unknown' ? [] : Array.from(element('intervals').children, group => [
-    group.querySelector('.begin').valueAsNumber, group.querySelector('.end').valueAsNumber,
-  ]);
-  const payload = {label, negative, note: element('note').value};
-  if (label === 'Fall') {
-    payload.onset_s = element('onset').valueAsNumber;
-    payload.impact_s = element('impact').valueAsNumber;
-  }
-  element('save').disabled = true;
-  try {
-    clip.annotation = await api('/api/annotation?id=' + encodeURIComponent(clip.video_id), {
-      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
-    });
-    if (currentClip === clip) message('Đã lưu nhãn trong workspace.');
-  } catch (error) {
-    if (currentClip === clip) message(cameraError(error), true);
-  } finally {
-    if (currentClip === clip) element('save').disabled = false;
-  }
 });
 
 async function init() {
   try {
     status = await api('/api/status');
-    element('backend').textContent = status.message || `Bộ phân loại ${status.model} đã sẵn sàng`;
+    element('backend').textContent = status.message || (status.ready ? 'Sẵn sàng' : 'Chưa sẵn sàng');
+    element('backend-status').dataset.ready = String(status.ready && !status.message);
+    element('upload-nav').hidden = !status.local;
     if (status.local) {
       element('upload-limit').textContent = `MP4 hoặc WebM, tối đa ${status.upload_max_bytes / 1048576} MiB và ${status.upload_max_seconds} giây.`;
-      clips = await api('/api/videos');
-      document.querySelectorAll('[data-mode]:not([data-mode="camera"])').forEach(button => { button.hidden = false; });
-      const query = new URLSearchParams(location.search);
-      if (query.has('replay')) selectMode('replay', query.get('replay'));
-      else if (query.has('review')) selectMode('review', query.get('review'));
     }
   } catch {
-    element('backend').textContent = 'Không kết nối được với máy xử lý. Kiểm tra cửa sổ chạy web rồi tải lại trang.';
+    element('backend').textContent = 'Mất kết nối';
+    element('backend-status').dataset.ready = 'false';
   }
   updateControls();
 }
