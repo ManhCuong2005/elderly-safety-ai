@@ -58,9 +58,9 @@ function clearEvents() {
   element('empty-events').hidden = false;
 }
 
-function showAlarm(t, seekable = false) {
+function showAlarm(t, seekable = false, kind = 'Nghi té ngã') {
   const event = document.createElement('li');
-  const label = `${t.toFixed(2)} giây · Nghi té ngã`;
+  const label = `${t.toFixed(2)} giây · ${kind}`;
   if (seekable) {
     const jump = document.createElement('button');
     jump.type = 'button';
@@ -285,6 +285,7 @@ function display(result) {
   points = result.points;
   draw();
   if (result.alarm) showAlarm(result.t);
+  if (result.absence_alarm) showAlarm(result.t, false, `Không thấy người trong ${result.absence_alarm} giây`);
 }
 
 element('start').addEventListener('click', startCamera);
@@ -379,13 +380,19 @@ element('upload-actions').addEventListener('submit', async event => {
     summary.dataset.alarm = String(count > 0);
     summary.hidden = false;
     const telegram = element('upload-telegram');
-    telegram.textContent = {
+    const delivery = {
       sent: 'Đã gửi ảnh kiểm thử qua Telegram.',
+      sent_text: 'Đã gửi thông báo chữ qua Telegram. Ảnh không gửi được.',
       unlinked: 'Hãy kết nối Telegram trong mục Tôi để nhận ảnh kiểm thử.',
       unavailable: 'Máy chủ chưa cấu hình gửi ảnh kiểm thử qua Telegram.',
-      error: 'Chưa xác nhận được ảnh kiểm thử đã gửi. Hãy kiểm tra Telegram.',
+      error: 'Chưa xác nhận được thông báo đã gửi. Hãy kiểm tra Telegram.',
       history_error: 'Chưa cập nhật được lịch sử thử video. Hãy kiểm tra Supabase và Telegram.',
     }[data.telegram_status] || '';
+    const historyWarning = {
+      error: 'Chưa lưu được sự kiện vào lịch sử.',
+      status_error: 'Đã lưu sự kiện nhưng chưa cập nhật được trạng thái gửi trong lịch sử.',
+    }[data.history_status] || '';
+    telegram.textContent = [delivery, historyWarning].filter(Boolean).join(' ');
     telegram.hidden = !telegram.textContent;
     element('upload-source').hidden = !data.matches_train;
     clearEvents();

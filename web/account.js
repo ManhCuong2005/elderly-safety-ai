@@ -45,7 +45,7 @@ function renderRoute() {
     history.replaceState(null, '', `#${currentRoute}`);
     return;
   }
-  if (!['camera', 'thu-video', 'toi', 'tai-khoan', 'lich-su'].includes(route)) route = 'camera';
+  if (!['camera', 'thu-video', 'toi', 'tai-khoan', 'cai-dat-camera', 'lich-su'].includes(route)) route = 'camera';
   if (route === 'thu-video' && status?.local === false) {
     route = 'camera';
     history.replaceState(null, '', '#camera');
@@ -66,6 +66,7 @@ function renderRoute() {
     document.querySelector(`[data-screen="${screen}"] h1`).focus({preventScroll: true});
   }
   if (route === 'tai-khoan') loadTelegram();
+  if (route === 'cai-dat-camera') loadCameraSettings();
   if (route === 'lich-su') loadHistory();
 }
 
@@ -134,6 +135,50 @@ element('logout').addEventListener('click', async () => {
   }
 });
 
+const cameraSettingsFields = element('camera-settings-fields');
+const absenceEnabled = element('absence-enabled');
+const absenceSeconds = element('absence-seconds');
+let cameraSettingsBusy = false;
+
+async function loadCameraSettings() {
+  if (cameraSettingsBusy) return;
+  cameraSettingsBusy = cameraSettingsFields.disabled = true;
+  accountMessage('camera-settings-status', 'Đang tải cài đặt…');
+  try {
+    const settings = await api('/api/account/camera-settings');
+    absenceEnabled.checked = settings.enabled;
+    absenceSeconds.value = settings.seconds;
+    cameraSettingsFields.disabled = false;
+    accountMessage('camera-settings-status', '');
+  } catch (error) {
+    accountMessage('camera-settings-status', error.message);
+  } finally {
+    cameraSettingsBusy = false;
+  }
+}
+
+for (const preset of cameraSettingsFields.querySelectorAll('[data-absence-seconds]')) {
+  preset.addEventListener('click', () => { absenceSeconds.value = preset.dataset.absenceSeconds; });
+}
+
+element('camera-settings-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (cameraSettingsBusy) return;
+  cameraSettingsBusy = cameraSettingsFields.disabled = true;
+  accountMessage('camera-settings-status', 'Đang lưu cài đặt…');
+  try {
+    await api('/api/account/camera-settings', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({enabled: absenceEnabled.checked, seconds: absenceSeconds.valueAsNumber}),
+    });
+    accountMessage('camera-settings-status', 'Đã lưu cài đặt.');
+  } catch (error) {
+    accountMessage('camera-settings-status', error.message);
+  } finally {
+    cameraSettingsBusy = cameraSettingsFields.disabled = false;
+  }
+});
+
 const deliveryLabels = {pending: 'Đang xử lý', sent: 'Đã gửi Telegram', unlinked: 'Chưa kết nối Telegram', error: 'Gửi Telegram thất bại'};
 const historyDate = element('history-date');
 const historyDay = new Intl.DateTimeFormat('vi-VN', {
@@ -192,7 +237,7 @@ async function loadHistory(page = historyPage) {
       time.textContent = historyClock.format(occurred);
       const detail = document.createElement('div');
       const title = document.createElement('strong');
-      title.textContent = 'Nghi té ngã';
+      title.textContent = event.source === 'camera_absence' ? 'Không thấy người' : 'Nghi té ngã';
       const source = document.createElement('p');
       source.textContent = event.source === 'video_test' ? 'Thử video' : 'Camera';
       detail.append(title, source);

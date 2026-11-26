@@ -17,7 +17,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 
 from .accounts import AccountAlerts, AccountError, load_supabase, load_telegram, register_account_routes
 from .dataset import RAW
-from .inference import Engine, TRACKING, web_result
+from .inference import Engine, FALL_WARNING, NO_PERSON, TRACKING, web_result
 from .keypoints import get_keypoints
 from .pose import CONFIG, MODEL, Cadence, Pose, sample_frames
 from .posture import load_posture
@@ -30,6 +30,10 @@ MAX_SESSIONS = 12
 MAX_JPEG = 600_000
 MAX_UPLOAD = 64 * 1024**2
 MAX_VIDEO_SECONDS = 90
+ABSENCE_DEFAULT = 60
+ABSENCE_MIN = 10
+ABSENCE_MAX = 3600
+ABSENCE_FRAME_GAP = 2
 logger = logging.getLogger(__name__)
 
 
@@ -37,15 +41,49 @@ def reject_external_media(*args):
     raise OSError("Video tham chiếu tới nguồn khác")
 
 
+def alert_jpeg(image):
+    try:
+        image.thumbnail((640, 640))
+        with io.BytesIO() as photo:
+            image.save(photo, format="JPEG", quality=82, optimize=True)
+            return photo.getvalue()
+    except OSError as error:
+        logger.warning("Không tạo được ảnh cảnh báo. %s", error)
+        return None
+
+
 @dataclass
 class Session:
     engine: Engine
     pace: Cadence
     owner: str
+    user_id: str
+    absence_after: int | None = None
+    person_seen: bool = False
+    absence_since: float | None = None
+    absence_notified: bool = False
+    last_observed: float | None = None
     last_seen: float = field(default_factory=time.monotonic)
     active: bool = True
     last_timestamp: float = -1
     lock: threading.Lock = field(default_factory=threading.Lock)
+
+    def observe_absence(self, state, now):
+        if self.last_observed is not None and now - self.last_observed > ABSENCE_FRAME_GAP:
+            self.absence_since = None
+        self.last_observed = now
+        if state in {TRACKING, FALL_WARNING}:
+            self.person_seen = True
+            self.absence_notified = False
+        if state != NO_PERSON or not self.person_seen or self.absence_after is None:
+            self.absence_since = None
+            return None
+        if self.absence_since is None:
+            self.absence_since = now
+        if not self.absence_notified and now - self.absence_since >= self.absence_after:
+            self.absence_notified = True
+            return self.absence_after
+        return None
 
 
 class Sessions:
@@ -76,13 +114,23 @@ class Sessions:
                 if entry.owner == owner:
                     self.remove_locked(token)
 
-    def open(self, cfg, model, threshold, owner):
+    def open(self, cfg, model, threshold, owner, user_id, absence_after):
         with self.lock:
             if len(self.items) >= MAX_SESSIONS:
                 return None
             token = secrets.token_urlsafe(24)
-            self.items[token] = Session(Engine(cfg, model, threshold), Cadence(1 / cfg["sample_hz"]), owner)
+            self.items[token] = Session(Engine(cfg, model, threshold), Cadence(1 / cfg["sample_hz"]),
+                                        owner, user_id, absence_after)
             return token
+
+    def configure_absence(self, user_id, seconds):
+        with self.lock:
+            entries = [entry for entry in self.items.values() if entry.user_id == user_id]
+        for entry in entries:
+            with entry.lock:
+                if entry.absence_after != seconds:
+                    entry.absence_after = seconds
+                    entry.absence_since = None
 
     def find(self, token):
         with self.lock:
@@ -122,6 +170,7 @@ def create_app(host="127.0.0.1", start_sweeper=True):
     admin_lock = threading.Lock()
     pose_lock = threading.Lock()
     upload_lock = threading.Lock()
+    settings_lock = threading.Lock()
     try:
         info, model = load_model()
         load_error = None
@@ -248,7 +297,8 @@ def create_app(host="127.0.0.1", start_sweeper=True):
         request.max_content_length = MAX_UPLOAD
         if not upload_lock.acquire(blocking=False):
             return jsonify(error="Đang phân tích một video khác. Thử lại khi video đó xử lý xong."), 429
-        alert_image = None
+        alarms = []
+        photo = None
         try:
             data = request.get_data(cache=False)
             if data[4:8] == b"ftyp":
@@ -276,9 +326,10 @@ def create_app(host="127.0.0.1", start_sweeper=True):
                     for t, image in sample_frames(container, cfg["sample_hz"], limit_s=MAX_VIDEO_SECONDS):
                         result = tracked_frame(engine, estimator.observe(t, image))
                         trace.append(result)
-                        if result["alarm"] and alert_image is None and alerts is not None:
-                            image.thumbnail((640, 640))
-                            alert_image = image
+                        if result["alarm"]:
+                            if not alarms and alerts is not None:
+                                photo = alert_jpeg(image)
+                            alarms.append(result["t"])
             except (av.FFmpegError, OSError):
                 raise ValueError("Không đọc được video. Thử một tệp MP4 hoặc WebM khác.") from None
             if not trace:
@@ -286,26 +337,13 @@ def create_app(host="127.0.0.1", start_sweeper=True):
             matches_train = hashlib.sha256(data).hexdigest() in train_hashes
         finally:
             upload_lock.release()
-        alarms = [frame["t"] for frame in trace if frame["alarm"]]
         telegram_status = "unavailable" if alarms else None
+        history_status = "unavailable" if alarms else None
         if alarms and alerts is not None:
-            jpeg = None
-            if alert_image is not None:
-                try:
-                    with io.BytesIO() as photo:
-                        alert_image.save(photo, format="JPEG", quality=82, optimize=True)
-                        jpeg = photo.getvalue()
-                except OSError as error:
-                    logger.warning("Không tạo được ảnh thử video. %s", error)
-            try:
-                status = alerts.record(account_session["user"]["id"], datetime.now(timezone.utc),
-                                       video_time=alarms[0], photo=jpeg)
-                if telegram is not None:
-                    telegram_status = status
-            except AccountError as error:
-                logger.warning("Không cập nhật được lịch sử thử video. %s", error)
-                telegram_status = "history_error"
+            telegram_status, history_status = alerts.record(account_session["user"]["id"], datetime.now(timezone.utc),
+                                                             video_time=alarms[0], photo=photo)
         return jsonify(trace=trace, classifier_ready=True, alarms=alarms, telegram_status=telegram_status,
+                       history_status=history_status,
                        has_predictions=any(frame["score"] is not None for frame in trace), matches_train=matches_train)
 
     @app.post("/api/annotation")
@@ -323,10 +361,47 @@ def create_app(host="127.0.0.1", start_sweeper=True):
         if not info:
             return jsonify(error=load_error or "Chưa có bộ phân loại đã huấn luyện."), 503
         get_pose()
-        token = sessions.open(cfg, model, threshold, account_session["login_id"])
+        user_id = account_session["user"]["id"]
+        with settings_lock:
+            absence_after = None
+            if alerts is not None:
+                try:
+                    settings = camera_settings(user_id)
+                    if settings["enabled"]:
+                        absence_after = settings["seconds"]
+                except AccountError as error:
+                    logger.warning("Không tải được cài đặt vắng người. %s", error)
+            token = sessions.open(cfg, model, threshold, account_session["login_id"], user_id, absence_after)
         if token is None:
             return jsonify(error="Đã đầy phiên theo dõi. Thử lại sau."), 429
         return jsonify(token=token, sample_hz=cfg["sample_hz"])
+
+    def camera_settings(user_id):
+        saved = db.user_rows("GET", "camera_settings", user_id, select="absence_enabled,absence_seconds", limit=1)
+        if saved:
+            return {"enabled": saved[0]["absence_enabled"], "seconds": saved[0]["absence_seconds"]}
+        return {"enabled": False, "seconds": ABSENCE_DEFAULT}
+
+    @app.route("/api/account/camera-settings", methods=["GET", "POST"])
+    def settings_camera():
+        if alerts is None:
+            raise AccountError("Máy chủ chưa cấu hình lưu cài đặt camera.")
+        user_id = account_session["user"]["id"]
+        if request.method == "GET":
+            return jsonify(camera_settings(user_id))
+        request.max_content_length = 2048
+        values = request.get_json(silent=True)
+        if not isinstance(values, dict) or type(values.get("enabled")) is not bool:
+            raise AccountError("Chọn bật hoặc tắt cảnh báo.", 400)
+        enabled, seconds = values["enabled"], values.get("seconds")
+        if type(seconds) is not int or not ABSENCE_MIN <= seconds <= ABSENCE_MAX:
+            raise AccountError(f"Nhập số giây từ {ABSENCE_MIN} đến {ABSENCE_MAX}.", 400)
+        with settings_lock:
+            db.user_rows("POST", "camera_settings", user_id,
+                         payload={"absence_enabled": enabled, "absence_seconds": seconds},
+                         prefer="resolution=merge-duplicates")
+            sessions.configure_absence(user_id, seconds if enabled else None)
+        return jsonify(enabled=enabled, seconds=seconds)
 
     @app.delete("/api/session/<token>")
     def stop(token):
@@ -372,8 +447,13 @@ def create_app(host="127.0.0.1", start_sweeper=True):
             if not session.active:
                 return "", 204
             result = tracked_frame(session.engine, obs)
-            if result["alarm"] and alerts is not None:
-                alerts.enqueue(account_session["user"]["id"])
+            if alerts is not None:
+                if result["alarm"]:
+                    alerts.enqueue(session.user_id, photo=alert_jpeg(image))
+                absence = session.observe_absence(result["state"], now)
+                if absence is not None:
+                    alerts.enqueue(session.user_id, photo=alert_jpeg(image), absence_seconds=absence)
+                    result["absence_alarm"] = absence
             return jsonify(result)
         finally:
             session.lock.release()

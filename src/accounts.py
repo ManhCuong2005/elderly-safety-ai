@@ -32,11 +32,13 @@ class Supabase:
         self.publishable_key = publishable_key
         self.secret_key = secret_key
 
-    def request(self, method, path, payload=None, *, database=False):
+    def request(self, method, path, payload=None, *, database=False, prefer=None):
         key = self.secret_key if database else self.publishable_key
         if not key:
             raise AccountError("Máy chủ chưa cấu hình cơ sở dữ liệu tài khoản.")
         headers = {"apikey": key, "Content-Type": "application/json"}
+        if prefer is not None:
+            headers["Prefer"] = prefer
         connection = http.client.HTTPSConnection(self.host, timeout=5)
         try:
             connection.request(method, path, json.dumps(payload) if payload is not None else None, headers)
@@ -54,6 +56,8 @@ class Supabase:
         if database:
             if code == "23505":
                 raise AccountError("Tài khoản CameraAI hoặc Telegram này đã có liên kết.", 409)
+            if code in {"PGRST205", "42P01"} and path.startswith("/rest/v1/camera_settings?"):
+                raise AccountError("Supabase chưa có bảng cài đặt camera. Hãy chạy lại supabase/schema.sql.")
             logger.warning("Không truy cập được dữ liệu tài khoản Supabase (%s).", response.status)
             raise AccountError("Lịch sử hoặc kết nối Telegram chưa khả dụng. Kiểm tra cấu hình Supabase.")
         if response.status == 429 or code in {"over_email_send_rate_limit", "over_request_rate_limit"}:
@@ -77,12 +81,12 @@ class Supabase:
         metadata = user.get("user_metadata") or {}
         return {"id": user["id"], "email": user["email"], "name": str(metadata.get("name", ""))[:80]}
 
-    def user_rows(self, method, table, user_id, *, payload=None, **query):
+    def user_rows(self, method, table, user_id, *, payload=None, prefer=None, **query):
         if method == "POST":
             payload = {**payload, "user_id": user_id}
         else:
             query["user_id"] = f"eq.{user_id}"
-        return self.request(method, f"/rest/v1/{table}?{urlencode(query)}", payload, database=True)
+        return self.request(method, f"/rest/v1/{table}?{urlencode(query)}", payload, database=True, prefer=prefer)
 
 
 def load_supabase():
@@ -116,14 +120,22 @@ class TelegramLinks:
     def delivery_lock(self, user_id):
         return self.delivery_locks[hash(user_id) % len(self.delivery_locks)]
 
-    def send(self, chat_id, text, *, photo=None):
+    def send(self, chat_id, text):
         try:
-            if photo is None:
-                telegram.api(self.token, "sendMessage", {"chat_id": chat_id, "text": text})
-            else:
-                telegram.api(self.token, "sendPhoto", {"chat_id": chat_id, "caption": text}, photo=photo)
+            telegram.api(self.token, "sendMessage", {"chat_id": chat_id, "text": text})
         except telegram.TelegramError as error:
             raise AccountError(str(error), 502) from None
+
+    def send_photo(self, chat_id, caption, photo):
+        try:
+            telegram.api(self.token, "sendPhoto", {"chat_id": chat_id, "caption": caption}, photo=photo)
+        except telegram.TelegramError as error:
+            if error.status != 400:
+                raise AccountError(str(error), 502) from None
+            logger.warning("Telegram từ chối ảnh cảnh báo. Gửi thông báo chữ thay thế.")
+            self.send(chat_id, caption)
+            return "sent_text"
+        return "sent"
 
     def start(self, login_id):
         with self.lock:
@@ -206,51 +218,72 @@ class AccountAlerts:
         self.pending = Queue(maxsize=64)
         threading.Thread(target=self.run, name="account-alerts", daemon=True).start()
 
-    def enqueue(self, user_id):
+    def enqueue(self, user_id, *, photo=None, absence_seconds=None):
         try:
-            self.pending.put_nowait((user_id, datetime.now(timezone.utc)))
+            self.pending.put_nowait((user_id, datetime.now(timezone.utc), photo, absence_seconds))
         except Full:
             logger.warning("Hàng đợi cảnh báo đã đầy.")
 
     def send_linked(self, user_id, text, *, photo=None):
         if not self.links:
-            return False
+            return "unavailable"
         with self.links.delivery_lock(user_id):
             rows = self.db.user_rows("GET", "telegram_links", user_id, select="chat_id", limit=1)
             if not rows:
-                return False
-            self.links.send(rows[0]["chat_id"], text, photo=photo)
-            return True
+                return "unlinked"
+            chat_id = rows[0]["chat_id"]
+            if photo is not None:
+                return self.links.send_photo(chat_id, text, photo)
+            self.links.send(chat_id, text)
+            return "sent"
 
-    def record(self, user_id, occurred_at, *, video_time=None, photo=None):
+    def record(self, user_id, occurred_at, *, video_time=None, photo=None, absence_seconds=None):
         alert_id = str(uuid4())
         event = {
             "id": alert_id, "occurred_at": occurred_at.isoformat(), "telegram_status": "pending",
         }
-        if video_time is not None:
+        if absence_seconds is not None:
+            event["source"] = "camera_absence"
+        elif video_time is not None:
             event["source"] = "video_test"
-            if photo is not None:
-                event["photo_jpeg"] = "\\x" + photo.hex()
-        self.db.user_rows("POST", "fall_alerts", user_id, payload=event)
+        if photo is not None:
+            event["photo_jpeg"] = "\\x" + photo.hex()
+        history_status = "saved"
+        try:
+            self.db.user_rows("POST", "fall_alerts", user_id, payload=event)
+        except AccountError as error:
+            logger.warning("Không lưu được lịch sử cảnh báo. %s", error)
+            history_status = "error"
+
         status = "error"
         try:
-            if video_time is None or (photo is not None and self.links):
-                text = telegram.fall_text(occurred_at) if video_time is None else telegram.video_test_text(video_time)
-                status = "sent" if self.send_linked(user_id, text, photo=photo) else "unlinked"
+            if absence_seconds is not None:
+                text = telegram.absence_text(occurred_at, absence_seconds)
+            elif video_time is not None:
+                text = telegram.video_test_text(video_time)
+            else:
+                text = telegram.fall_text(occurred_at)
+            status = self.send_linked(user_id, text, photo=photo)
+            if status == "sent" and video_time is not None and photo is None:
+                status = "sent_text"
         except AccountError as error:
             logger.warning("Không gửi được cảnh báo Telegram. %s", error)
-        finally:
-            self.db.user_rows("PATCH", "fall_alerts", user_id, id=f"eq.{alert_id}",
-                              payload={"telegram_status": status})
-        return status
+
+        if history_status == "saved":
+            stored_status = {"sent_text": "sent", "unavailable": "unlinked"}.get(status, status)
+            try:
+                self.db.user_rows("PATCH", "fall_alerts", user_id, id=f"eq.{alert_id}",
+                                  payload={"telegram_status": stored_status})
+            except AccountError as error:
+                logger.warning("Không cập nhật được trạng thái Telegram trong lịch sử. %s", error)
+                history_status = "status_error"
+        return status, history_status
 
     def run(self):
         while True:
-            user_id, occurred_at = self.pending.get()
+            user_id, occurred_at, photo, absence_seconds = self.pending.get()
             try:
-                self.record(user_id, occurred_at)
-            except AccountError as error:
-                logger.warning("Không lưu được lịch sử cảnh báo. %s", error)
+                self.record(user_id, occurred_at, photo=photo, absence_seconds=absence_seconds)
             finally:
                 self.pending.task_done()
 

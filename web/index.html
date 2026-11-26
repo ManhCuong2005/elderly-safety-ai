@@ -131,6 +131,10 @@
               <span><strong>Tài khoản &amp; Telegram</strong><span>Thông tin cá nhân và cài đặt nhận cảnh báo</span></span>
               <span class="chevron" aria-hidden="true"></span>
             </a>
+            <a class="menu-row" href="#cai-dat-camera">
+              <span><strong>Cài đặt camera</strong><span>Chọn thời gian báo khi không thấy người</span></span>
+              <span class="chevron" aria-hidden="true"></span>
+            </a>
             <a class="menu-row" href="#lich-su">
               <span><strong>Lịch sử cảnh báo</strong><span>Xem lại sự kiện theo ngày, giờ và ảnh</span></span>
               <span class="chevron" aria-hidden="true"></span>
@@ -166,6 +170,30 @@
               <p id="telegram-message" class="message" role="status" hidden></p>
             </section>
           </div>
+        </section>
+
+        <section class="screen detail-screen" id="camera-settings-screen" aria-labelledby="camera-settings-heading" data-screen="cai-dat-camera" hidden>
+          <a class="back-link" href="#toi"><span class="chevron" aria-hidden="true"></span>Quay lại mục Tôi</a>
+          <header class="page-head"><h1 id="camera-settings-heading" tabindex="-1">Cài đặt camera</h1></header>
+          <form class="panel settings-panel" id="camera-settings-form" aria-labelledby="absence-heading">
+            <h2 id="absence-heading">Báo khi không thấy người</h2>
+            <p>Camera bắt đầu tính thời gian chờ sau khi đã thấy người trong khung hình.</p>
+            <fieldset class="camera-settings-fields" id="camera-settings-fields" aria-labelledby="absence-heading" disabled>
+              <label class="camera-settings-toggle"><input type="checkbox" id="absence-enabled"> Bật cảnh báo Telegram</label>
+              <div class="form-field">
+                <label for="absence-seconds">Thời gian chờ (giây)</label>
+                <input type="number" id="absence-seconds" min="10" max="3600" step="1" value="60" required aria-describedby="absence-help">
+                <p class="setting-hint" id="absence-help">Từ 10 đến 3600 giây. Chọn thời gian chờ lâu hơn nếu phòng có lối đi khuất camera.</p>
+              </div>
+              <div class="controls" aria-label="Thời gian đề xuất" role="group">
+                <button type="button" data-absence-seconds="30">30 giây · Góc rộng</button>
+                <button type="button" data-absence-seconds="60">60 giây · Mặc định</button>
+                <button type="button" data-absence-seconds="180">180 giây · Góc hẹp</button>
+              </div>
+              <button type="submit" class="primary">Lưu cài đặt</button>
+            </fieldset>
+            <p id="camera-settings-status" class="message" role="status" hidden></p>
+          </form>
         </section>
 
         <section class="screen history-screen" id="history-screen" aria-labelledby="history-heading" data-screen="lich-su" hidden>

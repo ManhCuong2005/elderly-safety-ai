@@ -3,13 +3,15 @@ import unittest
 from datetime import datetime, timezone
 from email import policy
 from email.parser import BytesParser
+from types import SimpleNamespace
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 from PIL import Image
 
 from src.accounts import AccountAlerts, AccountError, Supabase, TelegramLinks
-from src.server import create_app
+from src.inference import FALL_WARNING, NO_PERSON, UNCLEAR
+from src.server import Session, create_app
 from src.storage import safe
 from src.telegram import TelegramError
 from src.train import load_model, load_split
@@ -20,8 +22,9 @@ class SupabaseFixture(Supabase):
         super().__init__("test.supabase.co", "publishable", "secret")
         self.links = {}
         self.events = {}
+        self.settings = {}
 
-    def request(self, method, path, payload=None, *, database=False):
+    def request(self, method, path, payload=None, *, database=False, prefer=None):
         route = urlsplit(path)
         if route.path == "/auth/v1/signup":
             return {"id": "pending-confirmation"}
@@ -44,6 +47,12 @@ class SupabaseFixture(Supabase):
                 self.links.pop(owner, None)
             else:
                 return [self.links[owner].copy()] if owner in self.links else []
+        elif route.path == "/rest/v1/camera_settings":
+            if method == "POST":
+                assert prefer == "resolution=merge-duplicates"
+                self.settings[owner] = payload.copy()
+            else:
+                return [self.settings[owner].copy()] if owner in self.settings else []
         else:
             events = self.events.setdefault(owner, {})
             if method == "POST":
@@ -70,13 +79,114 @@ class AccountTests(unittest.TestCase):
     def setUp(self):
         self.db = SupabaseFixture()
         self.links = TelegramLinks("1:test")
+        self.alerts = AccountAlerts(self.db, self.links)
         with (patch("src.server.load_supabase", return_value=self.db),
-              patch("src.server.load_telegram", return_value=self.links)):
+              patch("src.server.load_telegram", return_value=self.links),
+              patch("src.server.AccountAlerts", return_value=self.alerts)):
             self.app = create_app(start_sweeper=False)
         self.alice, self.bob, self.guest = [self.app.test_client() for _ in range(3)]
 
     def login(self, client, name, password="valid-pass"):
         return client.post("/api/account/login", json={"email": f"{name}@example.com", "password": password})
+
+    def test_camera_settings_are_optional_validated_and_private(self):
+        url = "/api/account/camera-settings"
+        self.assertEqual(self.guest.get(url).status_code, 401)
+        self.login(self.alice, "alice")
+        self.login(self.bob, "bob")
+        default = {"enabled": False, "seconds": 60}
+        self.assertEqual(self.alice.get(url).json, default)
+        for seconds in (9, 3601, 60.5, True, "60"):
+            self.assertEqual(self.alice.post(url, json={"enabled": True, "seconds": seconds}).status_code, 400)
+        self.assertEqual(self.alice.post(url, json={"enabled": "false", "seconds": 60}).status_code, 400)
+        self.assertEqual(self.alice.post(url, json={"enabled": True, "seconds": 30}).status_code, 200)
+        self.assertEqual(self.bob.get(url).json, default)
+        self.login(self.guest, "alice")
+        self.assertEqual(self.guest.get(url).json, {**default, "enabled": True, "seconds": 30})
+        self.assertEqual(self.alice.post(url, json={"enabled": False, "seconds": 30}).status_code, 200)
+        self.assertEqual(self.guest.get(url).json, {**default, "seconds": 30})
+
+    def test_absence_timer_restarts_after_unclear_frames_or_capture_gap(self):
+        monitor = Session(None, None, "login", "alice", absence_after=10)
+        for now in range(12):
+            self.assertIsNone(monitor.observe_absence(NO_PERSON, now))
+        monitor.observe_absence(FALL_WARNING, 12)
+        for now in range(13, 19):
+            self.assertIsNone(monitor.observe_absence(NO_PERSON, now))
+        monitor.observe_absence(UNCLEAR, 19)
+        for now in range(20, 28):
+            self.assertIsNone(monitor.observe_absence(NO_PERSON, now))
+        for now in range(31, 41):
+            self.assertIsNone(monitor.observe_absence(NO_PERSON, now))
+        self.assertEqual(monitor.observe_absence(NO_PERSON, 41), 10)
+        monitor.observe_absence(UNCLEAR, 42)
+        for now in range(43, 55):
+            self.assertIsNone(monitor.observe_absence(NO_PERSON, now))
+
+    def test_camera_absence_sends_once_per_departure_and_keeps_fall_alert(self):
+        self.login(self.alice, "alice")
+        self.login(self.bob, "bob")
+        self.db.links["alice"] = {"chat_id": 111}
+        token = self.alice.post("/api/session").json["token"]
+        monitor = self.app.extensions["sessions"].find(token)
+        self.assertIsNone(monitor.absence_after)
+        url = "/api/account/camera-settings"
+        self.bob.post(url, json={"enabled": True, "seconds": 30})
+        self.assertIsNone(monitor.absence_after)
+        with io.BytesIO() as buffer:
+            Image.new("RGB", (20, 20)).save(buffer, "JPEG")
+            jpeg = buffer.getvalue()
+        with io.BytesIO() as buffer:
+            Image.new("RGB", (28, 20)).save(buffer, "JPEG")
+            absence_jpeg = buffer.getvalue()
+        start = monitor.last_seen
+
+        def send(stamp, state, *, alarm=False, frame=jpeg):
+            clock = SimpleNamespace(monotonic=lambda: start + stamp)
+            with (patch("src.server.time", clock),
+                  patch("src.server.web_result", return_value={"t": stamp, "state": state, "alarm": alarm})):
+                result = self.alice.post(f"/api/frame/{token}", data=frame, content_type="image/jpeg",
+                                         headers={"X-Frame-Time": str(stamp)})
+            self.assertEqual(result.status_code, 200)
+            return result.json.get("absence_alarm")
+
+        with patch("src.server.Pose"), patch("src.accounts.telegram.api") as bot:
+            send(0, FALL_WARNING, alarm=True)
+            for stamp in range(1, 12):
+                self.assertIsNone(send(stamp, NO_PERSON))
+            self.alice.post(url, json={"enabled": True, "seconds": 10})
+            for stamp in range(12, 22):
+                self.assertIsNone(send(stamp, NO_PERSON))
+            self.assertEqual(send(22, NO_PERSON, frame=absence_jpeg), 10)
+            self.assertIsNone(send(23, NO_PERSON))
+            self.assertIsNone(send(24, FALL_WARNING))
+            for stamp in range(25, 35):
+                self.assertIsNone(send(stamp, NO_PERSON))
+            self.assertEqual(send(35, NO_PERSON, frame=absence_jpeg), 10)
+            self.alerts.pending.join()
+
+        self.assertEqual([call.args[1] for call in bot.call_args_list], ["sendPhoto"] * 3)
+        photos = []
+        for call in bot.call_args_list[1:]:
+            self.assertEqual(call.args[2]["chat_id"], 111)
+            self.assertIn("Không thấy người trong khung hình ít nhất 10 giây", call.args[2]["caption"])
+            photo = call.kwargs["photo"]
+            with Image.open(io.BytesIO(photo)) as image:
+                self.assertEqual((image.format, image.size), ("JPEG", (28, 20)))
+            photos.append(photo)
+        events = self.alice.get("/api/account/history").json["events"]
+        self.assertCountEqual([(row["source"], row["has_photo"], row["telegram_status"]) for row in events],
+                              [("camera", True, "sent"), ("camera_absence", True, "sent"), ("camera_absence", True, "sent")])
+        history_photos = []
+        for row in events:
+            if row["source"] == "camera_absence":
+                url = f'/api/account/history/{row["id"]}/photo'
+                response = self.alice.get(url)
+                self.assertEqual(response.mimetype, "image/jpeg")
+                history_photos.append(response.data)
+                self.assertEqual(self.bob.get(url).status_code, 404)
+        self.assertCountEqual(history_photos, photos)
+        self.assertEqual(self.bob.get("/api/account/history").json["events"], [])
 
     def test_history_filters_vietnam_day_before_paginating(self):
         self.login(self.alice, "alice")
@@ -130,13 +240,13 @@ class AccountTests(unittest.TestCase):
         received = []
         outgoing = []
 
-        def fake_bot(token, method, body):
+        def fake_bot(token, method, body, *, photo=None):
             if method == "getMe":
                 return {"username": "CameraTestBot"}
             if method == "getUpdates":
                 return [update for update in received if update["update_id"] >= body["offset"]]
-            self.assertEqual(method, "sendMessage")
-            outgoing.append(body)
+            self.assertIn(method, ("sendMessage", "sendPhoto"))
+            outgoing.append((method, body, photo))
 
         def start(client):
             url = client.post(prefix + "start").json["url"]
@@ -166,17 +276,25 @@ class AccountTests(unittest.TestCase):
             self.assertEqual(self.alice.get(prefix.rstrip("/")).json["label"], "@chat_111")
 
             alerts = AccountAlerts(self.db, self.links)
-            alerts.enqueue("alice")
+            with io.BytesIO() as buffer:
+                Image.new("RGB", (20, 20), "red").save(buffer, "JPEG")
+                camera_photo = buffer.getvalue()
+            alerts.enqueue("alice", photo=camera_photo)
             alerts.enqueue("bob")
             alerts.pending.join()
-            self.assertEqual([message["chat_id"] for message in outgoing], [111, 111, 222])
-            self.assertIn("Nghi té ngã", outgoing[1]["text"])
+            self.assertEqual([(method, body["chat_id"]) for method, body, _ in outgoing],
+                             [("sendMessage", 111), ("sendPhoto", 111), ("sendMessage", 222)])
+            self.assertIn("Nghi té ngã qua camera", outgoing[1][1]["caption"])
+            self.assertEqual(outgoing[1][2], camera_photo)
             alice = self.alice.get("/api/account/history?user_id=bob").json["events"]
             bob = self.bob.get("/api/account/history").json["events"]
             self.assertEqual(alice[0]["telegram_status"], "sent")
             self.assertEqual(alice[0]["source"], "camera")
-            self.assertFalse(alice[0]["has_photo"])
-            self.assertEqual(self.alice.get(f'/api/account/history/{alice[0]["id"]}/photo').status_code, 404)
+            self.assertTrue(alice[0]["has_photo"])
+            url = f'/api/account/history/{alice[0]["id"]}/photo'
+            self.assertEqual(self.alice.get(url).data, camera_photo)
+            self.assertEqual(self.bob.get(url).status_code, 404)
+            self.assertFalse(bob[0]["has_photo"])
             self.assertNotEqual(alice[0]["id"], bob[0]["id"])
             self.assertEqual(self.alice.post(prefix + "unlink").status_code, 204)
             alerts.enqueue("alice")
@@ -221,6 +339,7 @@ class AccountTests(unittest.TestCase):
             detected = upload(self.alice, fall)
             self.assertTrue(detected["alarms"])
             self.assertEqual(detected["telegram_status"], "sent")
+            self.assertEqual(detected["history_status"], "saved")
             alice_history = self.alice.get("/api/account/history").json["events"]
             self.assertEqual(len(alice_history), 1)
             self.assertEqual((alice_history[0]["source"], alice_history[0]["telegram_status"]), ("video_test", "sent"))
@@ -259,6 +378,8 @@ class AccountTests(unittest.TestCase):
             failed = upload(self.bob, fall)
             self.assertEqual(failed["alarms"], detected["alarms"])
             self.assertEqual(failed["telegram_status"], "error")
+            self.assertEqual(failed["history_status"], "saved")
+            self.assertEqual(connection.request.call_count, 2)
         alice = self.alice.get("/api/account/history").json["events"]
         bob = self.bob.get("/api/account/history").json["events"]
         self.assertEqual([(e["source"], e["telegram_status"]) for e in alice],
@@ -267,11 +388,37 @@ class AccountTests(unittest.TestCase):
         self.assertTrue(alice[0]["has_photo"])
         self.assertTrue(bob[0]["has_photo"])
 
-    def test_skips_alert_delivery_when_history_insert_fails(self):
+    def test_history_write_errors_do_not_block_or_mask_telegram(self):
         self.db.links["alice"] = {"chat_id": 111}
-        with (patch.object(self.db, "user_rows", side_effect=AccountError("Supabase is offline")),
-              patch("src.telegram.api") as bot):
-            with self.assertRaises(AccountError):
-                AccountAlerts(self.db, self.links).record("alice", datetime.now(timezone.utc),
-                                                         video_time=0, photo=b"test JPEG")
-            bot.assert_not_called()
+        original = self.db.user_rows
+        alerts = AccountAlerts(self.db, self.links)
+        for failing_method, expected in (("POST", "error"), ("PATCH", "status_error")):
+            with self.subTest(failing_method=failing_method):
+                def user_rows(method, table, user_id, **kwargs):
+                    if method == failing_method and table == "fall_alerts":
+                        raise AccountError("Supabase history write failed")
+                    return original(method, table, user_id, **kwargs)
+
+                with (patch.object(self.db, "user_rows", side_effect=user_rows),
+                      patch("src.telegram.api") as bot):
+                    status = alerts.record("alice", datetime.now(timezone.utc), video_time=0, photo=b"test JPEG")
+                    self.assertEqual(status, ("sent", expected))
+                    bot.assert_called_once()
+                    self.assertEqual(bot.call_args.args[1], "sendPhoto")
+                    self.assertEqual(bot.call_args.args[2]["chat_id"], 111)
+                    self.assertEqual(bot.call_args.kwargs["photo"], b"test JPEG")
+
+    def test_rejected_or_missing_photo_falls_back_to_test_text(self):
+        self.db.links["alice"] = {"chat_id": 111}
+        alerts = AccountAlerts(self.db, self.links)
+        for photo, methods in ((b"test JPEG", ["sendPhoto", "sendMessage"]), (None, ["sendMessage"])):
+            def transport(token, method, payload, **kwargs):
+                if method == "sendPhoto":
+                    raise TelegramError("Rejected photo", status=400)
+
+            with self.subTest(photo=photo), patch("src.telegram.api", side_effect=transport) as bot:
+                status = alerts.record("alice", datetime.now(timezone.utc), video_time=0, photo=photo)
+                self.assertEqual(status, ("sent_text", "saved"))
+                self.assertEqual([call.args[1] for call in bot.call_args_list], methods)
+                self.assertEqual(bot.call_args.args[2]["chat_id"], 111)
+                self.assertIn("[THỬ VIDEO]", bot.call_args.args[2]["text"])

@@ -42,9 +42,11 @@ Lưu `{"bot_token": "..."}` vào `.secrets/telegram.json` và khởi động l�
 
 Nếu bật xác nhận email cho người dùng bên ngoài nhóm Supabase, cấu hình [SMTP riêng](https://supabase.com/docs/guides/auth/auth-smtp) để gửi email đăng ký.
 
-Camera trực tiếp ghi sự kiện **Nghi té ngã** cho tài khoản đã mở phiên. Bot chỉ gửi tới chat đã liên kết với tài khoản đó. **Tôi → Lịch sử cảnh báo** nhóm sự kiện theo ngày, hiện giờ Việt Nam và cho phép chọn ngày hoặc chuyển trang. Khi **Thử video** phát hiện nghi té ngã, bot gửi một ảnh ở mốc cảnh báo đầu tiên với nhãn **[THỬ VIDEO]** và lưu một mục lịch sử có nguồn **Thử video**, kể cả khi Telegram chưa kết nối hoặc gửi lỗi. Web hiển thị kết quả phân tích và trạng thái gửi ảnh. [Telegram Bot API](https://core.telegram.org/bots/api#sendphoto)
+Camera trực tiếp lưu một ảnh JPEG tại mỗi mốc **Nghi té ngã** vào lịch sử của tài khoản đã mở phiên. Bot gửi ảnh và giờ cảnh báo tới chat đã liên kết. Nếu không tạo được ảnh hoặc Telegram từ chối ảnh, bot gửi tin chữ thay thế. **Tôi → Lịch sử cảnh báo** nhóm sự kiện theo ngày, hiện giờ Việt Nam và cho phép chọn ngày hoặc chuyển trang. Khi **Thử video** phát hiện nghi té ngã, bot gửi một ảnh ở mốc cảnh báo đầu tiên với nhãn **[THỬ VIDEO]** và lưu một mục lịch sử có nguồn **Thử video**, kể cả khi Telegram chưa kết nối hoặc gửi lỗi. Web hiển thị kết quả phân tích và trạng thái gửi ảnh. [Telegram Bot API](https://core.telegram.org/bots/api#sendphoto)
 
-Ảnh khung hình của lượt **Thử video** mới hiện trong lịch sử riêng của tài khoản. Bấm vào ảnh thu nhỏ để xem kích thước đầy đủ.
+Trong **Tôi → Cài đặt camera**, bạn có thể bật **Báo khi không thấy người** và chọn thời gian chờ từ 10 đến 3600 giây. Tính năng tắt sẵn. Mốc mặc định là 60 giây, với đề xuất 30 giây cho góc rộng và 180 giây cho góc hẹp. Sau khi camera đã thấy người, một lần vắng mặt liên tục đủ lâu sẽ chụp ảnh JPEG tại thời điểm cảnh báo, lưu ảnh trong mục **Không thấy người** của lịch sử và gửi ảnh kèm thông báo tới Telegram đã liên kết. Camera phải tiếp tục theo dõi và thấy người quay lại trước khi gửi cảnh báo cho lần rời khung hình tiếp theo. Với dự án Supabase đã tạo từ trước, chạy lại [schema.sql](supabase/schema.sql) trong **SQL Editor** để bổ sung phần cài đặt và loại cảnh báo mới.
+
+Ảnh từ **Camera** và **Thử video** hiện trong lịch sử riêng của tài khoản. Bấm vào ảnh thu nhỏ để xem kích thước đầy đủ.
 
 ## Chuẩn bị lại từng bước
 

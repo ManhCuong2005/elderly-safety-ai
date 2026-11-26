@@ -13,7 +13,9 @@ VN_TIME = timezone(timedelta(hours=7))
 
 
 class TelegramError(Exception):
-    pass
+    def __init__(self, message, *, status=None):
+        super().__init__(message)
+        self.status = status
 
 
 def read_config():
@@ -49,13 +51,19 @@ def api(token, method, payload, *, photo=None):
         connection.request("POST", f"/bot{token}/{method}", body, {"Content-Type": content_type})
         response = connection.getresponse()
         if response.status != 200:
-            raise TelegramError(f"Telegram trả HTTP {response.status}.")
+            raise TelegramError(f"Telegram trả HTTP {response.status} khi gọi {method}.", status=response.status)
         data = json.loads(response.read(1024 * 1024))
         if not isinstance(data, dict) or data.get("ok") is not True or "result" not in data:
-            raise TelegramError("Telegram chưa xác nhận yêu cầu.")
+            raise TelegramError(f"Telegram chưa xác nhận yêu cầu {method}.")
         return data["result"]
-    except (OSError, http.client.HTTPException, ValueError):
-        raise TelegramError("Không kết nối được hoặc phản hồi Telegram không hợp lệ.") from None
+    except TimeoutError:
+        raise TelegramError(f"Hết thời gian chờ Telegram khi gọi {method}.") from None
+    except http.client.RemoteDisconnected:
+        raise TelegramError(f"Kết nối Telegram bị đóng trước khi nhận phản hồi {method}.") from None
+    except (http.client.HTTPException, ValueError):
+        raise TelegramError(f"Phản hồi Telegram không hợp lệ khi gọi {method}.") from None
+    except OSError as error:
+        raise TelegramError(f"Lỗi kết nối Telegram khi gọi {method} ({type(error).__name__}).") from None
     finally:
         connection.close()
 
@@ -99,6 +107,13 @@ def fall_text(occurred_at):
     when = occurred_at.astimezone(VN_TIME).strftime("%H:%M:%S %d/%m/%Y")
     return (f"⚠️ Nghi té ngã qua camera\nThời điểm: {when} (giờ Việt Nam).\n"
             "Hãy kiểm tra tình trạng người đang được theo dõi.")
+
+
+def absence_text(occurred_at, seconds):
+    when = occurred_at.astimezone(VN_TIME).strftime("%H:%M:%S %d/%m/%Y")
+    return (f"CameraAI · Không thấy người trong khung hình ít nhất {seconds} giây.\n"
+            f"Thời điểm cảnh báo: {when} (giờ Việt Nam).\n"
+            "Hãy kiểm tra vùng quan sát nếu cần.")
 
 
 def video_test_text(timestamp):

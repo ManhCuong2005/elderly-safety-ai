@@ -1,9 +1,11 @@
+import http.client
 import io
 import os
 import unittest
 from unittest.mock import Mock, patch
 
 import numpy as np
+from PIL import Image
 
 from src.dataset import wanted
 from src.inference import Engine, FALL_WARNING, NO_PERSON, SCHEMA
@@ -162,9 +164,22 @@ class TelegramTests(unittest.TestCase):
             save.assert_called_once_with(safe(".secrets/telegram.json"), {**config, "chat_id": 123})
 
     def test_hides_transport_error_details(self):
+        for failure, message in ((OSError, "Lỗi kết nối"), (TimeoutError, "Hết thời gian"),
+                                 (http.client.RemoteDisconnected, "bị đóng")):
+            with self.subTest(failure=failure), patch("src.telegram.http.client.HTTPSConnection") as connection:
+                connection.return_value.request.side_effect = failure("url contained 123:unused")
+                with self.assertRaises(TelegramError) as caught:
+                    telegram_api("123:unused", "sendPhoto", {}, photo=b"test image")
+                self.assertIn(message, str(caught.exception))
+                self.assertIn("sendPhoto", str(caught.exception))
+                self.assertNotIn("123:unused", str(caught.exception))
+
+    def test_invalid_response_does_not_expose_body(self):
         with patch("src.telegram.http.client.HTTPSConnection") as connection:
-            connection.return_value.request.side_effect = OSError("url contained 123:unused")
-            with self.assertRaises(TelegramError) as caught:
+            response = connection.return_value.getresponse.return_value
+            response.status = 200
+            response.read.return_value = b"invalid response with 123:unused"
+            with self.assertRaisesRegex(TelegramError, "Phản hồi Telegram không hợp lệ") as caught:
                 telegram_api("123:unused", "sendMessage", {})
             self.assertNotIn("123:unused", str(caught.exception))
 
@@ -182,8 +197,11 @@ class RealVideoTests(unittest.TestCase):
         cls.path = safe(cls.video["relative_path"])
         cls.cfg = cls.info["config"]
         cls.alerts = Mock()
+        cls.alerts.record.return_value = ("unavailable", "saved")
+        db = Mock()
+        db.user_rows.return_value = []
         with (patch("src.server.AccountAlerts", return_value=cls.alerts),
-              patch("src.server.load_supabase"), patch("src.server.load_telegram", return_value=None)):
+              patch("src.server.load_supabase", return_value=db), patch("src.server.load_telegram", return_value=None)):
             cls.app = create_app(start_sweeper=False)
 
     def setUp(self):
@@ -266,14 +284,20 @@ class RealVideoTests(unittest.TestCase):
         self.assertEqual(other.delete(f"/api/session/{token}").status_code, 204)
         self.assertEqual(other.post(route, data=jpeg, content_type="image/jpeg",
                                     headers={"X-Frame-Time": "0.1"}).status_code, 410)
+        alarm_buffer = io.BytesIO()
+        Image.new("RGB", (800, 400), (220, 40, 20)).save(alarm_buffer, "JPEG")
         with patch("src.server.web_result", side_effect=[
             {"state": FALL_WARNING, "alarm": True}, {"state": FALL_WARNING, "alarm": False},
         ]):
-            for timestamp in ("0.1", "0.2"):
-                result = self.client.post(route, data=jpeg, content_type="image/jpeg",
+            for timestamp, frame in (("0.1", alarm_buffer.getvalue()), ("0.2", jpeg)):
+                result = self.client.post(route, data=frame, content_type="image/jpeg",
                                           headers={"X-Frame-Time": timestamp})
                 self.assertEqual(result.status_code, 200)
-        self.alerts.enqueue.assert_called_once_with("test-user")
+        self.alerts.enqueue.assert_called_once()
+        self.assertEqual(self.alerts.enqueue.call_args.args, ("test-user",))
+        with Image.open(io.BytesIO(self.alerts.enqueue.call_args.kwargs["photo"])) as photo:
+            self.assertEqual((photo.format, photo.size), ("JPEG", (640, 320)))
+            np.testing.assert_allclose(photo.getpixel((0, 0)), (220, 40, 20), atol=3)
         self.assertEqual(self.client.delete(f"/api/session/{token}").status_code, 204)
         self.assertEqual(self.client.post(route, data=jpeg, content_type="image/jpeg",
                                          headers={"X-Frame-Time": "0.3"}).status_code, 410)
