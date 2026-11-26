@@ -33,7 +33,7 @@ async function api(url, options) {
     error.retryAfter = Number(response.headers.get('Retry-After'));
     throw error;
   }
-  return data;
+  return response.headers.get('content-type')?.startsWith('image/') ? response.blob() : data;
 }
 
 function message(text, error = false) {

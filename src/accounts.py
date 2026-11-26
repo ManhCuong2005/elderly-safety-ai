@@ -1,4 +1,5 @@
 import http.client
+import io
 import json
 import logging
 import os
@@ -8,16 +9,26 @@ import threading
 from datetime import date, datetime, timedelta, timezone
 from queue import Full, Queue
 from time import monotonic
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 from uuid import uuid4
 
 from flask import Response, jsonify, request, session
 from flask.sessions import SecureCookieSessionInterface
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from . import telegram
 from .storage import read_json, safe
 
 logger = logging.getLogger(__name__)
+AVATAR_BUCKET = "cameraai-avatars"
+MAX_AVATAR_UPLOAD = 5 * 1024**2
+
+
+def storage_missing(status, details):
+    return status == 404 or (status == 400 and isinstance(details, dict)
+                             and (str(details.get("statusCode")) == "404"
+                                  or details.get("code") in ("NoSuchBucket", "NoSuchKey")
+                                  or details.get("error") in ("NoSuchBucket", "NoSuchKey", "Bucket not found")))
 
 
 class AccountError(Exception):
@@ -34,33 +45,40 @@ class Supabase:
         self.publishable_key = publishable_key
         self.secret_key = secret_key
 
-    def request(self, method, path, payload=None, *, database=False, prefer=None):
+    def exchange(self, method, path, body, headers, timeout=5):
+        connection = http.client.HTTPSConnection(self.host, timeout=timeout)
+        try:
+            connection.request(method, path, body, headers)
+            response = connection.getresponse()
+            return response.status, response.read(1024**2)
+        finally:
+            connection.close()
+
+    def request(self, method, path, payload=None, *, database=False, prefer=None, token=None):
         key = self.secret_key if database else self.publishable_key
         if not key:
             raise AccountError("Máy chủ chưa cấu hình cơ sở dữ liệu tài khoản.")
         headers = {"apikey": key, "Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
         if prefer is not None:
             headers["Prefer"] = prefer
         sends_confirmation = path in {"/auth/v1/signup", "/auth/v1/resend"}
-        connection = http.client.HTTPSConnection(self.host, timeout=20 if sends_confirmation else 5)
         try:
-            connection.request(method, path, json.dumps(payload) if payload is not None else None, headers)
-            response = connection.getresponse()
-            raw = response.read(1024 * 1024)
+            status, raw = self.exchange(method, path, json.dumps(payload) if payload is not None else None,
+                                        headers, timeout=20 if sends_confirmation else 5)
         except TimeoutError:
             if sends_confirmation:
                 raise AccountError("Supabase phản hồi quá lâu khi gửi email xác nhận. Kiểm tra hộp thư rồi thử lại.", 504) from None
             raise AccountError("Supabase phản hồi quá lâu. Vui lòng thử lại.", 504) from None
         except (OSError, http.client.HTTPException):
             raise AccountError("Không kết nối được với Supabase. Vui lòng thử lại.") from None
-        finally:
-            connection.close()
         try:
             result = json.loads(raw) if raw else None
         except ValueError:
-            logger.warning("Supabase trả về phản hồi không đọc được (HTTP %s).", response.status)
-            raise AccountError(f"Supabase trả về phản hồi không đọc được (HTTP {response.status}).", 502) from None
-        if response.status < 300:
+            logger.warning("Supabase trả về phản hồi không đọc được (HTTP %s).", status)
+            raise AccountError(f"Supabase trả về phản hồi không đọc được (HTTP {status}).", 502) from None
+        if status < 300:
             return result
         details = result if isinstance(result, dict) else {}
         code = details.get("error_code") or details.get("code")
@@ -72,7 +90,9 @@ class Supabase:
                 raise AccountError("Tài khoản CameraAI hoặc Telegram này đã có liên kết.", 409)
             if code in {"PGRST205", "42P01"} and path.startswith("/rest/v1/camera_settings?"):
                 raise AccountError("Supabase chưa có bảng cài đặt camera. Hãy chạy lại supabase/schema.sql.")
-            logger.warning("Không truy cập được dữ liệu tài khoản Supabase (%s).", response.status)
+            logger.warning("Không truy cập được dữ liệu tài khoản Supabase (%s).", status)
+            if path.startswith("/auth/v1/admin/users/"):
+                raise AccountError("Chưa lưu được tên hiển thị. Vui lòng thử lại.")
             raise AccountError("Lịch sử hoặc kết nối Telegram chưa khả dụng. Kiểm tra cấu hình Supabase.")
         if code == "over_email_send_rate_limit":
             wait = re.fullmatch(r"For security purposes, you can only request this after ([0-9]{1,5}) seconds?\.",
@@ -81,14 +101,16 @@ class Supabase:
                 seconds = int(wait[1]) + 1
                 raise AccountError(f"Chờ {seconds} giây trước khi yêu cầu mã mới.", 429, retry_after=seconds)
             raise AccountError("Đã tới giới hạn gửi email xác nhận. Vui lòng đợi rồi thử lại.", 429)
-        if response.status == 429 or code == "over_request_rate_limit":
+        if status == 429 or code == "over_request_rate_limit":
             raise AccountError("Có quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.", 429)
         if code == "email_not_confirmed":
             raise AccountError("Hãy xác nhận email trước khi đăng nhập.", 403, code=code)
         if path == "/auth/v1/verify" and code == "otp_expired":
             raise AccountError("Supabase không chấp nhận mã này. Nhập mã trong thư mới nhất hoặc gửi lại mã.", 400)
-        if code == "invalid_credentials" or (response.status == 401 and path.startswith("/auth/v1/token?")):
+        if code == "invalid_credentials" or (status == 401 and path.startswith("/auth/v1/token?")):
             raise AccountError("Email hoặc mật khẩu không đúng.", 401)
+        if code == "weak_password" and path == "/auth/v1/user":
+            raise AccountError("Mật khẩu mới chưa đáp ứng yêu cầu bảo mật. Hãy chọn mật khẩu mạnh hơn.", 400)
         if code == "email_address_not_authorized":
             raise AccountError("Supabase không được phép gửi thư đến địa chỉ này. Kiểm tra cấu hình SMTP trong Supabase.", 403)
         if code == "signup_disabled":
@@ -98,11 +120,11 @@ class Supabase:
         if (sends_confirmation and isinstance(provider_message, str)
                 and provider_message.lower().startswith("error sending confirmation email")):
             logger.warning("Supabase Auth báo lỗi gửi thư xác nhận trên %s (HTTP %s, %s).",
-                           path, response.status, code or "không có mã lỗi")
+                           path, status, code or "không có mã lỗi")
             raise AccountError("Supabase báo lỗi ở bước gửi email xác nhận. Xem Auth Logs trong Supabase để kiểm tra SMTP hoặc mẫu thư.", 502)
         logger.warning("Supabase Auth trả lỗi trên %s (HTTP %s, %s).",
-                       path.partition("?")[0], response.status, code or "không có mã lỗi")
-        raise AccountError(f"Supabase trả lỗi HTTP {response.status} khi xử lý tài khoản. Xem Auth Logs trong Supabase.", 502)
+                       path.partition("?")[0], status, code or "không có mã lỗi")
+        raise AccountError(f"Supabase trả lỗi HTTP {status} khi xử lý tài khoản. Xem Auth Logs trong Supabase.", 502)
 
     def authenticate(self, payload, signup):
         path = "/auth/v1/signup" if signup else "/auth/v1/token?grant_type=password"
@@ -117,6 +139,69 @@ class Supabase:
 
     def resend_signup(self, email):
         self.request("POST", "/auth/v1/resend", {"email": email, "type": "signup"})
+
+    def change_password(self, user, current, new):
+        try:
+            result = self.request("POST", "/auth/v1/token?grant_type=password",
+                                  {"email": user["email"], "password": current})
+        except AccountError as error:
+            if error.status == 401:
+                raise AccountError("Mật khẩu hiện tại không đúng.", 400) from None
+            raise
+        if self.authenticated_user(result)["id"] != user["id"]:
+            raise AccountError("Phiên tài khoản đã thay đổi. Hãy đăng nhập lại.", 401)
+        self.request("PUT", "/auth/v1/user", {"password": new, "current_password": current},
+                     token=result["access_token"])
+
+    def rename(self, user_id, name):
+        self.request("PUT", f"/auth/v1/admin/users/{quote(user_id, safe='')}",
+                     {"user_metadata": {"name": name}}, database=True)
+
+    def storage_request(self, method, path, payload=None):
+        if not self.secret_key:
+            raise AccountError("Máy chủ chưa cấu hình lưu ảnh đại diện.")
+        headers = {"apikey": self.secret_key}
+        if isinstance(payload, bytes):
+            headers.update({"Content-Type": "image/jpeg", "x-upsert": "true"})
+        elif payload is not None:
+            headers["Content-Type"] = "application/json"
+            payload = json.dumps(payload)
+        try:
+            status, raw = self.exchange(method, f"/storage/v1/{path}", payload, headers, timeout=10)
+            if status == 200 and path.startswith("object/authenticated/"):
+                return status, raw
+            return status, json.loads(raw) if raw else {}
+        except (OSError, ValueError, http.client.HTTPException):
+            raise AccountError("Không kết nối được với kho ảnh. Vui lòng thử lại.") from None
+
+    def avatar(self, method, user_id, jpeg=None):
+        key = f"{quote(user_id, safe='')}.jpg"
+        if method == "POST":
+            status, bucket = self.storage_request("GET", f"bucket/{AVATAR_BUCKET}")
+            if storage_missing(status, bucket):
+                self.storage_request("POST", "bucket", {"id": AVATAR_BUCKET, "name": AVATAR_BUCKET,
+                                                          "public": False, "allowed_mime_types": ["image/jpeg"],
+                                                          "file_size_limit": 256 * 1024})
+                status, bucket = self.storage_request("GET", f"bucket/{AVATAR_BUCKET}")
+            if status != 200 or bucket.get("public") is not False:
+                raise AccountError("Chưa thiết lập được kho ảnh đại diện riêng tư.")
+            status, _ = self.storage_request("POST", f"object/{AVATAR_BUCKET}/{key}", jpeg)
+        elif method == "DELETE":
+            status, result = self.storage_request("DELETE", f"object/{AVATAR_BUCKET}", {"prefixes": [key]})
+            if storage_missing(status, result):
+                return None
+        else:
+            if not self.secret_key:
+                return None
+            status, data = self.storage_request("GET", f"object/authenticated/{AVATAR_BUCKET}/{key}")
+            if status == 200:
+                return data
+            if storage_missing(status, data):
+                return None
+        if not 200 <= status < 300:
+            logger.warning("Supabase Storage từ chối thao tác ảnh đại diện %s (HTTP %s).", method, status)
+            raise AccountError("Chưa xử lý được ảnh đại diện. Vui lòng thử lại.")
+        return None
 
     @staticmethod
     def authenticated_user(result):
@@ -340,6 +425,21 @@ class AccountCookie(SecureCookieSessionInterface):
         return request.is_secure or super().get_cookie_secure(app)
 
 
+def avatar_jpeg(content):
+    try:
+        with Image.open(io.BytesIO(content), formats=["JPEG", "PNG", "WEBP"]) as source:
+            if source.width * source.height > 16_000_000:
+                raise AccountError("Ảnh đại diện vượt quá 16 megapixel.", 413)
+            image = ImageOps.fit(ImageOps.exif_transpose(source).convert("RGBA"), (256, 256))
+            background = Image.new("RGB", image.size, "white")
+            background.paste(image, mask=image.getchannel("A"))
+            result = io.BytesIO()
+            background.save(result, format="JPEG", quality=86, optimize=True)
+            return result.getvalue()
+    except (OSError, UnidentifiedImageError, Image.DecompressionBombError, ValueError):
+        raise AccountError("Chọn một ảnh JPG, PNG hoặc WebP hợp lệ.", 415) from None
+
+
 def register_account_routes(app, db, links, stop_sessions):
     app.secret_key = os.environ.get("CAMERAAI_SESSION_SECRET") or secrets.token_bytes(32)
     app.session_interface = AccountCookie()
@@ -373,13 +473,17 @@ def register_account_routes(app, db, links, stop_sessions):
         session.update(user=user, login_id=secrets.token_urlsafe(24))
         return jsonify(user=user)
 
-    def email_request():
+    def account_request():
         if db is None:
             raise AccountError("Máy chủ chưa cấu hình Supabase.")
         request.max_content_length = 8192
         body = request.get_json(silent=True)
         if not isinstance(body, dict):
             raise AccountError("Dữ liệu tài khoản không hợp lệ.", 400)
+        return body
+
+    def email_request():
+        body = account_request()
         email = body.get("email")
         if not isinstance(email, str) or len(email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+", email.strip()):
             raise AccountError("Nhập địa chỉ email hợp lệ.", 400)
@@ -422,6 +526,44 @@ def register_account_routes(app, db, links, stop_sessions):
     def logout():
         end_session()
         return "", 204
+
+    @app.post("/api/account/profile")
+    def update_profile():
+        name = account_request().get("name")
+        if not isinstance(name, str) or not 1 <= len(name.strip()) <= 80:
+            raise AccountError("Tên hiển thị cần từ 1 đến 80 ký tự.", 400)
+        user = session["user"]
+        name = name.strip()
+        db.rename(user["id"], name)
+        user = {**user, "name": name}
+        session["user"] = user
+        return jsonify(user=user)
+
+    @app.post("/api/account/password")
+    def update_password():
+        body = account_request()
+        current, new = body.get("current_password"), body.get("new_password")
+        if not isinstance(current, str) or not 1 <= len(current) <= 256:
+            raise AccountError("Nhập mật khẩu hiện tại.", 400)
+        if not isinstance(new, str) or not 8 <= len(new) <= 256:
+            raise AccountError("Mật khẩu mới cần từ 8 đến 256 ký tự.", 400)
+        if new == current:
+            raise AccountError("Mật khẩu mới phải khác mật khẩu hiện tại.", 400)
+        db.change_password(session["user"], current, new)
+        return "", 204
+
+    @app.route("/api/account/avatar", methods=["GET", "POST", "DELETE"])
+    def account_avatar():
+        if db is None:
+            raise AccountError("Máy chủ chưa cấu hình Supabase.")
+        user_id = session["user"]["id"]
+        if request.method == "POST":
+            request.max_content_length = MAX_AVATAR_UPLOAD
+            jpeg = avatar_jpeg(request.get_data(cache=False))
+            db.avatar("POST", user_id, jpeg)
+            return Response(jpeg, mimetype="image/jpeg")
+        jpeg = db.avatar(request.method, user_id)
+        return Response(jpeg, mimetype="image/jpeg") if jpeg is not None else ("", 204)
 
     def user_rows(method, table, **options):
         if db is None:

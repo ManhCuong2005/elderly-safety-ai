@@ -9,6 +9,8 @@
   <meta name="description" content="Theo dõi té ngã qua camera, thử video và xem lại cảnh báo trên CameraAI.">
   <title>CameraAI · Theo dõi té ngã</title>
   <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/gsap.min.js" defer></script>
+  <script src="/assets/ScrollTrigger.min.js" defer></script>
   <script src="/assets/app.js" defer></script>
   <script src="/assets/account.js" defer></script>
 </head>
@@ -39,6 +41,7 @@
             <label for="account-password">Mật khẩu</label>
             <input id="account-password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
           </div>
+          <label class="tick password-reveal"><input type="checkbox" data-show-password> Hiện mật khẩu</label>
           <div class="auth-actions">
             <button class="primary" id="account-submit" type="submit">Đăng nhập</button>
             <button class="text-button" id="account-switch" type="button">Tạo tài khoản</button>
@@ -71,7 +74,7 @@
       <a class="brand" href="#camera" aria-label="CameraAI, về trang camera"><span class="brand-mark" aria-hidden="true"></span>CameraAI</a>
       <div class="header-actions">
         <span class="live-note" id="camera-running" hidden><span class="status-dot" aria-hidden="true"></span>Camera đang bật</span>
-        <a id="open-account" class="account-link" href="#toi" data-route="toi"><span id="account-avatar" class="avatar" aria-hidden="true"></span>Tôi</a>
+        <a id="open-account" class="account-link" href="#toi" data-route="toi"><span class="avatar" aria-hidden="true"><span data-avatar-initial></span><img data-avatar-image alt="" hidden></span>Tôi</a>
       </div>
     </header>
     <div class="app-shell">
@@ -152,7 +155,7 @@
           <div class="me-layout">
             <div class="me-profile">
               <span class="focus-mark" aria-hidden="true"></span>
-              <span class="avatar me-avatar" id="me-avatar" aria-hidden="true"></span>
+              <span class="avatar me-avatar" aria-hidden="true"><span data-avatar-initial></span><img data-avatar-image alt="" hidden></span>
               <div class="me-identity">
                 <h2 id="me-name"></h2>
                 <p id="me-email"></p>
@@ -178,17 +181,62 @@
           </div>
         </section>
 
-        <section class="screen detail-screen" id="profile-screen" aria-labelledby="profile-heading" data-screen="tai-khoan" hidden>
+        <section class="screen account-detail" id="profile-screen" aria-labelledby="profile-heading" data-screen="tai-khoan" hidden>
           <a class="back-link" href="#toi"><span class="chevron" aria-hidden="true"></span>Quay lại mục Tôi</a>
           <header class="page-head"><h1 id="profile-heading" tabindex="-1">Tài khoản &amp; Telegram</h1></header>
-          <div class="settings-list">
+          <div class="settings-list account-settings">
             <section class="panel settings-panel" aria-labelledby="profile-info">
               <h2 id="profile-info">Thông tin cá nhân</h2>
-              <dl class="profile-info">
-                <dt>Tên hiển thị</dt><dd id="profile-name"></dd>
-                <dt>Email</dt><dd id="profile-email"></dd>
-              </dl>
+              <form class="avatar-form" id="avatar-form">
+                <div class="avatar-editor">
+                  <span class="avatar profile-avatar" aria-hidden="true"><span data-avatar-initial></span><img data-avatar-image id="profile-avatar-image" alt="" hidden></span>
+                  <div class="form-field">
+                    <span id="avatar-label">Ảnh đại diện</span>
+                    <div class="avatar-picker">
+                      <input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" aria-labelledby="avatar-label avatar-choose" aria-describedby="avatar-hint">
+                      <label for="avatar-file" class="button" id="avatar-choose">Chọn ảnh</label>
+                      <span id="avatar-filename" class="hint">Chưa chọn ảnh</span>
+                    </div>
+                    <p class="hint" id="avatar-hint">JPG, PNG hoặc WebP, tối đa 5 MB.</p>
+                  </div>
+                </div>
+                <div class="controls">
+                  <button id="avatar-save" type="submit" class="primary" disabled>Lưu ảnh</button>
+                  <button id="avatar-remove" type="button" class="text-button" hidden>Gỡ ảnh</button>
+                </div>
+                <p id="avatar-status" class="message" role="status" hidden></p>
+              </form>
+              <form id="profile-form" class="profile-form">
+                <div class="form-field">
+                  <label for="profile-name">Tên hiển thị</label>
+                  <input id="profile-name" autocomplete="nickname" maxlength="80" required>
+                </div>
+                <dl class="profile-info"><dt>Email đăng nhập</dt><dd id="profile-email"></dd></dl>
+                <button type="submit" class="primary">Lưu tên hiển thị</button>
+                <p id="profile-status" class="message" role="status" hidden></p>
+              </form>
             </section>
+            <form class="panel settings-panel password-form" id="password-form" aria-labelledby="password-heading">
+              <h2 id="password-heading">Đổi mật khẩu</h2>
+              <div class="form-field">
+                <label for="current-password">Mật khẩu hiện tại</label>
+                <input id="current-password" type="password" autocomplete="current-password" maxlength="256" required>
+              </div>
+              <div class="form-field">
+                <label for="new-password">Mật khẩu mới</label>
+                <input id="new-password" type="password" autocomplete="new-password" minlength="8" maxlength="256" required aria-describedby="password-hint">
+                <p id="password-hint" class="hint">Tối thiểu 8 ký tự.</p>
+              </div>
+              <div class="form-field">
+                <label for="confirm-password">Nhập lại mật khẩu mới</label>
+                <input id="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="256" required>
+              </div>
+              <div class="controls password-actions">
+                <button type="submit" class="primary">Đổi mật khẩu</button>
+                <label class="tick password-reveal"><input type="checkbox" data-show-password> Hiện mật khẩu</label>
+              </div>
+              <p id="password-status" class="message" role="status" hidden></p>
+            </form>
             <section class="panel settings-panel" aria-labelledby="telegram-heading">
               <h2 id="telegram-heading">Kết nối Telegram</h2>
               <p id="telegram-status" role="status"></p>

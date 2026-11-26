@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from email import policy
 from email.parser import BytesParser
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import call, patch
 from urllib.parse import parse_qs, urlsplit
 
 from PIL import Image
@@ -25,8 +25,11 @@ class SupabaseFixture(Supabase):
         self.events = {}
         self.settings = {}
         self.pending_signups = {}
+        self.avatars = {}
+        self.names = {}
+        self.passwords = {}
 
-    def request(self, method, path, payload=None, *, database=False, prefer=None):
+    def request(self, method, path, payload=None, *, database=False, prefer=None, token=None):
         route = urlsplit(path)
         if route.path == "/auth/v1/signup":
             email = payload["email"]
@@ -48,14 +51,25 @@ class SupabaseFixture(Supabase):
                 "id": email.split("@")[0], "email": email, "user_metadata": {"name": name},
             }}
         if route.path == "/auth/v1/token":
-            if payload["password"] != "valid-pass":
-                raise AccountError("Email hoặc mật khẩu không đúng.", 401)
             email = payload["email"]
+            if payload["password"] != self.passwords.get(email, "valid-pass"):
+                raise AccountError("Email hoặc mật khẩu không đúng.", 401)
             if email in self.pending_signups:
                 raise AccountError("Hãy xác nhận email trước khi đăng nhập.", 403, code="email_not_confirmed")
-            return {"access_token": "private-test-token", "user": {
-                "id": email.split("@")[0], "email": email, "user_metadata": {"name": "Người kiểm thử"},
+            user_id = email.split("@")[0]
+            return {"access_token": f"private-test-token:{email}", "user": {
+                "id": user_id, "email": email, "user_metadata": {"name": self.names.get(user_id, "Người kiểm thử")},
             }}
+        if route.path == "/auth/v1/user":
+            assert method == "PUT" and token.startswith("private-test-token:")
+            email = token.split(":", 1)[1]
+            assert payload["current_password"] == self.passwords.get(email, "valid-pass")
+            self.passwords[email] = payload["password"]
+            return {}
+        if route.path.startswith("/auth/v1/admin/users/"):
+            assert method == "PUT" and database
+            self.names[route.path.rsplit("/", 1)[1]] = payload["user_metadata"]["name"]
+            return {}
         assert database
         query = parse_qs(route.query)
         owner = payload["user_id"] if method == "POST" else query["user_id"][0][3:]
@@ -94,6 +108,15 @@ class SupabaseFixture(Supabase):
                 limit = int(query.get("limit", [len(latest)])[0])
                 latest = latest[offset:offset + limit]
                 return [{key: row[key] for key in query["select"][0].split(",")} for row in latest]
+
+    def avatar(self, method, user_id, jpeg=None):
+        if method == "POST":
+            self.avatars[user_id] = jpeg
+        elif method == "DELETE":
+            self.avatars.pop(user_id, None)
+        else:
+            return self.avatars.get(user_id)
+        return None
 
 
 class AccountTests(unittest.TestCase):
@@ -321,6 +344,63 @@ class AccountTests(unittest.TestCase):
             self.assertEqual(delayed.status_code, 429)
             self.assertEqual(delayed.headers["Retry-After"], "13")
             self.assertIn("13 giây", delayed.json["error"])
+
+    def test_account_can_change_name_and_password_only_for_current_user(self):
+        url = "/api/account/"
+        self.assertEqual(self.guest.post(url + "password").status_code, 401)
+        self.login(self.alice, "alice")
+        self.assertEqual(self.alice.post(url + "profile", json={"name": "  "}).status_code, 400)
+        updated = self.alice.post(url + "profile", json={"name": "  Minh  ", "user_id": "bob"})
+        self.assertEqual(updated.json["user"]["name"], "Minh")
+        self.assertEqual(self.login(self.bob, "bob").json["user"]["name"], "Người kiểm thử")
+        payload = {"current_password": "wrong-old", "new_password": "new-valid-pass", "email": "bob@example.com"}
+        self.assertEqual(self.alice.post(url + "password", json=payload).status_code, 400)
+        payload["current_password"] = "valid-pass"
+        self.assertEqual(self.alice.post(url + "password", json=payload,
+                                         headers={"Origin": "https://elsewhere.test"}).status_code, 403)
+        self.assertEqual(self.alice.post(url + "password", json=payload).status_code, 204)
+        self.assertEqual(self.login(self.alice, "alice").status_code, 401)
+        self.assertEqual(self.login(self.alice, "alice", "new-valid-pass").json["user"]["name"], "Minh")
+        self.assertEqual(self.login(self.bob, "bob").status_code, 200)
+
+    def test_avatar_is_normalized_private_and_removable(self):
+        url = "/api/account/avatar"
+        self.assertEqual(self.guest.get(url).status_code, 401)
+        self.login(self.alice, "alice")
+        self.login(self.bob, "bob")
+        self.assertEqual(self.alice.post(url, data=b"<svg/>", content_type="image/svg+xml").status_code, 415)
+        self.assertEqual(self.alice.post(url, data=b"x" * (5 * 1024**2 + 1)).status_code, 413)
+        png = io.BytesIO()
+        Image.new("RGBA", (400, 160), "#248557").save(png, "PNG")
+        response = self.alice.post(url, data=png.getvalue(), content_type="image/png")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "image/jpeg")
+        with Image.open(io.BytesIO(response.data)) as photo:
+            self.assertEqual((photo.format, photo.size), ("JPEG", (256, 256)))
+        self.assertEqual(self.alice.get(url).data, response.data)
+        self.assertEqual(self.bob.get(url).status_code, 204)
+        self.assertEqual(self.bob.delete(url).status_code, 204)
+        self.assertEqual(self.alice.get(url).data, response.data)
+        self.assertEqual(self.alice.delete(url).status_code, 204)
+        self.assertEqual(self.alice.get(url).status_code, 204)
+
+    def test_first_avatar_write_creates_a_private_bucket(self):
+        db = Supabase("test.supabase.co", "publishable", "secret")
+        with patch.object(db, "storage_request", side_effect=[(400, {"error": "NoSuchBucket"}),
+                                                               (200, {}), (200, {"public": False}),
+                                                               (200, {})]) as storage:
+            db.avatar("POST", "alice", b"stored-jpeg")
+        self.assertEqual(storage.call_args_list, [
+            call("GET", "bucket/cameraai-avatars"),
+            call("POST", "bucket", {"id": "cameraai-avatars", "name": "cameraai-avatars", "public": False,
+                                    "allowed_mime_types": ["image/jpeg"], "file_size_limit": 256 * 1024}),
+            call("GET", "bucket/cameraai-avatars"),
+            call("POST", "object/cameraai-avatars/alice.jpg", b"stored-jpeg"),
+        ])
+        with patch.object(db, "storage_request", return_value=(200, {"public": True})) as storage:
+            with self.assertRaises(AccountError):
+                db.avatar("POST", "alice", b"stored-jpeg")
+        storage.assert_called_once_with("GET", "bucket/cameraai-avatars")
 
     def test_two_telegram_links_and_private_history(self):
         self.login(self.alice, "alice")

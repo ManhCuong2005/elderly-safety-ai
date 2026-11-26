@@ -16,6 +16,9 @@ let resendAfter = 0;
 let resendTimer;
 let telegramStep = '';
 let currentRoute;
+let historyMotion;
+
+if (window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
 
 function accountMessage(id, text, error = false) {
   const item = element(id);
@@ -34,16 +37,24 @@ function accountsMode(signup) {
   passwordInput.autocomplete = signup ? 'new-password' : 'current-password';
   passwordInput.minLength = signup ? 8 : 1;
   passwordInput.value = '';
+  accountForm.querySelector('[data-show-password]').checked = false;
+  passwordInput.type = 'password';
+}
+
+function showIdentity(user) {
+  const name = (user.name || '').trim();
+  element('profile-name').value = name;
+  element('me-name').textContent = name || 'Chưa đặt tên';
+  element('profile-email').textContent = element('me-email').textContent = user.email;
+  const initial = Array.from(name || user.email.trim())[0]?.toLocaleUpperCase('vi-VN') || '';
+  for (const label of document.querySelectorAll('[data-avatar-initial]')) label.textContent = initial;
 }
 
 function showMonitor(user) {
   clearTimeout(resendTimer);
   confirmationForm.hidden = true;
-  const name = (user.name || '').trim();
-  element('profile-name').textContent = element('me-name').textContent = name || 'Chưa đặt tên';
-  element('profile-email').textContent = element('me-email').textContent = user.email;
-  const initial = Array.from(name || user.email.trim())[0]?.toLocaleUpperCase('vi-VN') || '';
-  element('account-avatar').textContent = element('me-avatar').textContent = initial;
+  showIdentity(user);
+  loadAccountAvatar();
   element('account-screen').hidden = true;
   workspace.hidden = false;
   element('skip-link').href = '#main-content';
@@ -65,6 +76,10 @@ function renderRoute() {
   }
   if (route === currentRoute) return;
   const first = currentRoute === undefined;
+  if (currentRoute === 'lich-su') {
+    historyRequest?.abort();
+    historyMotion?.revert();
+  }
   currentRoute = route;
   const screen = route === 'camera' || route === 'thu-video' ? 'monitor' : route;
   for (const view of screens) view.hidden = view.dataset.screen !== screen;
@@ -231,10 +246,153 @@ logoutButton.addEventListener('click', async () => {
   }
 });
 
+const avatarForm = element('avatar-form');
+const avatarFile = element('avatar-file');
+const avatarSave = element('avatar-save');
+const avatarRemove = element('avatar-remove');
+const avatarFilename = element('avatar-filename');
+const avatarPreview = element('profile-avatar-image');
+const avatarImages = document.querySelectorAll('[data-avatar-image]');
+let avatarUrl;
+let avatarPreviewUrl;
+let avatarRevision = 0;
+
+function showAvatarImage(image, url) {
+  if (url) image.src = url;
+  else image.removeAttribute('src');
+  image.hidden = !url;
+  image.previousElementSibling.hidden = Boolean(url);
+}
+
+function showSavedAvatar(blob) {
+  if (avatarUrl) URL.revokeObjectURL(avatarUrl);
+  avatarUrl = blob ? URL.createObjectURL(blob) : undefined;
+  for (const image of avatarImages) {
+    showAvatarImage(image, image === avatarPreview && avatarPreviewUrl ? avatarPreviewUrl : avatarUrl);
+  }
+  avatarRemove.hidden = !avatarUrl;
+}
+
+async function loadAccountAvatar() {
+  const revision = avatarRevision;
+  try {
+    const photo = await api('/api/account/avatar');
+    if (revision === avatarRevision) showSavedAvatar(photo);
+  } catch (error) {
+    if (revision === avatarRevision) accountMessage('avatar-status', error.message, true);
+  }
+}
+
+function clearAvatarPreview() {
+  if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+  avatarPreviewUrl = undefined;
+  showAvatarImage(avatarPreview, avatarUrl);
+}
+
+avatarFile.addEventListener('change', () => {
+  clearAvatarPreview();
+  const file = avatarFile.files[0];
+  avatarSave.disabled = true;
+  avatarFilename.textContent = 'Chưa chọn ảnh';
+  accountMessage('avatar-status', '');
+  if (!file) return;
+  if (!file.size || file.size > 5 * 1024 ** 2) {
+    accountMessage('avatar-status', 'Chọn ảnh có dung lượng tối đa 5 MB.', true);
+    avatarFile.value = '';
+    return;
+  }
+  avatarPreviewUrl = URL.createObjectURL(file);
+  avatarFilename.textContent = file.name;
+  showAvatarImage(avatarPreview, avatarPreviewUrl);
+  avatarSave.disabled = false;
+});
+
+async function saveAvatar(method, file) {
+  avatarRevision += 1;
+  avatarFile.disabled = avatarSave.disabled = avatarRemove.disabled = true;
+  accountMessage('avatar-status', 'Đang cập nhật ảnh…');
+  try {
+    const photo = await api('/api/account/avatar', {method, body: file});
+    avatarFile.value = '';
+    avatarFilename.textContent = 'Chưa chọn ảnh';
+    clearAvatarPreview();
+    showSavedAvatar(photo);
+    accountMessage('avatar-status', photo ? 'Đã lưu ảnh đại diện.' : 'Đã gỡ ảnh đại diện.');
+  } catch (error) {
+    accountMessage('avatar-status', error.message, true);
+  } finally {
+    avatarFile.disabled = avatarRemove.disabled = false;
+    avatarSave.disabled = !avatarFile.files.length;
+  }
+}
+
+avatarForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const file = avatarFile.files[0];
+  if (file && !avatarSave.disabled) saveAvatar('POST', file);
+});
+avatarRemove.addEventListener('click', () => saveAvatar('DELETE'));
+
+element('profile-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const submit = event.submitter;
+  submit.disabled = true;
+  accountMessage('profile-status', 'Đang lưu tên…');
+  try {
+    const {user} = await postAccount('profile', {name: element('profile-name').value});
+    showIdentity(user);
+    accountMessage('profile-status', 'Đã lưu tên hiển thị.');
+  } catch (error) {
+    accountMessage('profile-status', error.message, true);
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+for (const toggle of document.querySelectorAll('[data-show-password]')) {
+  toggle.addEventListener('change', () => {
+    for (const input of toggle.form.querySelectorAll('input[autocomplete$="-password"]')) {
+      input.type = toggle.checked ? 'text' : 'password';
+    }
+  });
+}
+
+const passwordForm = element('password-form');
+const confirmed = element('confirm-password');
+passwordForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const newPassword = element('new-password').value;
+  if (newPassword !== confirmed.value) {
+    accountMessage('password-status', 'Mật khẩu nhập lại chưa khớp.', true);
+    confirmed.focus();
+    return;
+  }
+  const submit = event.submitter;
+  submit.disabled = true;
+  accountMessage('password-status', 'Đang đổi mật khẩu…');
+  try {
+    await postAccount('password', {current_password: element('current-password').value, new_password: newPassword});
+    passwordForm.reset();
+    passwordForm.querySelector('[data-show-password]').dispatchEvent(new Event('change'));
+    accountMessage('password-status', 'Đã đổi mật khẩu. Dùng mật khẩu mới cho lần đăng nhập sau.');
+  } catch (error) {
+    accountMessage('password-status', error.message, true);
+  } finally {
+    submit.disabled = false;
+  }
+});
+
 const cameraSettingsFields = element('camera-settings-fields');
 const absenceEnabled = element('absence-enabled');
 const absenceSeconds = element('absence-seconds');
+const absencePresets = cameraSettingsFields.querySelectorAll('[data-absence-seconds]');
 let cameraSettingsBusy = false;
+
+function updateAbsencePresets() {
+  for (const preset of absencePresets) {
+    preset.setAttribute('aria-pressed', String(Number(preset.dataset.absenceSeconds) === absenceSeconds.valueAsNumber));
+  }
+}
 
 async function loadCameraSettings() {
   if (cameraSettingsBusy) return;
@@ -244,6 +402,7 @@ async function loadCameraSettings() {
     const settings = await api('/api/account/camera-settings');
     absenceEnabled.checked = settings.enabled;
     absenceSeconds.value = settings.seconds;
+    updateAbsencePresets();
     cameraSettingsFields.disabled = false;
     accountMessage('camera-settings-status', '');
   } catch (error) {
@@ -253,8 +412,12 @@ async function loadCameraSettings() {
   }
 }
 
-for (const preset of cameraSettingsFields.querySelectorAll('[data-absence-seconds]')) {
-  preset.addEventListener('click', () => { absenceSeconds.value = preset.dataset.absenceSeconds; });
+absenceSeconds.addEventListener('input', updateAbsencePresets);
+for (const preset of absencePresets) {
+  preset.addEventListener('click', () => {
+    absenceSeconds.value = preset.dataset.absenceSeconds;
+    updateAbsencePresets();
+  });
 }
 
 element('camera-settings-form').addEventListener('submit', async event => {
@@ -298,6 +461,7 @@ async function loadHistory(page = historyPage) {
   element('history-clear').hidden = !selected;
   element('history-pages').hidden = true;
   reload.disabled = true;
+  historyMotion?.revert();
   list.replaceChildren();
   accountMessage('history-status', 'Đang tải lịch sử…');
   try {
@@ -351,11 +515,25 @@ async function loadHistory(page = historyPage) {
         const image = document.createElement('img');
         image.alt = 'Mở ảnh tại mốc cảnh báo';
         image.loading = 'lazy';
+        image.addEventListener('load', () => window.ScrollTrigger?.refresh(true), {once: true});
         image.src = link.href;
         link.append(image);
         detail.append(link);
       }
       rows.append(item);
+    }
+    if (events.length && window.gsap && window.ScrollTrigger) {
+      historyMotion = gsap.matchMedia();
+      historyMotion.add('(prefers-reduced-motion: no-preference)', () => {
+        const rows = Array.from(list.querySelectorAll('.history-event'));
+        for (const row of rows.filter(item => item.getBoundingClientRect().top >= window.innerHeight)) {
+          gsap.from(row, {
+            opacity: 0.65, y: 8, duration: 0.24, ease: 'power1.out', clearProps: 'opacity,transform',
+            scrollTrigger: {trigger: row, start: 'top bottom-=16', once: true},
+          });
+        }
+        ScrollTrigger.refresh();
+      });
     }
   } catch (error) {
     if (historyRequest === controller && error.name !== 'AbortError') accountMessage('history-status', error.message);

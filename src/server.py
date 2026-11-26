@@ -235,7 +235,7 @@ def create_app(host="127.0.0.1", start_sweeper=True):
         response.headers["Permissions-Policy"] = "camera=(self), microphone=()"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self' blob:; "
+            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src 'self' blob:; "
             "connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'")
         return response
 
@@ -253,6 +253,8 @@ def create_app(host="127.0.0.1", start_sweeper=True):
 
     @app.get("/assets/<name>")
     def asset(name):
+        if name in {"gsap.min.js", "ScrollTrigger.min.js"}:
+            return send_file(safe(f"web/vendor/{name}"), mimetype="text/javascript")
         mime = {"app.js": "text/javascript", "account.js": "text/javascript", "style.css": "text/css"}.get(name)
         if mime is None:
             abort(404)
