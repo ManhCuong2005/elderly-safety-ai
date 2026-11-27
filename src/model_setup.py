@@ -15,17 +15,17 @@ def prepare():
         return
     archive = safe(".cache/movenet.tar.gz")
     if not archive.exists():
-        with urlopen(info["download"], timeout=45) as response:
-            data = response.read(8 * 1024**2 + 1)
-        if len(data) > 8 * 1024**2:
+        with urlopen(info["download"], timeout=60) as response:
+            data = response.read(20 * 1024**2 + 1)
+        if len(data) > 20 * 1024**2:
             raise ValueError("Archive MoveNet quá lớn")
         atomic(archive, data)
     with tarfile.open(archive, "r:gz") as package:
         members = package.getmembers()
-        if len(members) != 1 or members[0].name != info["file"] or not members[0].isreg():
+        if len(members) != 1 or not members[0].isreg():
             raise ValueError("Archive chỉ được chứa đúng file trọng số, không chứa đường dẫn hoặc liên kết")
         member = members[0]
-        if not 0 < member.size <= 8 * 1024**2:
+        if not 0 < member.size <= 20 * 1024**2:
             raise ValueError("Kích thước trọng số không hợp lệ")
         with package.extractfile(member) as stream:
             data = stream.read()

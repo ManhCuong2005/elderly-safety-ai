@@ -1,12 +1,11 @@
 <!doctype html>
-<html lang="vi" data-type="software" data-radius="soft" data-buttons="solid">
+<html lang="vi">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="page-type" content="software">
-  <meta name="site-kind" content="software">
-  <meta name="theme-color" content="#182023">
+  <meta name="theme-color" content="#0f111a">
   <meta name="description" content="Theo dõi té ngã qua camera, thử video và xem lại cảnh báo trên CameraAI.">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <title>CameraAI · Theo dõi té ngã</title>
   <link rel="stylesheet" href="/assets/style.css">
   <script src="/assets/app.js" defer></script>
@@ -14,205 +13,766 @@
 </head>
 <body>
   <a class="skip-link" id="skip-link" href="#account-screen">Đến nội dung chính</a>
+
+  <!-- ===== MÀN 6: ĐĂNG NHẬP / ĐĂNG KÝ (M29 card không viền giữa trang) ===== -->
   <main id="account-screen" class="auth-shell" tabindex="-1">
-    <section class="auth-intro hero" aria-labelledby="auth-title" data-enter>
-      <span class="brand"><span class="brand-mark" aria-hidden="true"></span>CameraAI</span>
-      <div class="auth-story">
-        <div class="focus-visual" aria-hidden="true"><span class="focus-mark"></span></div>
-        <h1 id="auth-title">Theo dõi té ngã qua camera</h1>
-        <p>Nhận cảnh báo qua Telegram và xem lại sự kiện theo ngày.</p>
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-mark brand-mark-lg" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="4"></rect>
+            <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </span>
+        <span class="auth-brand-name">CameraAI</span>
       </div>
-    </section>
-    <div class="auth-pane">
-      <div class="account-card">
-        <form id="account-form" hidden>
-          <h2 id="account-heading">Đăng nhập</h2>
-          <div class="form-field" id="account-name-field" hidden>
-            <label for="account-name">Tên hiển thị</label>
-            <input id="account-name" name="name" autocomplete="name" maxlength="80">
+
+      <h1 id="account-heading" class="auth-title">Đăng nhập</h1>
+      <p class="auth-subtitle">Theo dõi té ngã qua camera và nhận ảnh cảnh báo qua Telegram.</p>
+
+      <form id="account-form" class="auth-form" hidden>
+        <div class="field" id="account-name-field" hidden>
+          <label for="account-name">Tên hiển thị</label>
+          <input id="account-name" class="input input-lg" name="name" autocomplete="name" maxlength="80" placeholder="Nhập họ và tên">
+        </div>
+
+        <div class="field">
+          <label for="account-email">Email</label>
+          <input id="account-email" class="input input-lg" name="email" type="email" autocomplete="email" maxlength="254" placeholder="Nhập email" required>
+        </div>
+
+        <div class="field">
+          <label for="account-password">Mật khẩu</label>
+          <div class="password-wrap">
+            <input id="account-password" class="input input-lg" name="password" type="password" autocomplete="current-password" maxlength="256" placeholder="Nhập mật khẩu" required>
+            <button type="button" id="toggle-password" class="password-toggle" aria-label="Hiện mật khẩu">
+              <svg id="icon-eye" data-lucide="eye" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg id="icon-eye-off" data-lucide="eye-off" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path>
+                <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path>
+                <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path>
+                <path d="m2 2 20 20"></path>
+              </svg>
+            </button>
           </div>
-          <div class="form-field">
-            <label for="account-email">Email</label>
-            <input id="account-email" name="email" type="email" autocomplete="email" maxlength="254" required>
-          </div>
-          <div class="form-field">
-            <label for="account-password">Mật khẩu</label>
-            <input id="account-password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
-          </div>
-          <div class="auth-actions">
-            <button class="primary" id="account-submit" type="submit">Đăng nhập</button>
-            <button class="text-button" id="account-switch" type="button">Tạo tài khoản</button>
-          </div>
-        </form>
-        <p id="account-message" class="message" role="status">Đang kiểm tra phiên đăng nhập…</p>
-      </div>
+          <p id="password-hint" class="field-hint" hidden>Ít nhất 8 ký tự</p>
+        </div>
+
+        <p id="account-message" class="inline-message" role="status">Đang kiểm tra phiên đăng nhập…</p>
+
+        <button class="btn btn-primary btn-lg" id="account-submit" type="submit">Đăng nhập</button>
+
+        <p class="auth-switch-row">
+          <span id="account-switch-prompt">Chưa có tài khoản?</span>
+          <button class="auth-switch-link" id="account-switch" type="button">Tạo tài khoản</button>
+        </p>
+      </form>
+
+      <p id="account-boot-message" class="inline-message" role="status">Đang kiểm tra phiên đăng nhập…</p>
     </div>
   </main>
 
-  <div id="workspace" hidden>
-    <header class="app-header">
-      <a class="brand" href="#camera" aria-label="CameraAI, về trang camera"><span class="brand-mark" aria-hidden="true"></span>CameraAI</a>
-      <div class="header-actions">
-        <span class="live-note" id="camera-running" hidden><span class="status-dot" aria-hidden="true"></span>Camera đang bật</span>
-        <a id="open-account" class="account-link" href="#toi" data-route="toi"><span id="account-avatar" class="avatar" aria-hidden="true"></span>Tôi</a>
+  <!-- ===== KHUNG ỨNG DỤNG CHÍNH (DARK SIDEBAR + STICKY HEADER) ===== -->
+  <div id="workspace" class="app-root" hidden>
+    <!-- Sidebar Desktop (256px, khóa tối .force-dark) -->
+    <aside class="sidebar force-dark" aria-label="Điều hướng ứng dụng">
+      <div class="sidebar-head">
+        <a class="sidebar-brand-link" href="#camera" aria-label="CameraAI, về trang camera">
+          <span class="brand-mark" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="4"></rect>
+              <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"></circle>
+            </svg>
+          </span>
+          <span class="sidebar-brand-text truncate">CameraAI</span>
+        </a>
       </div>
-    </header>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <nav class="mode" aria-label="Giám sát">
-          <a href="#camera" data-route="camera" class="nav-link" aria-current="page"><span class="mode-icon icon-camera" aria-hidden="true"></span>Camera</a>
-          <a href="#thu-video" data-route="thu-video" class="nav-link" id="upload-nav" hidden><span class="mode-icon icon-video" aria-hidden="true"></span>Thử video</a>
-        </nav>
+
+      <nav class="sidebar-nav" aria-label="Điều hướng chính">
+        <a href="#camera" data-route="camera" class="nav-link" aria-current="page">
+          <svg data-lucide="video" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path>
+            <rect x="2" y="6" width="14" height="12" rx="2"></rect>
+          </svg>
+          <span class="truncate">Camera</span>
+        </a>
+        <a href="#thu-video" data-route="thu-video" class="nav-link" id="upload-nav" hidden>
+          <svg data-lucide="clapperboard" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"></path>
+            <path d="m6.2 5.3 3.1 3.9"></path>
+            <path d="m12.4 3.4 3.1 4"></path>
+            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path>
+          </svg>
+          <span class="truncate">Thử video</span>
+        </a>
+        <a href="#lich-su" data-route="lich-su" class="nav-link">
+          <svg data-lucide="history" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M12 7v5l4 2"></path>
+          </svg>
+          <span class="truncate">Lịch sử cảnh báo</span>
+        </a>
+        <a href="#cai-dat-camera" data-route="cai-dat-camera" class="nav-link">
+          <svg data-lucide="sliders-horizontal" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line>
+            <line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line>
+            <line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line>
+            <line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line>
+          </svg>
+          <span class="truncate">Cài đặt camera</span>
+        </a>
+        <a href="#tai-khoan" data-route="tai-khoan" class="nav-link">
+          <svg data-lucide="shield-check" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+          <span class="truncate">Tài khoản &amp; Telegram</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
         <div class="backend-status" id="backend-status">
-          <span class="status-dot" aria-hidden="true"></span>
-          <div><strong>Máy xử lý</strong><p id="backend" role="status">Đang kết nối…</p></div>
+          <span class="backend-dot" aria-hidden="true"></span>
+          <div class="backend-text">
+            <p class="backend-label">Máy xử lý cục bộ</p>
+            <p id="backend" class="backend-detail" role="status">Đang kết nối…</p>
+          </div>
         </div>
-      </aside>
 
-      <main id="main-content" class="content" tabindex="-1">
-        <section id="monitor" class="screen" aria-labelledby="monitor-title" data-screen="monitor" hidden>
-          <header class="page-head">
-            <div>
-              <h1 id="monitor-title" tabindex="-1">Theo dõi té ngã</h1>
-              <p id="monitor-description">Theo dõi trực tiếp từ camera của thiết bị này.</p>
+        <div class="profile-wrap" data-dropdown>
+          <button type="button" id="open-account" class="profile-trigger" data-dropdown-btn aria-expanded="false" aria-controls="sidebar-profile-menu">
+            <span id="account-avatar" class="avatar" aria-hidden="true"></span>
+            <span id="sidebar-user-name" class="profile-trigger-name truncate">Tài khoản</span>
+            <svg data-lucide="chevrons-up-down" class="icon text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m7 15 5 5 5-5"></path>
+              <path d="m7 9 5-5 5 5"></path>
+            </svg>
+          </button>
+          <div id="sidebar-profile-menu" class="popover popover-up" data-dropdown-panel data-open="false">
+            <div id="sidebar-user-email" class="profile-menu-email"></div>
+            <hr class="popover-divider">
+            <div class="menu-group">
+              <a href="#tai-khoan" class="menu-item" data-dropdown-close>
+                <svg data-lucide="user" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>Tài khoản &amp; Telegram</span>
+              </a>
+              <a href="#cai-dat-camera" class="menu-item" data-dropdown-close>
+                <svg data-lucide="sliders-horizontal" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line>
+                  <line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line>
+                  <line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line>
+                  <line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line>
+                </svg>
+                <span>Cài đặt camera</span>
+              </a>
             </div>
-            <a class="button subtle" href="#lich-su">Xem lịch sử</a>
-          </header>
-          <div class="monitor-grid">
-            <section class="panel viewer" aria-labelledby="viewer-title">
-              <header class="panel-head"><h2 id="viewer-title">Khung camera</h2></header>
-              <div id="stage" class="stage">
-                <div id="placeholder" class="placeholder">
-                  <span class="focus-mark" aria-hidden="true"></span>
-                  <span id="placeholder-text">Camera đang tắt</span>
+            <hr class="popover-divider">
+            <div class="menu-group">
+              <button type="button" class="menu-item menu-item-danger" data-logout-action>
+                <svg data-lucide="log-out" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" x2="9" y1="12" y2="12"></line>
+                </svg>
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Drawer Mobile (< 1024px, không nút X hiển thị theo shell.md) -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <aside id="mobile-drawer" class="mobile-drawer force-dark" inert aria-label="Menu điều hướng">
+      <button type="button" class="sr-only" id="drawer-close-sr">Đóng menu</button>
+      <div class="sidebar-head">
+        <a class="sidebar-brand-link" href="#camera" data-drawer-link>
+          <span class="brand-mark" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="4"></rect>
+              <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"></circle>
+            </svg>
+          </span>
+          <span class="sidebar-brand-text truncate">CameraAI</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Điều hướng di động">
+        <a href="#camera" data-route="camera" data-drawer-link class="nav-link" aria-current="page">
+          <svg data-lucide="video" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path>
+            <rect x="2" y="6" width="14" height="12" rx="2"></rect>
+          </svg>
+          <span class="truncate">Camera</span>
+        </a>
+        <a href="#thu-video" data-route="thu-video" data-drawer-link class="nav-link" id="upload-nav-mobile" hidden>
+          <svg data-lucide="clapperboard" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"></path>
+            <path d="m6.2 5.3 3.1 3.9"></path>
+            <path d="m12.4 3.4 3.1 4"></path>
+            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path>
+          </svg>
+          <span class="truncate">Thử video</span>
+        </a>
+        <a href="#lich-su" data-route="lich-su" data-drawer-link class="nav-link">
+          <svg data-lucide="history" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M12 7v5l4 2"></path>
+          </svg>
+          <span class="truncate">Lịch sử cảnh báo</span>
+        </a>
+        <a href="#cai-dat-camera" data-route="cai-dat-camera" data-drawer-link class="nav-link">
+          <svg data-lucide="sliders-horizontal" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line>
+            <line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line>
+            <line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line>
+            <line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line>
+          </svg>
+          <span class="truncate">Cài đặt camera</span>
+        </a>
+        <a href="#tai-khoan" data-route="tai-khoan" data-drawer-link class="nav-link">
+          <svg data-lucide="shield-check" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+          <span class="truncate">Tài khoản &amp; Telegram</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="backend-status" id="backend-status-mobile">
+          <span class="backend-dot" aria-hidden="true"></span>
+          <div class="backend-text">
+            <p class="backend-label">Máy xử lý cục bộ</p>
+            <p id="backend-mobile" class="backend-detail">Đang kết nối…</p>
+          </div>
+        </div>
+
+        <div class="profile-wrap" data-dropdown>
+          <button type="button" class="profile-trigger" data-dropdown-btn aria-expanded="false" aria-controls="drawer-profile-menu">
+            <span id="drawer-avatar" class="avatar" aria-hidden="true"></span>
+            <span id="drawer-user-name" class="profile-trigger-name truncate">Tài khoản</span>
+            <svg data-lucide="chevrons-up-down" class="icon text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m7 15 5 5 5-5"></path>
+              <path d="m7 9 5-5 5 5"></path>
+            </svg>
+          </button>
+          <div id="drawer-profile-menu" class="popover popover-up" data-dropdown-panel data-open="false">
+            <div id="drawer-user-email" class="profile-menu-email"></div>
+            <hr class="popover-divider">
+            <div class="menu-group">
+              <a href="#tai-khoan" class="menu-item" data-dropdown-close data-drawer-link>
+                <svg data-lucide="user" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>Tài khoản &amp; Telegram</span>
+              </a>
+              <a href="#cai-dat-camera" class="menu-item" data-dropdown-close data-drawer-link>
+                <svg data-lucide="sliders-horizontal" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line>
+                  <line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line>
+                  <line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line>
+                  <line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line>
+                </svg>
+                <span>Cài đặt camera</span>
+              </a>
+            </div>
+            <hr class="popover-divider">
+            <div class="menu-group">
+              <button type="button" class="menu-item menu-item-danger" data-logout-action>
+                <svg data-lucide="log-out" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" x2="9" y1="12" y2="12"></line>
+                </svg>
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Nội dung chính -->
+    <div class="app-main">
+      <header class="app-header">
+        <div class="header-left">
+          <button type="button" id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="mobile-drawer">
+            <svg data-lucide="menu" class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="4" x2="20" y1="12" y2="12"></line>
+              <line x1="4" x2="20" y1="6" y2="6"></line>
+              <line x1="4" x2="20" y1="18" y2="18"></line>
+            </svg>
+          </button>
+          <h1 id="page-title" class="page-title" tabindex="-1">Theo dõi camera</h1>
+        </div>
+        <div class="header-actions">
+          <span class="badge badge-success header-live-pill" id="camera-running" hidden>Camera đang bật</span>
+          <a class="btn btn-ghost" id="header-history-link" href="#lich-su">Xem lịch sử</a>
+        </div>
+      </header>
+
+      <main id="main-content" class="main-body" tabindex="-1">
+        <div class="main-inner">
+
+          <!-- ===== MÀN 1 & 2: CAMERA & THỬ VIDEO (Phương án A) ===== -->
+          <section id="monitor" class="screen" aria-labelledby="page-title" data-screen="monitor" hidden>
+            <!-- Dải cảnh báo đỉnh khi báo động bị khóa -->
+            <div id="alert-banner" class="alert-banner" role="alert" hidden>
+              <div class="alert-banner-main">
+                <svg data-lucide="shield-alert" class="icon-md alert-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+                  <path d="M12 8v4"></path>
+                  <path d="M12 16h.01"></path>
+                </svg>
+                <div class="min-w-0">
+                  <p id="alert-banner-title" class="alert-banner-title">Nghi té ngã · Đã khóa báo động</p>
+                  <p id="alert-banner-desc" class="alert-banner-desc">Đã gửi ảnh cảnh báo qua Telegram. Kiểm tra an toàn rồi mở khóa để tiếp tục theo dõi.</p>
                 </div>
-                <video id="video" aria-label="Khung hình theo dõi" playsinline preload="metadata" hidden></video>
-                <canvas id="skeleton" aria-hidden="true"></canvas>
               </div>
-              <div id="camera-actions" class="controls viewer-controls">
-                <button class="primary" id="start" disabled>Bắt đầu theo dõi</button>
-                <button id="stop" disabled>Dừng</button>
-                <button id="flip" disabled>Đổi camera</button>
-                <label class="tick"><input type="checkbox" id="show-bones" checked> Hiện khung xương</label>
+              <div class="alert-banner-actions">
+                <button type="button" id="confirm-safe" class="btn btn-primary" hidden>Xác nhận an toàn (Mở khóa)</button>
               </div>
-              <form id="upload-actions" class="controls viewer-controls upload-controls" hidden>
-                <label class="file-field" for="upload-file"><span>Video phân tích</span><input id="upload-file" type="file" accept=".mp4,.webm" aria-describedby="upload-limit" required></label>
-                <button id="analyze" class="primary" type="submit" disabled>Phân tích video</button>
-                <p id="upload-limit" class="hint"></p>
-                <p class="hint">Gửi một ảnh kiểm thử tới Telegram đã liên kết nếu phát hiện nghi té ngã.</p>
+            </div>
+
+            <div class="monitor-grid">
+              <section class="card card-pad" aria-labelledby="viewer-title">
+                <header class="viewer-head">
+                  <h2 id="viewer-title" class="card-title text-balance">Khung camera trực tiếp</h2>
+                  <span id="viewer-meta" class="viewer-meta tabular-nums">Tự giải phóng bộ đệm khi dừng</span>
+                </header>
+
+                <div id="stage" class="stage">
+                  <div id="placeholder" class="placeholder">
+                    <svg id="placeholder-icon-camera" data-lucide="camera" class="icon-lg placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                      <circle cx="12" cy="13" r="3"></circle>
+                    </svg>
+                    <svg id="placeholder-icon-video" data-lucide="clapperboard" class="icon-lg placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"></path>
+                      <path d="m6.2 5.3 3.1 3.9"></path>
+                      <path d="m12.4 3.4 3.1 4"></path>
+                      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path>
+                    </svg>
+                    <div>
+                      <p id="placeholder-text" class="placeholder-title">Camera đang tắt</p>
+                      <p id="placeholder-hint" class="placeholder-hint">Đặt thiết bị cố định sao cho thấy rõ vai, hông và chân. Hai giây đầu dùng để làm đầy cửa sổ tư thế.</p>
+                    </div>
+                  </div>
+                  <div id="stage-live-badge" class="stage-pill stage-pill-top tabular-nums" hidden>
+                    <span class="stage-pill-dot" aria-hidden="true"></span>
+                    <span id="stage-live-text">Đang theo dõi</span>
+                  </div>
+                  <div id="stage-ram-badge" class="stage-pill stage-pill-bottom tabular-nums" hidden>MoveNet 10 Hz · Xử lý trong RAM</div>
+                  <video id="video" aria-label="Khung hình theo dõi" playsinline preload="metadata" hidden></video>
+                  <canvas id="skeleton" aria-hidden="true"></canvas>
+                </div>
+
+                <!-- Điều khiển Camera -->
+                <div id="camera-actions" class="viewer-controls">
+                  <div class="controls-group">
+                    <button type="button" class="btn btn-primary" id="start" disabled>
+                      <svg data-lucide="play" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polygon points="6 3 20 12 6 21 6 3"></polygon>
+                      </svg>
+                      <span>Bắt đầu theo dõi</span>
+                    </button>
+                    <button type="button" class="btn btn-danger" id="stop" disabled hidden>
+                      <svg data-lucide="square" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                      </svg>
+                      <span>Dừng</span>
+                    </button>
+                    <button type="button" class="btn btn-outline" id="flip" disabled>
+                      <svg data-lucide="switch-camera" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"></path>
+                        <path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="m18 22-3-3 3-3"></path>
+                        <path d="m6 2 3 3-3 3"></path>
+                      </svg>
+                      <span>Đổi camera</span>
+                    </button>
+                  </div>
+
+                  <label class="checkbox-label">
+                    <span class="checkbox-box">
+                      <input type="checkbox" id="show-bones" checked>
+                      <svg data-lucide="check" class="checkbox-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5"></path>
+                      </svg>
+                    </span>
+                    <span>Hiện khung xương</span>
+                  </label>
+                </div>
+
+                <!-- Khu tải tệp Thử video (components/file-upload.md) -->
+                <form id="upload-actions" class="upload-form" hidden>
+                  <label class="dropzone" for="upload-file" id="upload-dropzone">
+                    <input id="upload-file" class="sr-only" type="file" accept=".mp4,.webm" aria-describedby="upload-limit" required>
+                    <span id="dropzone-title" class="dropzone-title">Kéo thả video MP4 hoặc WebM vào đây</span>
+                    <span id="upload-limit" class="dropzone-hint">MP4 hoặc WebM, tối đa 64 MiB và 90 giây.</span>
+                    <span class="dropzone-btn">
+                      <svg data-lucide="upload" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" x2="12" y1="3" y2="15"></line>
+                      </svg>
+                      <span>Chọn tệp video</span>
+                    </span>
+                  </label>
+
+                  <div id="upload-selected" class="upload-selected" hidden>
+                    <div class="upload-file-info">
+                      <svg data-lucide="file-video" class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                        <path d="m10 11 5 3-5 3v-6Z"></path>
+                      </svg>
+                      <div class="upload-file-text">
+                        <p id="upload-filename" class="upload-filename">
+                          <span id="upload-file-head" class="upload-filename-head"></span><span id="upload-file-tail" class="upload-filename-tail"></span>
+                        </p>
+                        <p id="upload-file-meta" class="upload-file-meta tabular-nums"></p>
+                      </div>
+                    </div>
+                    <button id="analyze" class="btn btn-primary upload-submit-btn" type="submit" disabled>Phân tích video</button>
+                  </div>
+
+                  <p class="field-hint">Gửi một ảnh kiểm thử tới Telegram đã liên kết nếu phát hiện nghi té ngã.</p>
+                </form>
+
+                <p id="message" class="inline-message" role="status" hidden></p>
+              </section>
+
+              <aside id="session-panel" class="session-panel" aria-label="Thông tin phiên">
+                <section class="card card-pad" aria-labelledby="session-title">
+                  <h2 id="session-title" class="card-title">Trạng thái phiên</h2>
+                  <dl id="session-stats-dl" class="meta-dl">
+                    <div class="meta-row">
+                      <dt>Trạng thái</dt>
+                      <dd><span id="state" class="badge badge-neutral" aria-live="polite">Camera đang tắt</span></dd>
+                    </div>
+                    <div class="meta-row" id="posture-row">
+                      <dt id="posture-label">Tư thế hiện tại</dt>
+                      <dd id="posture-value">—</dd>
+                    </div>
+                    <div class="meta-row">
+                      <dt id="timer-label">Thời gian phiên</dt>
+                      <dd id="timer" class="tabular-nums">00:00</dd>
+                    </div>
+                    <div class="meta-row" id="ai-mode-row">
+                      <dt>Xử lý AI</dt>
+                      <dd>Cục bộ trong RAM</dd>
+                    </div>
+                  </dl>
+                  <p id="upload-empty-result" class="empty-text" hidden>Chọn một tệp video để xem kết quả phân tích.</p>
+                  <div class="upload-summary-stack">
+                    <span id="upload-result" class="badge badge-neutral" role="status" hidden></span>
+                    <p id="upload-telegram" class="field-hint" role="status" hidden></p>
+                    <div id="upload-source" class="warning-note" hidden>
+                      <svg data-lucide="triangle-alert" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                      </svg>
+                      <span>Video trùng với một tệp trong tập huấn luyện.</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="card card-pad" aria-labelledby="event-title">
+                  <div class="events-head">
+                    <h2 id="event-title" class="card-title">Sự kiện trong phiên</h2>
+                    <span id="event-count" class="events-count tabular-nums" hidden></span>
+                  </div>
+
+                  <p id="empty-events" class="empty-text">Chưa có cảnh báo.</p>
+                  <ol id="event-list" class="event-list event-list-live"></ol>
+                </section>
+              </aside>
+            </div>
+          </section>
+
+          <!-- ===== MÀN 3: LỊCH SỬ CẢNH BÁO (#lich-su — Phương án A) ===== -->
+          <section class="screen" id="history-screen" aria-labelledby="page-title" data-screen="lich-su" hidden>
+            <div class="history-toolbar">
+              <div class="history-filters">
+                <input id="history-date" type="hidden" value="">
+                <div class="dropdown-wrap" data-dropdown id="history-date-dropdown">
+                  <button type="button" id="history-date-btn" class="combobox-trigger combobox-date" role="combobox" aria-haspopup="dialog" aria-expanded="false" aria-controls="history-calendar-popover" data-dropdown-btn>
+                    <span id="history-date-label" class="truncate tabular-nums combobox-placeholder">Chọn ngày lọc</span>
+                    <svg data-lucide="calendar" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M8 2v4"></path><path d="M16 2v4"></path>
+                      <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                      <path d="M3 10h18"></path>
+                    </svg>
+                  </button>
+                  <div id="history-calendar-popover" class="popover popover-down calendar-popover" data-dropdown-panel data-open="false" role="dialog" aria-label="Chọn ngày lọc lịch sử">
+                    <div class="calendar-head">
+                      <button type="button" id="cal-month-toggle" class="calendar-month-btn">
+                        <span id="cal-month-label">Tháng 11, 2026</span>
+                        <svg data-lucide="chevron-down" class="icon-sm text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                      </button>
+                      <div class="calendar-nav">
+                        <button type="button" id="cal-prev" class="btn-icon calendar-nav-btn" aria-label="Tháng trước">
+                          <svg data-lucide="chevron-left" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m15 18-6-6 6-6"></path>
+                          </svg>
+                        </button>
+                        <button type="button" id="cal-next" class="btn-icon calendar-nav-btn" aria-label="Tháng sau">
+                          <svg data-lucide="chevron-right" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m9 18 6-6-6-6"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div id="cal-days-view">
+                      <div class="calendar-weekdays" aria-hidden="true">
+                        <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                      </div>
+                      <div id="cal-days-grid" class="calendar-grid"></div>
+                    </div>
+                    <div id="cal-months-view" class="calendar-months-grid" hidden></div>
+                    <div class="calendar-foot">
+                      <button type="button" id="cal-today" class="calendar-foot-btn">Hôm nay</button>
+                      <button type="button" id="cal-clear" class="calendar-foot-btn">Bỏ chọn ngày</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dropdown-wrap" data-dropdown id="history-type-dropdown">
+                  <button type="button" id="history-type-btn" class="combobox-trigger combobox-type" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="history-type-popover" data-dropdown-btn>
+                    <span id="history-type-label" class="truncate">Tất cả loại</span>
+                    <svg data-lucide="chevron-down" class="icon icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                  </button>
+                  <div id="history-type-popover" class="popover popover-down select-popover" data-dropdown-panel data-open="false" role="listbox" aria-label="Lọc theo loại sự kiện">
+                    <div class="menu-group">
+                      <button type="button" class="menu-item menu-item-active" role="option" aria-selected="true" data-history-type="all">
+                        <span>Tất cả loại</span>
+                        <svg data-lucide="check" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                      </button>
+                      <button type="button" class="menu-item" role="option" aria-selected="false" data-history-type="camera">
+                        <span>Nghi té ngã</span>
+                      </button>
+                      <button type="button" class="menu-item" role="option" aria-selected="false" data-history-type="camera_absence">
+                        <span>Không thấy người</span>
+                      </button>
+                      <button type="button" class="menu-item" role="option" aria-selected="false" data-history-type="video_test">
+                        <span>Nguồn thử video</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="button" id="history-clear" class="btn btn-ghost" hidden>Bỏ lọc</button>
+              </div>
+
+              <div class="history-tools-right">
+                <span class="field-hint">Giờ Việt Nam (UTC+7)</span>
+                <button type="button" id="history-refresh" class="btn btn-outline">
+                  <svg data-lucide="rotate-cw" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                    <path d="M21 3v5h-5"></path>
+                  </svg>
+                  <span>Tải lại</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="history-status-card" class="card history-status-card" hidden>
+              <p id="history-status" class="history-status-title text-muted" role="status"></p>
+              <div id="history-status-actions" class="history-status-actions" hidden></div>
+            </div>
+
+            <div id="history-events" class="history-groups"></div>
+
+            <div class="card" id="history-pages" hidden>
+              <div class="pagination-bar">
+                <p id="history-count" class="pagination-info tabular-nums"></p>
+                <nav class="pagination-nav" aria-label="Trang lịch sử">
+                  <button type="button" id="history-prev" class="btn-icon" aria-label="Trang trước">
+                    <svg data-lucide="chevron-left" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m15 18-6-6 6-6"></path>
+                    </svg>
+                  </button>
+                  <span id="history-page" class="page-current tabular-nums" aria-current="page">1</span>
+                  <button type="button" id="history-next" class="btn-icon" aria-label="Trang sau">
+                    <svg data-lucide="chevron-right" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== MÀN 4: CÀI ĐẶT CAMERA (#cai-dat-camera) ===== -->
+          <section class="screen" id="camera-settings-screen" aria-labelledby="page-title" data-screen="cai-dat-camera" hidden>
+            <div class="settings-wrap">
+              <h2 id="absence-heading" class="section-label">Cảnh báo vắng mặt</h2>
+              <form class="card settings-card" id="camera-settings-form" aria-labelledby="absence-heading">
+                <fieldset class="settings-fieldset" id="camera-settings-fields" disabled>
+                  <div class="settings-row settings-toggle-row">
+                    <div class="min-w-0">
+                      <p id="lbl-absence" class="settings-row-title">Báo Telegram khi không thấy người</p>
+                      <p class="settings-row-desc">Bắt đầu đếm thời gian chờ sau khi camera đã thấy người trong khung hình.</p>
+                    </div>
+                    <button type="button" role="switch" id="absence-enabled" class="switch" aria-checked="false" aria-labelledby="lbl-absence">
+                      <span class="switch-thumb" aria-hidden="true"></span>
+                    </button>
+                  </div>
+
+                  <div class="settings-row settings-field-row">
+                    <div class="settings-label-col">
+                      <label for="absence-seconds">Thời gian chờ (giây)</label>
+                    </div>
+                    <div class="settings-control-col">
+                      <input type="number" id="absence-seconds" class="input input-num" min="10" max="3600" step="1" value="60" required aria-describedby="absence-help">
+                      <p class="field-hint" id="absence-help">Từ 10 đến 3600 giây. Chọn lâu hơn nếu phòng có lối đi khuất góc camera.</p>
+                      <div class="preset-group" aria-label="Mức đề xuất" role="group">
+                        <button type="button" class="preset-chip" data-absence-seconds="30" aria-pressed="false">30 giây · Góc rộng</button>
+                        <button type="button" class="preset-chip" data-absence-seconds="60" aria-pressed="true">60 giây · Mặc định</button>
+                        <button type="button" class="preset-chip" data-absence-seconds="180" aria-pressed="false">180 giây · Góc hẹp</button>
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <footer class="settings-footer">
+                  <p id="camera-settings-status" class="footer-status" role="status"></p>
+                  <button type="submit" id="camera-settings-submit" class="btn btn-primary">Lưu cài đặt</button>
+                </footer>
               </form>
-              <p id="message" class="message viewer-message" role="status" hidden></p>
-            </section>
-            <aside id="session-panel" class="session-panel" aria-label="Thông tin phiên">
-              <section class="panel readings" aria-labelledby="session-title">
-                <h2 id="session-title">Trạng thái phiên</h2>
-                <dl>
-                  <dt>Trạng thái</dt><dd id="state" class="state" aria-live="polite">Camera đang tắt</dd>
-                  <dt id="posture-label" hidden>Tư thế</dt><dd id="posture-value" hidden></dd>
-                  <dt id="timer-label">Thời gian phiên</dt><dd id="timer" class="timer">00:00</dd>
-                </dl>
+            </div>
+          </section>
+
+          <!-- ===== MÀN 5: TÀI KHOẢN & TELEGRAM (#tai-khoan) ===== -->
+          <section class="screen" id="profile-screen" aria-labelledby="page-title" data-screen="tai-khoan" hidden>
+            <div class="account-stack">
+              <section class="card card-pad" aria-label="Thông tin cá nhân">
+                <div class="profile-identity">
+                  <span id="profile-avatar" class="avatar avatar-lg" aria-hidden="true"></span>
+                  <div class="profile-identity-text">
+                    <h2 id="profile-name" class="card-title"></h2>
+                    <p id="profile-email" class="profile-email"></p>
+                  </div>
+                </div>
               </section>
-              <section class="panel events" aria-labelledby="event-title">
-                <h2 id="event-title">Sự kiện trong phiên</h2>
-                <p id="upload-result" class="upload-result" role="status" hidden></p>
-                <p id="upload-telegram" role="status" hidden></p>
-                <p id="upload-source" hidden>Video trùng với một tệp trong tập huấn luyện.</p>
-                <p id="empty-events">Chưa có cảnh báo.</p>
-                <ol id="event-list"></ol>
+
+              <section class="card card-pad" aria-labelledby="telegram-heading">
+                <div class="telegram-head">
+                  <div class="telegram-head-text">
+                    <h2 id="telegram-heading" class="card-title">Kết nối Telegram</h2>
+                    <p id="telegram-status" class="telegram-status-text" role="status"></p>
+                  </div>
+                  <span id="telegram-badge" class="badge badge-neutral">Đang kiểm tra</span>
+                </div>
+
+                <ol id="telegram-steps" class="telegram-steps" hidden>
+                  <li><strong>1.</strong> Tạo liên kết bot</li>
+                  <li><strong>2.</strong> Mở Telegram &amp; bấm Start</li>
+                  <li><strong>3.</strong> Kiểm tra &amp; Xác nhận</li>
+                </ol>
+
+                <p id="telegram-candidate" class="telegram-candidate" hidden></p>
+
+                <div class="telegram-actions">
+                  <button type="button" id="telegram-start" class="btn btn-primary" hidden>
+                    <svg data-lucide="link" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <span>Kết nối Telegram</span>
+                  </button>
+                  <a class="btn btn-outline" id="telegram-open" target="_blank" rel="noopener noreferrer" hidden>
+                    <svg data-lucide="external-link" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M15 3h6v6"></path><path d="M10 14 21 3"></path>
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    </svg>
+                    <span>Mở bot Telegram</span>
+                  </a>
+                  <button type="button" id="telegram-check" class="btn btn-outline" hidden>Kiểm tra kết nối</button>
+                  <button type="button" id="telegram-confirm" class="btn btn-primary" hidden>Xác nhận liên kết</button>
+                  <button type="button" id="telegram-test" class="btn btn-outline" hidden>
+                    <svg data-lucide="send" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path>
+                      <path d="m21.854 2.147-10.94 10.939"></path>
+                    </svg>
+                    <span>Gửi tin nhắn thử</span>
+                  </button>
+                  <button type="button" id="telegram-unlink" class="btn btn-danger" hidden>Ngắt kết nối</button>
+                </div>
+
+                <p id="telegram-message" class="inline-message" role="status" hidden></p>
               </section>
-            </aside>
-          </div>
-        </section>
 
-        <section class="screen detail-screen" id="me-screen" aria-labelledby="me-title" data-screen="toi" hidden>
-          <header class="page-head"><h1 id="me-title" tabindex="-1">Tôi</h1></header>
-          <nav class="panel menu-list" aria-label="Mục Tôi">
-            <a class="menu-row" href="#tai-khoan">
-              <span><strong>Tài khoản &amp; Telegram</strong><span>Thông tin cá nhân và cài đặt nhận cảnh báo</span></span>
-              <span class="chevron" aria-hidden="true"></span>
-            </a>
-            <a class="menu-row" href="#cai-dat-camera">
-              <span><strong>Cài đặt camera</strong><span>Chọn thời gian báo khi không thấy người</span></span>
-              <span class="chevron" aria-hidden="true"></span>
-            </a>
-            <a class="menu-row" href="#lich-su">
-              <span><strong>Lịch sử cảnh báo</strong><span>Xem lại sự kiện theo ngày, giờ và ảnh</span></span>
-              <span class="chevron" aria-hidden="true"></span>
-            </a>
-          </nav>
-        </section>
+              <section class="card card-pad" aria-label="Phiên đăng nhập">
+                <div class="session-logout-card">
+                  <div>
+                    <h2 class="session-logout-title">Phiên đăng nhập</h2>
+                    <p class="session-logout-desc">Đăng xuất sẽ tự dừng camera nếu phiên theo dõi đang chạy.</p>
+                  </div>
+                  <button type="button" id="logout" class="btn btn-danger">
+                    <svg data-lucide="log-out" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" x2="9" y1="12" y2="12"></line>
+                    </svg>
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+                <p id="logout-message" class="inline-message" role="status" hidden></p>
+              </section>
+            </div>
+          </section>
 
-        <section class="screen detail-screen" id="profile-screen" aria-labelledby="profile-heading" data-screen="tai-khoan" hidden>
-          <a class="back-link" href="#toi"><span class="chevron" aria-hidden="true"></span>Quay lại mục Tôi</a>
-          <header class="page-head"><h1 id="profile-heading" tabindex="-1">Tài khoản &amp; Telegram</h1></header>
-          <div class="settings-list">
-            <section class="panel settings-panel" aria-labelledby="profile-info">
-              <h2 id="profile-info">Thông tin cá nhân</h2>
-              <dl class="profile-info">
-                <dt>Tên hiển thị</dt><dd id="profile-name"></dd>
-                <dt>Email</dt><dd id="profile-email"></dd>
-              </dl>
-              <button type="button" id="logout">Đăng xuất</button>
-              <p id="logout-message" class="message" role="status" hidden></p>
-            </section>
-            <section class="panel settings-panel" aria-labelledby="telegram-heading">
-              <h2 id="telegram-heading">Kết nối Telegram</h2>
-              <p id="telegram-status" role="status"></p>
-              <p id="telegram-candidate" hidden></p>
-              <div class="controls settings-actions">
-                <button type="button" id="telegram-start" class="primary" hidden>Kết nối Telegram</button>
-                <a class="button" id="telegram-open" target="_blank" rel="noopener noreferrer" hidden>Mở bot Telegram</a>
-                <button type="button" id="telegram-check" hidden>Kiểm tra kết nối</button>
-                <button type="button" class="primary" id="telegram-confirm" hidden>Xác nhận liên kết</button>
-                <button type="button" id="telegram-test" hidden>Gửi tin nhắn thử</button>
-                <button type="button" id="telegram-unlink" hidden>Ngắt kết nối</button>
-              </div>
-              <p id="telegram-message" class="message" role="status" hidden></p>
-            </section>
-          </div>
-        </section>
-
-        <section class="screen detail-screen" id="camera-settings-screen" aria-labelledby="camera-settings-heading" data-screen="cai-dat-camera" hidden>
-          <a class="back-link" href="#toi"><span class="chevron" aria-hidden="true"></span>Quay lại mục Tôi</a>
-          <header class="page-head"><h1 id="camera-settings-heading" tabindex="-1">Cài đặt camera</h1></header>
-          <form class="panel settings-panel" id="camera-settings-form" aria-labelledby="absence-heading">
-            <h2 id="absence-heading">Báo khi không thấy người</h2>
-            <p>Camera bắt đầu tính thời gian chờ sau khi đã thấy người trong khung hình.</p>
-            <fieldset class="camera-settings-fields" id="camera-settings-fields" aria-labelledby="absence-heading" disabled>
-              <label class="camera-settings-toggle"><input type="checkbox" id="absence-enabled"> Bật cảnh báo Telegram</label>
-              <div class="form-field">
-                <label for="absence-seconds">Thời gian chờ (giây)</label>
-                <input type="number" id="absence-seconds" min="10" max="3600" step="1" value="60" required aria-describedby="absence-help">
-                <p class="setting-hint" id="absence-help">Từ 10 đến 3600 giây. Chọn thời gian chờ lâu hơn nếu phòng có lối đi khuất camera.</p>
-              </div>
-              <div class="controls" aria-label="Thời gian đề xuất" role="group">
-                <button type="button" data-absence-seconds="30">30 giây · Góc rộng</button>
-                <button type="button" data-absence-seconds="60">60 giây · Mặc định</button>
-                <button type="button" data-absence-seconds="180">180 giây · Góc hẹp</button>
-              </div>
-              <button type="submit" class="primary">Lưu cài đặt</button>
-            </fieldset>
-            <p id="camera-settings-status" class="message" role="status" hidden></p>
-          </form>
-        </section>
-
-        <section class="screen history-screen" id="history-screen" aria-labelledby="history-heading" data-screen="lich-su" hidden>
-          <a class="back-link" href="#toi"><span class="chevron" aria-hidden="true"></span>Quay lại mục Tôi</a>
-          <header class="page-head"><div><h1 id="history-heading" tabindex="-1">Lịch sử cảnh báo</h1><p>Thời gian hiển thị theo giờ Việt Nam (UTC+7).</p></div></header>
-          <div class="history-tools">
-            <label for="history-date">Lọc theo ngày<input id="history-date" type="date"></label>
-            <button type="button" id="history-clear" hidden>Bỏ lọc</button>
-            <button type="button" id="history-refresh" class="subtle">Tải lại</button>
-          </div>
-          <p id="history-status" class="message history-status" role="status" hidden></p>
-          <div id="history-events"></div>
-          <nav class="history-pages" aria-label="Trang lịch sử" id="history-pages" hidden>
-            <button type="button" id="history-prev">Trang trước</button>
-            <span id="history-page"></span>
-            <button type="button" id="history-next">Trang sau</button>
-          </nav>
-        </section>
+        </div>
       </main>
+    </div>
+  </div>
+
+  <!-- ===== HỘP XEM ẢNH LỚN LỊCH SỬ (layouts/overlay.md) ===== -->
+  <div id="photo-modal" class="modal-wrap" data-open="false" inert>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="photo-modal-title">
+      <div class="modal-head">
+        <div class="min-w-0">
+          <h2 id="photo-modal-title" class="card-title">Ảnh tại mốc cảnh báo</h2>
+          <p id="photo-modal-desc" class="modal-desc"></p>
+        </div>
+        <button type="button" id="photo-modal-close" class="btn-icon" aria-label="Đóng ảnh">
+          <svg data-lucide="x" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-stage">
+        <img id="photo-modal-img" alt="Ảnh chụp tại mốc cảnh báo">
+      </div>
+      <div class="modal-foot">
+        <a id="photo-modal-raw" class="btn btn-outline btn-outline-sm" target="_blank" rel="noopener noreferrer">
+          <svg data-lucide="external-link" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 3h6v6"></path><path d="M10 14 21 3"></path>
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          </svg>
+          <span>Mở ảnh gốc</span>
+        </a>
+      </div>
     </div>
   </div>
 </body>

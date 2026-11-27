@@ -67,6 +67,21 @@ def load_posture():
     return classify
 
 
+def extended_posture(obs, base_classifier=None, confidence=CONFIDENCE):
+    """Return Standing/Sitting from base classifier, or Lying / Slumped from trunk & head geometry."""
+    from .inference import Body
+    body = Body.from_pose(obs, confidence)
+    if body is None:
+        return None
+    if body.lying:
+        return "Nằm"
+    if body.slumped:
+        return "Gục người / trượt tường"
+    if base_classifier is not None:
+        return base_classifier(obs)
+    return None
+
+
 def train():
     from .keypoints import get_keypoints
     from .pose import Pose

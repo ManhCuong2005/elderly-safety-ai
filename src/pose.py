@@ -30,33 +30,91 @@ class Observation:
 
 
 class Pose:
-    def __init__(self):
+    def __init__(self, prefer_yolo=True):
+        self.lock = threading.Lock()
+        self.backend = "movenet"
+        self.yolo = None
+        self.prev_center = None
+        self.last_people_count = 0
+        yolo_path = safe("models/yolov8n-pose.pt")
+        if prefer_yolo and yolo_path.is_file():
+            try:
+                from ultralytics import YOLO
+                self.yolo = YOLO(str(yolo_path))
+                self.backend = "yolov8n-pose"
+                self.size = 512
+                return
+            except Exception:
+                self.yolo = None
         path = safe("models/" + MODEL["file"])
         if not path.is_file() or sha(path) != MODEL["sha256"]:
             raise ValueError("Thiếu MoveNet hoặc checksum trọng số sai. Chạy bước Model.")
-        self.lock = threading.Lock()
         self.model = Interpreter(model_path=str(path), num_threads=2)
         self.model.allocate_tensors()
         self.input = self.model.get_input_details()[0]
         self.output = self.model.get_output_details()[0]["index"]
-        if self.input["dtype"] != np.uint8 or list(self.input["shape"]) != [1, 192, 192, 3]:
-            raise ValueError("Đầu vào MoveNet không khớp model v4")
+        shape = list(self.input["shape"])
+        if self.input["dtype"] != np.uint8 or shape not in ([1, 192, 192, 3], [1, 256, 256, 3]):
+            raise ValueError("Đầu vào MoveNet không khớp model v4 (Lightning 192 hoặc Thunder 256)")
+        self.size = int(shape[1])
+
+    def reset_tracking(self):
+        with self.lock:
+            self.prev_center = None
+            self.last_people_count = 0
 
     def observe(self, t, image):
+        if self.yolo is not None:
+            return self._observe_yolo(t, image)
         width, height = image.size
-        scale = 192 / max(width, height)
+        size = self.size
+        scale = size / max(width, height)
         w, h = max(1, round(width * scale)), max(1, round(height * scale))
-        left, top = (192 - w) // 2, (192 - h) // 2
-        input_image = Image.new("RGB", (192, 192))
+        left, top = (size - w) // 2, (size - h) // 2
+        input_image = Image.new("RGB", (size, size))
         input_image.paste(image.convert("RGB").resize((w, h), Image.Resampling.BILINEAR), (left, top))
         tensor = np.asarray(input_image)[None]
         with self.lock:
             self.model.set_tensor(self.input["index"], tensor)
             self.model.invoke()
             y, x, confidence = self.model.get_tensor(self.output).reshape(17, 3).T
-        px, py = (x * 192 - left) * width / w, (y * 192 - top) * height / h
+        px, py = (x * size - left) * width / w, (y * size - top) * height / h
         inside = (px >= 0) & (px < width) & (py >= 0) & (py < height)
+        self.last_people_count = 1 if (confidence * inside >= 0.3).sum() >= 3 else 0
         return Observation(t, width, height, np.column_stack((px, py, confidence * inside)))
+
+    def _observe_yolo(self, t, image):
+        width, height = image.size
+        with self.lock:
+            res = self.yolo.predict(image, imgsz=self.size, conf=0.25, verbose=False)[0]
+            kps = res.keypoints
+            if kps is None or kps.xy is None or len(kps.xy) == 0:
+                self.last_people_count = 0
+                return Observation(t, width, height, np.zeros((17, 3), dtype=float))
+            xy_all = kps.xy.cpu().numpy()
+            cf_all = kps.conf.cpu().numpy()
+            boxes = res.boxes.xyxy.cpu().numpy() if res.boxes is not None else None
+            n = len(xy_all)
+            self.last_people_count = n
+            best_i = 0
+            if n > 1:
+                if self.prev_center is not None:
+                    scored = []
+                    for i in range(n):
+                        c = xy_all[i, TORSO].mean(axis=0) / max(width, height)
+                        area = (((boxes[i, 2] - boxes[i, 0]) * (boxes[i, 3] - boxes[i, 1])) / max(width * height, 1)
+                                if boxes is not None else 0.1)
+                        scored.append((float(np.linalg.norm(c - self.prev_center)) - 0.15 * area, i))
+                    best_i = min(scored)[1]
+                elif boxes is not None:
+                    areas = [(boxes[i, 2] - boxes[i, 0]) * (boxes[i, 3] - boxes[i, 1]) for i in range(n)]
+                    best_i = int(np.argmax(areas))
+            pts = np.column_stack((xy_all[best_i, :, 0], xy_all[best_i, :, 1], cf_all[best_i]))
+            inside = (pts[:, 0] >= 0) & (pts[:, 0] < width) & (pts[:, 1] >= 0) & (pts[:, 1] < height)
+            pts[:, 2] *= inside
+            if (pts[TORSO, 2] >= 0.25).all():
+                self.prev_center = pts[TORSO, :2].mean(axis=0) / max(width, height)
+            return Observation(t, width, height, pts)
 
 
 class Cadence:

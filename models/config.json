@@ -13,5 +13,20 @@
   "match_after_impact_s": 1.5,
   "positive_after_onset_s": 0.2,
   "positive_after_impact_s": 0.75,
-  "seed": 37
+  "seed": 37,
+  "enable_convulsion": true,
+  "convulsion_window_s": 2.0,
+  "convulsion_min_hz": 2.0,
+  "convulsion_max_hz": 9.0,
+  "convulsion_amp": 0.14,
+  "convulsion_max_drift": 1.2,
+  "convulsion_sustain_s": 1.0,
+  "enable_slump_detection": true,
+  "slump_head_droop": -0.10,
+  "slump_lean_deg": 25.0,
+  "slump_alert_s": 3.5,
+  "slump_prior_window_s": 30.0,
+  "immobile_speed": 0.35,
+  "alert_lock_enabled": true,
+  "recovery_hold_s": 3.0
 }

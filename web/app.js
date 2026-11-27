@@ -19,6 +19,115 @@ let uploadRequest;
 let viewLoader = 0;
 let points;
 let uploadUrl;
+let lastAlarmClock = '';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const ICON_DEFS = {
+  'triangle-alert': [
+    ['path', {d: 'm21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'}],
+    ['path', {d: 'M12 9v4'}],
+    ['path', {d: 'M12 17h.01'}],
+  ],
+  'user-x': [
+    ['path', {d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'}],
+    ['circle', {cx: '9', cy: '7', r: '4'}],
+    ['line', {x1: '17', x2: '22', y1: '8', y2: '13'}],
+    ['line', {x1: '22', x2: '17', y1: '8', y2: '13'}],
+  ],
+  check: [
+    ['path', {d: 'M20 6 9 17l-5-5'}],
+  ],
+  'rotate-cw': [
+    ['path', {d: 'M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8'}],
+    ['path', {d: 'M21 3v5h-5'}],
+  ],
+};
+
+function createSvgIcon(name, className = 'icon') {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('data-lucide', name);
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('class', className);
+  for (const [tag, attrs] of (ICON_DEFS[name] || [])) {
+    const node = document.createElementNS(SVG_NS, tag);
+    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+    svg.append(node);
+  }
+  return svg;
+}
+
+function setBadgeTone(node, tone) {
+  if (!node) return;
+  node.classList.remove('badge-neutral', 'badge-success', 'badge-warning', 'badge-error');
+  node.classList.add(`badge-${tone || 'neutral'}`);
+}
+
+function renderEmail(container, email) {
+  if (!container) return;
+  container.replaceChildren();
+  const text = String(email || '');
+  const wrapper = document.createElement('span');
+  wrapper.className = 'email-text';
+  const at = text.lastIndexOf('@');
+  if (at < 0) {
+    wrapper.textContent = text;
+    container.append(wrapper);
+    return;
+  }
+  const localSpan = document.createElement('span');
+  const parts = text.slice(0, at + 1).split('.');
+  parts.forEach((part, index) => {
+    if (index > 0) localSpan.append(document.createElement('wbr'));
+    localSpan.append(document.createTextNode((index > 0 ? '.' : '') + part));
+  });
+  const domainSpan = document.createElement('span');
+  domainSpan.textContent = text.slice(at + 1);
+  wrapper.append(localSpan, domainSpan);
+  container.append(wrapper);
+}
+
+function formatClock(seconds) {
+  const whole = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0));
+  return [Math.floor(whole / 60), whole % 60].map(n => String(n).padStart(2, '0')).join(':');
+}
+
+function formatSecVi(seconds) {
+  return seconds.toFixed(2).replace('.', ',');
+}
+
+function formatSizeVi(bytes) {
+  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1).replace('.', ',')} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} B`;
+}
+
+function splitMiddleFilename(name) {
+  const dot = name.lastIndexOf('.');
+  const ext = dot > 0 ? name.slice(dot) : '';
+  const stem = dot > 0 ? name.slice(0, dot) : name;
+  if (stem.length <= 14) return {head: name, tail: ''};
+  const keep = Math.min(8, Math.max(4, Math.floor(stem.length / 3)));
+  return {
+    head: stem.slice(0, stem.length - keep),
+    tail: stem.slice(stem.length - keep) + ext,
+  };
+}
+
+// Thanh cuộn tự ẩn khi đang cuộn (I18 — references/tokens.css)
+let scrollTimer;
+document.addEventListener('scroll', event => {
+  const target = event.target === document ? document.documentElement : event.target;
+  if (!target?.classList) return;
+  target.classList.add('is-scrolling');
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(() => target.classList.remove('is-scrolling'), 700);
+}, {capture: true, passive: true});
 
 async function api(url, options) {
   const response = await fetch(url, options);
@@ -38,50 +147,174 @@ function message(text, error = false) {
   item.dataset.tone = error ? 'alert' : '';
 }
 
-function showState(text, activity) {
+const ALARM_REASON_LABELS = {
+  fall: 'Nghi té ngã',
+  convulsion: 'Nghi co giật / giãy giụa',
+  stroke_slump: 'Nghi đột quỵ / ngồi gục bất động',
+  slow_collapse: 'Trượt ngã chậm / nằm gục bất động',
+};
+
+function showState(text, activity, alarmReason = null, alertLocked = false) {
   const state = element('state');
-  if (state.textContent !== text) state.textContent = text;
-  state.dataset.tone = text === 'Nghi té ngã' ? 'alert' : text === 'Đang theo dõi' ? 'tracking' : '';
+  const reasonLabel = alarmReason && ALARM_REASON_LABELS[alarmReason] ? ALARM_REASON_LABELS[alarmReason] : 'Nghi té ngã';
+  const displayText = text === 'Nghi té ngã' && alarmReason && ALARM_REASON_LABELS[alarmReason]
+    ? `${ALARM_REASON_LABELS[alarmReason]}${alertLocked ? ' · Khóa' : ''}`
+    : (text === 'Nghi té ngã' && alertLocked ? 'Nghi té ngã · Khóa' : text);
+  if (state.textContent !== displayText) state.textContent = displayText;
+  const isAlert = text === 'Nghi té ngã';
+  const isTracking = text === 'Đang theo dõi';
+  const isBusy = text === 'Đang mở camera…' || text === 'Đang phân tích video…';
+  state.dataset.tone = isAlert ? 'alert' : isTracking ? 'tracking' : '';
+  setBadgeTone(state, isAlert ? 'error' : isTracking ? 'success' : isBusy ? 'warning' : 'neutral');
+
   const posture = element('posture-value');
-  const visible = text === 'Đang theo dõi' && Boolean(activity);
-  element('posture-label').hidden = posture.hidden = !visible;
-  if (posture.textContent !== (activity || '')) posture.textContent = activity || '';
+  const visible = (isTracking || isAlert) && Boolean(activity);
+  const postureText = visible ? activity : '—';
+  if (posture.textContent !== postureText) posture.textContent = postureText;
+
+  const lockedLive = mode === 'camera' && Boolean(active) && Boolean(alertLocked);
+  const confirmBtn = element('confirm-safe');
+  const alertBanner = element('alert-banner');
+  if (confirmBtn) confirmBtn.hidden = !lockedLive;
+  if (alertBanner) {
+    alertBanner.hidden = !lockedLive;
+    if (lockedLive) {
+      element('alert-banner-title').textContent = `${reasonLabel} · Đã khóa báo động`;
+      element('alert-banner-desc').textContent = lastAlarmClock
+        ? `Phát hiện lúc ${lastAlarmClock} · Đã gửi ảnh cảnh báo qua Telegram. Kiểm tra an toàn rồi mở khóa để tiếp tục theo dõi.`
+        : 'Đã gửi ảnh cảnh báo qua Telegram. Kiểm tra an toàn rồi mở khóa để tiếp tục theo dõi.';
+    }
+  }
+
+  const runningPill = element('camera-running');
+  if (runningPill && active) {
+    runningPill.textContent = lockedLive ? 'Đã khóa báo động' : 'Camera đang bật';
+    setBadgeTone(runningPill, lockedLive ? 'error' : 'success');
+  }
+
+  const liveBadge = element('stage-live-badge');
+  const ramBadge = element('stage-ram-badge');
+  if (liveBadge && ramBadge) {
+    const showLive = mode === 'camera' && Boolean(active);
+    liveBadge.hidden = !showLive;
+    ramBadge.hidden = !showLive;
+    if (showLive) {
+      liveBadge.dataset.tone = (isAlert || lockedLive) ? 'alert' : 'tracking';
+      element('stage-live-text').textContent = lockedLive ? 'ĐÃ KHÓA BÁO ĐỘNG' : 'ĐANG THEO DÕI';
+    }
+  }
 }
 
 function showTimer(t) {
-  const whole = Math.floor(t);
-  element('timer').textContent = [Math.floor(whole / 60), whole % 60].map(n => String(n).padStart(2, '0')).join(':');
+  const formatted = formatClock(t);
+  element('timer').textContent = formatted;
+  if (mode === 'upload' && video.duration && Number.isFinite(video.duration)) {
+    element('viewer-meta').textContent = `${formatted} / ${formatClock(video.duration)}`;
+  }
+}
+
+function updateEventCount() {
+  const count = element('event-list').children.length;
+  const badge = element('event-count');
+  if (badge) {
+    badge.textContent = `${count} mốc`;
+    badge.hidden = count === 0;
+  }
 }
 
 function clearEvents() {
   element('event-list').replaceChildren();
   element('empty-events').hidden = false;
+  updateEventCount();
 }
 
 function showAlarm(t, seekable = false, kind = 'Nghi té ngã') {
+  const list = element('event-list');
   const event = document.createElement('li');
-  const label = `${t.toFixed(2)} giây · ${kind}`;
   if (seekable) {
+    list.className = 'event-list event-list-seek';
     const jump = document.createElement('button');
     jump.type = 'button';
-    jump.textContent = label;
+    jump.className = 'seek-btn';
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'seek-btn-label';
+    labelSpan.textContent = kind;
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'seek-btn-time tabular-nums';
+    timeSpan.textContent = `${formatSecVi(t)} giây`;
+    jump.append(labelSpan, timeSpan);
     jump.addEventListener('click', () => {
       if (video.readyState >= 1) video.currentTime = t;
     });
     event.append(jump);
   } else {
-    event.textContent = label;
+    list.className = 'event-list event-list-live';
+    const nowClock = new Intl.DateTimeFormat('vi-VN', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    }).format(new Date());
+    lastAlarmClock = nowClock;
+    const iconBox = document.createElement('span');
+    iconBox.className = 'event-icon-box';
+    iconBox.setAttribute('aria-hidden', 'true');
+    iconBox.append(createSvgIcon(kind.startsWith('Không thấy') ? 'user-x' : 'triangle-alert'));
+    const body = document.createElement('div');
+    body.className = 'min-w-0';
+    const title = document.createElement('p');
+    title.className = 'event-item-title';
+    title.textContent = kind;
+    const meta = document.createElement('p');
+    meta.className = 'event-item-meta tabular-nums';
+    meta.textContent = `${nowClock} · Mốc ${formatSecVi(t)} giây`;
+    body.append(title, meta);
+    event.append(iconBox, body);
   }
-  element('event-list').append(event);
+  list.append(event);
   element('empty-events').hidden = true;
+  updateEventCount();
+}
+
+function updateSelectedFileUI(statusText = '') {
+  const input = element('upload-file');
+  const file = input.files[0];
+  const row = element('upload-selected');
+  if (!file) {
+    row.hidden = true;
+    return;
+  }
+  const {head, tail} = splitMiddleFilename(file.name);
+  const headEl = element('upload-file-head');
+  const tailEl = element('upload-file-tail');
+  const nameEl = element('upload-filename');
+  headEl.textContent = head;
+  tailEl.textContent = tail;
+  if (tail) nameEl.title = file.name;
+  else nameEl.removeAttribute('title');
+  const metaParts = [formatSizeVi(file.size)];
+  if (statusText) metaParts.push(statusText);
+  element('upload-file-meta').textContent = metaParts.join(' · ');
+  row.hidden = false;
 }
 
 function updateControls() {
-  element('camera-running').hidden = !active;
-  element('start').disabled = Boolean(!status?.ready || active || opening);
-  element('stop').disabled = !active && !opening;
+  const isLive = Boolean(active || opening);
+  const runningPill = element('camera-running');
+  runningPill.hidden = !active;
+  if (!active) {
+    runningPill.textContent = 'Camera đang bật';
+    setBadgeTone(runningPill, 'success');
+  }
+
+  const startBtn = element('start');
+  const stopBtn = element('stop');
+  startBtn.disabled = Boolean(!status?.ready || isLive);
+  startBtn.hidden = isLive;
+  stopBtn.disabled = !isLive;
+  stopBtn.hidden = !isLive;
+
   element('flip').disabled = !active || active.devices.length < 2;
   element('analyze').disabled = !status?.ready || !element('upload-file').files.length || Boolean(uploadRequest);
+  const dropzone = element('upload-dropzone');
+  if (dropzone) dropzone.dataset.disabled = String(Boolean(uploadRequest));
 }
 
 function positionMedia() {
@@ -128,13 +361,19 @@ function draw() {
 }
 
 new ResizeObserver(draw).observe(stage);
-video.addEventListener('loadedmetadata', draw);
+video.addEventListener('loadedmetadata', () => {
+  draw();
+  if (mode === 'upload' && Number.isFinite(video.duration)) {
+    element('viewer-meta').textContent = `${formatClock(video.currentTime)} / ${formatClock(video.duration)}`;
+  }
+});
 element('show-bones').addEventListener('change', draw);
 
 function stopCamera(text = 'Camera đang tắt', error = false) {
   const run = active;
   active = null;
   opening = 0;
+  lastAlarmClock = '';
   if (run) {
     run.controller.abort();
     run.stream.getTracks().forEach(track => track.stop());
@@ -151,6 +390,7 @@ function stopCamera(text = 'Camera đang tắt', error = false) {
   }
   updateControls();
 }
+
 function cameraError(error) {
   if (error.name === 'NotAllowedError' || error.name === 'SecurityError') return 'Hãy cấp quyền camera trong trình duyệt rồi thử lại.';
   if (error.name === 'NotFoundError') return 'Thiết bị chưa có camera khả dụng.';
@@ -280,13 +520,35 @@ async function sendFrame(run, time) {
 }
 
 function display(result) {
-  showState(result.state, result.activity);
+  if (result.alarm) {
+    showAlarm(result.t, false, ALARM_REASON_LABELS[result.alarm_reason] || 'Nghi té ngã');
+  }
+  if (result.absence_alarm) {
+    showAlarm(result.t, false, `Không thấy người trong ${result.absence_alarm} giây`);
+  }
+  showState(result.state, result.activity, result.alarm_reason, Boolean(result.alert_locked));
   if (mode === 'camera') message(result.warming ? 'Đang tích lũy quan sát tư thế…' : '');
   points = result.points;
   draw();
-  if (result.alarm) showAlarm(result.t);
-  if (result.absence_alarm) showAlarm(result.t, false, `Không thấy người trong ${result.absence_alarm} giây`);
 }
+
+element('confirm-safe')?.addEventListener('click', async () => {
+  if (!active) return;
+  const btn = element('confirm-safe');
+  btn.disabled = true;
+  try {
+    const res = await api(`/api/session/${active.token}/confirm-safe`, {method: 'POST'});
+    if (res) {
+      lastAlarmClock = '';
+      showState(res.state || 'Đang theo dõi', null, null, Boolean(res.alert_locked));
+      message('Đã xác nhận an toàn và mở khóa báo động.');
+    }
+  } catch (error) {
+    message(cameraError(error), true);
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 element('start').addEventListener('click', startCamera);
 element('stop').addEventListener('click', () => stopCamera());
@@ -307,16 +569,26 @@ function selectMode(next) {
   element('upload-file').disabled = false;
   mode = next;
   const isUpload = mode === 'upload';
-  element('monitor-title').textContent = isUpload ? 'Thử video' : 'Theo dõi té ngã';
-  element('monitor-description').textContent = isUpload ? 'Phân tích video từ thiết bị của bạn.'
-    : 'Theo dõi trực tiếp từ camera của thiết bị này.';
-  element('viewer-title').textContent = isUpload ? 'Xem trước video' : 'Khung camera';
+  element('viewer-title').textContent = isUpload ? 'Xem trước & tải tệp video' : 'Khung camera trực tiếp';
+  element('viewer-meta').textContent = isUpload ? 'Chưa chọn video' : 'Tự giải phóng bộ đệm khi dừng';
+  element('session-title').textContent = isUpload ? 'Kết quả phân tích' : 'Trạng thái phiên';
+  element('event-title').textContent = isUpload ? 'Mốc cảnh báo (bấm để tua)' : 'Sự kiện trong phiên';
   element('timer-label').textContent = isUpload ? 'Thời gian video' : 'Thời gian phiên';
+  element('ai-mode-row').hidden = isUpload;
+  element('session-stats-dl').hidden = isUpload;
+  element('upload-empty-result').hidden = !isUpload;
   element('camera-actions').hidden = isUpload;
   element('upload-actions').hidden = !isUpload;
   element('upload-result').hidden = true;
   element('upload-source').hidden = true;
   element('upload-telegram').hidden = true;
+  element('placeholder-icon-camera').hidden = isUpload;
+  element('placeholder-icon-video').hidden = !isUpload;
+  element('placeholder-text').textContent = isUpload ? 'Chưa chọn video' : 'Camera đang tắt';
+  element('placeholder-hint').textContent = isUpload
+    ? 'Chọn tệp MP4 hoặc WebM bên dưới để xem trước khung xương MoveNet và kiểm thử phát hiện té ngã.'
+    : 'Đặt thiết bị cố định sao cho thấy rõ vai, hông và chân. Hai giây đầu dùng để làm đầy cửa sổ tư thế.';
+  element('empty-events').textContent = isUpload ? 'Chưa có mốc cảnh báo.' : 'Chưa có cảnh báo.';
   video.pause();
   video.removeAttribute('src');
   video.load();
@@ -324,19 +596,68 @@ function selectMode(next) {
     URL.revokeObjectURL(uploadUrl);
     uploadUrl = null;
   }
+  stage.hidden = isUpload;
   video.hidden = true;
   element('placeholder').hidden = false;
-  element('placeholder-text').textContent = isUpload ? 'Chưa chọn video' : 'Camera đang tắt';
+  element('stage-live-badge').hidden = true;
+  element('stage-ram-badge').hidden = true;
   points = traceData = null;
   draw();
   message('');
   showState(isUpload ? 'Chờ video' : 'Camera đang tắt');
   showTimer(0);
   clearEvents();
+  updateSelectedFileUI(isUpload && element('upload-file').files[0] ? 'Sẵn sàng phân tích' : '');
   updateControls();
 }
 
-element('upload-file').addEventListener('change', updateControls);
+// Kéo thả & chọn tệp video (components/file-upload.md)
+const uploadInput = element('upload-file');
+const dropzone = element('upload-dropzone');
+const dropzoneTitle = element('dropzone-title');
+
+uploadInput.addEventListener('change', () => {
+  message('');
+  updateSelectedFileUI('Sẵn sàng phân tích');
+  updateControls();
+});
+
+if (dropzone) {
+  let dragDepth = 0;
+  const setDragging = dragging => {
+    dropzone.dataset.dragging = String(dragging);
+    if (dropzoneTitle) {
+      dropzoneTitle.textContent = dragging ? 'Thả tệp để phân tích' : 'Kéo thả video MP4 hoặc WebM vào đây';
+    }
+  };
+  dropzone.addEventListener('dragenter', event => {
+    event.preventDefault();
+    dragDepth += 1;
+    setDragging(true);
+  });
+  dropzone.addEventListener('dragover', event => {
+    event.preventDefault();
+  });
+  dropzone.addEventListener('dragleave', () => {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) setDragging(false);
+  });
+  dropzone.addEventListener('drop', event => {
+    event.preventDefault();
+    dragDepth = 0;
+    setDragging(false);
+    if (uploadRequest) return;
+    const dropped = event.dataTransfer?.files?.[0];
+    if (!dropped) return;
+    const transfer = new DataTransfer();
+    transfer.items.add(dropped);
+    uploadInput.files = transfer.files;
+    message('');
+    updateSelectedFileUI('Sẵn sàng phân tích');
+    updateControls();
+  });
+}
+
 element('upload-actions').addEventListener('submit', async event => {
   event.preventDefault();
   const file = element('upload-file').files[0];
@@ -359,8 +680,12 @@ element('upload-actions').addEventListener('submit', async event => {
   video.controls = true;
   video.muted = false;
   video.hidden = true;
+  stage.hidden = false;
   element('placeholder').hidden = false;
+  element('upload-empty-result').hidden = true;
+  element('session-stats-dl').hidden = false;
   showState('Đang phân tích video…');
+  updateSelectedFileUI('Đang phân tích…');
   message('');
   const controller = new AbortController();
   uploadRequest = controller;
@@ -378,12 +703,13 @@ element('upload-actions').addEventListener('submit', async event => {
     summary.textContent = count ? `Nghi té ngã · ${count} cảnh báo`
       : data.has_predictions ? 'Không phát hiện té ngã trong video.' : 'Chưa đủ dữ liệu tư thế để kết luận.';
     summary.dataset.alarm = String(count > 0);
+    setBadgeTone(summary, count > 0 ? 'error' : data.has_predictions ? 'success' : 'neutral');
     summary.hidden = false;
     const telegram = element('upload-telegram');
     const delivery = {
       sent: 'Đã gửi ảnh kiểm thử qua Telegram.',
       sent_text: 'Đã gửi thông báo chữ qua Telegram. Ảnh không gửi được.',
-      unlinked: 'Hãy kết nối Telegram trong mục Tôi để nhận ảnh kiểm thử.',
+      unlinked: 'Hãy kết nối Telegram trong mục Tài khoản & Telegram để nhận ảnh kiểm thử.',
       unavailable: 'Máy chủ chưa cấu hình gửi ảnh kiểm thử qua Telegram.',
       error: 'Chưa xác nhận được thông báo đã gửi. Hãy kiểm tra Telegram.',
       history_error: 'Chưa cập nhật được lịch sử thử video. Hãy kiểm tra Supabase và Telegram.',
@@ -396,16 +722,22 @@ element('upload-actions').addEventListener('submit', async event => {
     telegram.hidden = !telegram.textContent;
     element('upload-source').hidden = !data.matches_train;
     clearEvents();
-    for (const time of data.alarms) showAlarm(time, true);
-    element('empty-events').hidden = true;
+    const alarmReasons = new Map();
+    for (const frame of data.trace || []) {
+      if (frame.alarm) alarmReasons.set(frame.t, ALARM_REASON_LABELS[frame.alarm_reason] || 'Nghi té ngã');
+    }
+    for (const time of data.alarms) showAlarm(time, true, alarmReasons.get(time) || 'Nghi té ngã');
+    element('empty-events').hidden = data.alarms.length > 0;
     if (!video.error) {
       video.hidden = false;
       element('placeholder').hidden = true;
     }
+    updateSelectedFileUI('Đã phân tích xong');
     updateVideoPreview();
   } catch (error) {
     if (!controller.signal.aborted) {
       showState('Chưa phân tích được video');
+      updateSelectedFileUI('Chưa phân tích được');
       message(cameraError(error), true);
     }
   } finally {
@@ -429,7 +761,7 @@ function updateVideoPreview() {
   }
   const event = traceData.trace[lo - 1];
   showTimer(t);
-  showState(event?.state || 'Đang chờ khung hình', event?.activity);
+  showState(event?.state || 'Đang chờ khung hình', event?.activity, event?.alarm_reason, Boolean(event?.alert_locked));
   points = event?.points;
   draw();
 }
@@ -442,15 +774,22 @@ video.addEventListener('error', () => {
 async function init() {
   try {
     status = await api('/api/status');
-    element('backend').textContent = status.message || (status.ready ? 'Sẵn sàng' : 'Chưa sẵn sàng');
-    element('backend-status').dataset.ready = String(status.ready && !status.message);
+    const readyText = status.message || (status.ready ? `MoveNet sẵn sàng · ${status.sample_hz || 10} Hz` : 'Chưa sẵn sàng');
+    const isReady = String(Boolean(status.ready && !status.message));
+    element('backend').textContent = readyText;
+    element('backend-status').dataset.ready = isReady;
+    if (element('backend-mobile')) element('backend-mobile').textContent = readyText;
+    if (element('backend-status-mobile')) element('backend-status-mobile').dataset.ready = isReady;
     element('upload-nav').hidden = !status.local;
+    if (element('upload-nav-mobile')) element('upload-nav-mobile').hidden = !status.local;
     if (status.local) {
       element('upload-limit').textContent = `MP4 hoặc WebM, tối đa ${status.upload_max_bytes / 1048576} MiB và ${status.upload_max_seconds} giây.`;
     }
   } catch {
-    element('backend').textContent = 'Mất kết nối';
+    element('backend').textContent = 'Mất kết nối máy xử lý';
     element('backend-status').dataset.ready = 'false';
+    if (element('backend-mobile')) element('backend-mobile').textContent = 'Mất kết nối máy xử lý';
+    if (element('backend-status-mobile')) element('backend-status-mobile').dataset.ready = 'false';
   }
   updateControls();
 }

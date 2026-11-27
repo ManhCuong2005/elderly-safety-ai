@@ -1,11 +1,73 @@
+# === Bí mật, cấu hình nhạy cảm & chứng chỉ LAN ===
+/.secrets/
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# === Môi trường ảo, công cụ & gói tải về ===
 /.venv/
+venv/
+env/
+/.tools/
+node_modules/
+
+# === Python cache, build & kiểm thử ===
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# === Thư mục tạm, cache & log ===
 /.cache/
 /.tmp/
-/.tools/
-/.secrets/
+tmp/
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# === Dữ liệu video gốc, dữ liệu đã xử lý & tệp media/nén nặng ===
 /data/raw/
 /data/processed/
 /data/review/*.jpg
+/data/review/*.png
+*.mp4
+*.webm
+*.avi
+*.mov
+*.mkv
+*.zip
+*.tar.gz
+*.rar
+
+# === Trọng số model nặng (tải lại được qua src/model_setup.py hoặc Ultralytics) ===
 /models/*.tflite
+/models/*.pt
+/models/*.pth
+/models/*.onnx
+/models/*.pkl
 /models/*.joblib
-__pycache__/
+# Giữ classifier.joblib (~99 KB) để chạy web ngay không cần train lại
+!/models/classifier.joblib
+
+# === Tài liệu Office & file tạm Word ===
+*.docx
+~$*
+
+# === IDE & hệ điều hành ===
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+desktop.ini

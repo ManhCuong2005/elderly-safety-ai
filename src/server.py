@@ -20,7 +20,7 @@ from .dataset import RAW
 from .inference import Engine, FALL_WARNING, NO_PERSON, TRACKING, web_result
 from .keypoints import get_keypoints
 from .pose import CONFIG, MODEL, Cadence, Pose, sample_frames
-from .posture import load_posture
+from .posture import extended_posture, load_posture
 from .review import ANNOTATIONS, VIDEOS, rotation_for, save_annotation
 from .storage import read_json, rows, safe, sha
 from .train import SPLIT, load_model
@@ -176,7 +176,7 @@ def create_app(host="127.0.0.1", start_sweeper=True):
         load_error = None
     except (ValueError, OSError, KeyError) as error:
         info, model, load_error = None, None, str(error)
-    cfg = info["config"] if info else CONFIG
+    cfg = {**CONFIG, **info["config"]} if info else CONFIG
     threshold = info["threshold"] if info else None
     locked_split = info["split_sha256"] if info else None
     train_hashes = {row["sha256"] for row in rows(SPLIT) if row["split"] == "train"} if (
@@ -210,8 +210,8 @@ def create_app(host="127.0.0.1", start_sweeper=True):
 
     def tracked_frame(engine, obs):
         result = web_result(engine, obs)
-        if posture is not None and result["state"] == TRACKING:
-            result["activity"] = posture(obs)
+        if result["state"] in {TRACKING, FALL_WARNING}:
+            result["activity"] = extended_posture(obs, posture, cfg["confidence"])
         return result
 
     def tracked_trace(observations):
@@ -252,10 +252,26 @@ def create_app(host="127.0.0.1", start_sweeper=True):
 
     @app.get("/assets/<name>")
     def asset(name):
-        mime = {"app.js": "text/javascript", "account.js": "text/javascript", "style.css": "text/css"}.get(name)
+        mime = {
+            "app.js": "text/javascript",
+            "account.js": "text/javascript",
+            "style.css": "text/css",
+            "favicon.svg": "image/svg+xml",
+        }.get(name)
         if mime is None:
             abort(404)
         return send_file(safe(f"web/{name}"), mimetype=mime)
+
+    @app.get("/assets/fonts/<name>")
+    def font_asset(name):
+        allowed = {
+            f"inter-{subset}-{weight}-normal.woff2"
+            for subset in ("latin", "vietnamese")
+            for weight in ("400", "500", "600", "700")
+        }
+        if name not in allowed:
+            abort(404)
+        return send_file(safe(f"web/fonts/{name}"), mimetype="font/woff2")
 
     @app.get("/api/status")
     def status():
@@ -321,6 +337,7 @@ def create_app(host="127.0.0.1", start_sweeper=True):
                     if stream.average_rate and stream.average_rate > 61:
                         raise ValueError("Chọn video có tốc độ tối đa 60 khung hình/giây.")
                     estimator = get_pose()
+                    estimator.reset_tracking()
                     engine = Engine(cfg, model, threshold)
                     trace = []
                     for t, image in sample_frames(container, cfg["sample_hz"], limit_s=MAX_VIDEO_SECONDS):
@@ -360,7 +377,7 @@ def create_app(host="127.0.0.1", start_sweeper=True):
     def start():
         if not info:
             return jsonify(error=load_error or "Chưa có bộ phân loại đã huấn luyện."), 503
-        get_pose()
+        get_pose().reset_tracking()
         user_id = account_session["user"]["id"]
         with settings_lock:
             absence_after = None
@@ -409,6 +426,15 @@ def create_app(host="127.0.0.1", start_sweeper=True):
         if entry and entry.owner == account_session["login_id"]:
             sessions.remove(token)
         return "", 204
+
+    @app.post("/api/session/<token>/confirm-safe")
+    def confirm_safe(token):
+        entry = sessions.find(token)
+        if entry is None or entry.owner != account_session["login_id"]:
+            return jsonify(error="Phiên đã kết thúc. Bấm bắt đầu lại."), 410
+        with entry.lock:
+            cleared = entry.engine.confirm_safe(entry.last_timestamp if entry.last_timestamp >= 0 else None)
+            return jsonify(cleared=cleared, state=entry.engine.state, alert_locked=entry.engine.alert_locked)
 
     @app.post("/api/frame/<token>")
     def frame(token):
